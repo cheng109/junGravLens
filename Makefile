@@ -27,8 +27,8 @@ LDFLAGS=-lcfitsio -lgsl -L. -lfortranstuff -lgfortran
 SRCS=main.cpp Image.cpp commons.cpp Model.cpp
 FC=gfortran
 
-COMMON_HDRS= Image.h Model.h commons.h fastell.h gl_crit.h parafit.h  
-OBJS= commons.o main.o Image.o Model.o gl_crit.o parafit.o
+COMMON_HDRS= Image.h Model.h commons.h fastell.h parafit.h  
+OBJS= commons.o main.o Image.o Model.o parafit.o
 #OMP_NUM_THREADS=8
 #F77FLAGS := -g $(OPT) -c  -ffixed-line-length-none -fno-automatic -fbounds-check 
 #-fno-underscoring

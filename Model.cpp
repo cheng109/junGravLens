@@ -21,11 +21,11 @@
 //#include "gsl/gsl_multimin.h"
 #include <Eigen/SparseCholesky>
 #include <Eigen/Dense>
-
+#include <assert.h>
 using namespace std;
 //using namespace arma;
 using namespace Eigen;
-
+#define DIFF 0.00000001
 
 /* Model::Model() {
 	// TODO Auto-generated constructor stub
@@ -769,6 +769,8 @@ MultModelParam::MultModelParam(map<string,string> confMap) {
 			tempParam.mTo   			= stof(items[19]);
 			tempParam.mInc  			= stof(items[20]);
 			
+
+
 			parameter.push_back(tempParam);
 			nParam.push_back(NUM_SERSIC_PARAM);
 
@@ -852,12 +854,25 @@ MultModelParam::MultModelParam(map<string,string> confMap) {
 				tempParam.coreTo		= stof(items[16]); 
 				tempParam.coreInc		= stof(items[17]); 
 
+
+				
+				assert (tempParam.centerXInc >DIFF and 
+						tempParam.centerYInc >DIFF and 
+						tempParam.critRadInc >DIFF and 
+						tempParam.eInc       >DIFF and  
+						tempParam.PAInc		 >DIFF and 
+						tempParam.coreInc 	 >DIFF); 
+
+
 				parameter.push_back(tempParam);
 				nParam.push_back(NUM_SIE_PARAM);
 
 				nLens +=1;
 			}
 		}
+
+
+
 		if(itNFW != confMap.end()) {
 			vector<string> items = splitString(itNFW->second);
 
