@@ -1074,20 +1074,25 @@ void MultModelParam::mix() {
 	}
 	mix.resize(3); 
 	/* for maximum 3 models:  j, k, m */
+    mix.resize(3);
 
-		for(int j=0; j<mix[0].size(); ++j) {
-			for(int k=0; k<mix[1].size(); ++k ) {
-				for(int m=0; m<mix[2].size(); ++m) {
-					vector<mixModels> v2; 
-					v2.push_back(mix[0][j]); 
-					v2.push_back(mix[1][k]); 
-					v2.push_back(mix[2][m]); 
-					mixAllModels.push_back(v2); 
-				}
+    size_t ms1 = (mix[1].size() > 0) ? mix[1].size():1;
+    size_t ms2 = (mix[2].size() > 0) ? mix[2].size():1;
 
-			}
+    /* for maximum 3 models:  j, k, m */
+    for(size_t j=0; j<mix[0].size(); ++j) {
+        for(size_t k=0; k<ms1; ++k ) {
+            for(size_t m=0; m<ms2; ++m) {
+                vector<mixModels> v2;
+                v2.push_back(mix[0][j]);
+                if (nLens>1) v2.push_back(mix[1][k]);
+                if (nLens>2) v2.push_back(mix[2][m]);
+                mixAllModels.push_back(v2);
+            }
 
-		}
+        }
+
+    }
 	nComb = mixAllModels.size(); 
 }
 
