@@ -1072,10 +1072,7 @@ void MultModelParam::mix() {
 
 
 	}
-	mix.resize(3); 
-	/* for maximum 3 models:  j, k, m */
-    mix.resize(3);
-
+	mix.resize(3);
     size_t ms1 = (mix[1].size() > 0) ? mix[1].size():1;
     size_t ms2 = (mix[2].size() > 0) ? mix[2].size():1;
 
