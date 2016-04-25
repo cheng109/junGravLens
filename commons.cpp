@@ -71,7 +71,7 @@ Conf::Conf(Image* dataImage, map<string, string> confMap) {
 		back_std = stod(confMap["back_std"]);
 
 
-
+		verbose		  = stoi(confMap["verbose"]); 
 		usingRegion   = stoi(confMap["usingRegion"]); 
 		outputSrcImg  = stoi(confMap["outputSrcImg"]); 
 		outputModImg  = stoi(confMap["outputModImg"]); 

@@ -1,5 +1,5 @@
-NAME=PC
-#NAME=LAPTOP
+#NAME=PC
+NAME=LAPTOP
 #NAME=RCAC
 ifeq ($(NAME), RCAC)   # Hansen
 INC=/home/cheng109/work/phosim_DES/phosim/phosim_core/source/cfitsio/include
@@ -42,7 +42,7 @@ OBJS= commons.o main.o Image.o Model.o parafit.o
 ## ARG3:   output files. 
 ARG1=horseshoe_test/
 ARG2=conf.txt
-ARG3=output_new.txt
+ARG3=output.txt
 
 all:  $(COMMON_HDRS) $(OBJS) libfortranstuff.a
 

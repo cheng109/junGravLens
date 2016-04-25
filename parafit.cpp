@@ -74,7 +74,7 @@ void gridSearch(Conf* conf, MultModelParam param_old, Image* dataImage, vec d, s
 		}
 
 		double zerothOrder, gradientOrder, curvatureOrder; 
-		if (0) {
+		if (1) {
 			zerothOrder 		= model->getZerothOrderReg   (conf, sBright);
 			if(zerothOrder > maxObjFunc[0])  {
 				maxObjFunc[0] = zerothOrder; 
@@ -93,12 +93,12 @@ void gridSearch(Conf* conf, MultModelParam param_old, Image* dataImage, vec d, s
 		}	
 
 
-		if(0) {
+		if(conf->verbose) {
 			string pStatus = "[" + to_string(i+1) + "/" + to_string(model->param.nComb) + "]\t" ; 
 			string resultStatus =  to_string(scatter) + "\t"
-				//+ to_string(zerothOrder) + "\t" 
-				//+ to_string(gradientOrder) + "\t" 
-				//+ to_string(curvatureOrder)  
+				+ to_string(zerothOrder) + "\t" 
+				+ to_string(gradientOrder) + "\t" 
+				+ to_string(curvatureOrder)  
 				+ "\n"; 
 			cout 	<< pStatus << resultStatus ; 
 			output  << pStatus << model->param.printCurrentModels(i).at(0) << resultStatus ; 		
@@ -144,14 +144,14 @@ void gridSearch(Conf* conf, MultModelParam param_old, Image* dataImage, vec d, s
 
 	clock_t end = clock(); 
 	double elapsed_secs = double(end-begin)/CLOCKS_PER_SEC; 
-	cout << "Time used: " << elapsed_secs << endl; 
+	cout << "Time used: " << elapsed_secs << " seconds. "<< endl; 
 
 	// Print out the best model : 
 	cout << "************************\nThe best models : " << minScatter << endl;
 	cout << model->param.printCurrentModels(minIndexScatter).at(1);
-	//cout << model->param.printCurrentModels(maxIndex[0]).at(1); 
-	//cout << model->param.printCurrentModels(maxIndex[1]).at(1);
-	//cout << model->param.printCurrentModels(maxIndex[2]).at(1); 
+	cout << model->param.printCurrentModels(maxIndex[0]).at(1); 
+	cout << model->param.printCurrentModels(maxIndex[1]).at(1);
+	cout << model->param.printCurrentModels(maxIndex[2]).at(1); 
 	cout << "************************\n" << endl;
  
 	delete model;

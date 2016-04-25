@@ -65,6 +65,7 @@ public:
 	double potYCenter;
 
 	// Flags: 
+	int verbose; 
 	int usingRegion; 
 	int outputSrcImg ; 	
 	int outputModImg ; 

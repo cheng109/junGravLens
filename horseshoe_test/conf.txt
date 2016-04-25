@@ -26,12 +26,13 @@ contourCritName  horseshoe_test/ds9crit.con
 contourCausName  horseshoe_test/ds9caus.con
 
 ## Flags:	 '1' == Yes && '0' == No
+verbose 		1
 usingRegion		1
-outputSrcImg	1
-outputModImg	1
-outputCritImg	1
-outputLensImg	1
-srcBackground	1
+outputSrcImg	0
+outputModImg	0
+outputCritImg	0
+outputLensImg	0
+srcBackground	0
 
 
 ## Source plane size (in pixel)
@@ -46,9 +47,8 @@ back_std 0.0019
 ## Model_SIE {xfrom, xto, xinc, yfrom, yto, yinc, critfrom, critto, critinc, ellfrom, ellto, ellinc, pafrom, pato, painc, corefrom, coreto, coreinc}
 ##
 ##
-#SIE 0.0 0.0 2.0 0.0 0.0 2.0 5.17 5.17 0.2 0.0 0.0 0.01 176.0 176.0 2.0 0.0 0.0 0.2
-SIE 0.0 0.0 0.0 0.0 0.0 10.0 4.6 4.6 0.1 0.25 0.25 0.05 170.0 170.0 10.0 0.0 0.0 0.002
-SIE -154.0 -154.0 2.0 2.0 2.0 2.0 1.4 1.4 0.1 0.45 0.45 0.05 10.0 10.0 10.0 0.0 0.0 0.002
+SIE 0.0 0.0 2.0 0.0 0.0 2.0 3.0 6.0 0.01 0.0 0.0 0.02 0.0 0.0 5.0 0.0 0.0 0.002
+SIE -154.0 -154.0 2.0 2.0 2.0 2.0 0.0 0.0 0.1 0.45 0.45 0.05 10.0 10.0 10.0 0.0 0.0 0.002
 SIE 15.0 15.0 3.0 -48.0 -48.0 3.0 0.0 0.0 0.05 0.0 0.0 0.2 0.0 0.0 10.0 0.0 0.0 0.001
 
 
