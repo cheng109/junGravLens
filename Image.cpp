@@ -36,8 +36,9 @@ Image::Image(vector<double> xpos, vector<double> ypos, vector<double> *briList, 
 
 		if(x>0 && x< naxis1 && y>0 && y<naxis2) {
 			iList = naxis1*y+x;
+			data[iList] += briList->at(i);
+
 		}
-		data[iList] += briList->at(i);
 
 	}
 }
@@ -63,8 +64,9 @@ Image::Image(vector<int> xpos, vector<int> ypos, vector<double> *briList, long n
 
 		if(x>=0 && x< naxis1 && y>=0 && y<naxis2) {
 			iList = naxis1*y+x;
+			data[iList] += briList->at(i);
+
 		}
-		data[iList] += briList->at(i);
 	}
 }
 
