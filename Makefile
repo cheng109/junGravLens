@@ -1,5 +1,5 @@
-#NAME=PC
-NAME=LAPTOP
+NAME=PC
+#NAME=LAPTOP
 #NAME=RCAC
 ifeq ($(NAME), RCAC)   # Hansen
 INC=/home/cheng109/work/phosim_DES/phosim/phosim_core/source/cfitsio/include

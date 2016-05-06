@@ -391,10 +391,11 @@ void Image::updateFilterImage(string regionFileName, int flag) {
 			double circleCenterX 	= xpos[0]; 
 			double circleCenterY 	= xpos[1]; 
 			double circleR 			= xpos[2]; 
+
 			for(int i=0; i<naxis1; ++i) {
 				for (int j=0; j<naxis2; ++j) {
-					int dy= j - circleCenterX;
-					int dx= i - circleCenterY;
+					int dy= j - circleCenterY;
+					int dx= i - circleCenterX;
 					double dr2 = dx*dx + dy*dy; 
 					if( dr2 < circleR*circleR) {
 						dataList.push_back(data[j*naxis1 + i]);

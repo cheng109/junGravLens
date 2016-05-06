@@ -190,6 +190,7 @@ string parseReagionFile(string regionFileName, vector<double> *xpos, vector<doub
 				istringstream ss(line.substr(pos1+1, pos2-pos1));	
 				for (int j=0;j<2 ; ++j) {
 					getline(ss, token, ','); 
+					//cout << stod(token) << endl; 
 					xpos->push_back(stod(token));
 					ypos->push_back(stod(token));
 				}
@@ -677,6 +678,53 @@ vector<string> splitString(string s) {
 	return items;
 }
 
+
+/***************************
+Function:   	splitString
+Description:    Read the lens image and a region file, to get a ratio 
+				regionMass/totalMass; 
+Arguments:		(1) lensImage ; 
+				(2) regionFileName: circle or polygon; 
+
+Returns:    	regionMass / totalMass ; 
+****************************/
+double getMassLuminosity(Image* lensImage, Image* dataImage,  string regionFileName, double background) {
+	double totalMass = 0; 
+	double regionMass = 0; 
+	double luminosity = 0 ; 
+
+	for(int i=0; i<lensImage->data.size(); ++i) {
+		totalMass += lensImage->data[i]; 
+	}
+
+	lensImage->updateFilterImage(regionFileName, 1);
+	dataImage->updateFilterImage(regionFileName, 1);
+
+	//lensImage->writeFilterImage(regionFileName + "_cut.fits"); 
+	//dataImage->writeFilterImage(regionFileName + "_cut_data.fits"); 
+
+
+	 
+	
+	for(int i=0; i<lensImage->dataList.size(); ++i) {
+		regionMass += lensImage->dataList[i]; 
+	}
+	for(int i=0; i<dataImage->dataList.size(); ++i) {
+		luminosity += dataImage->dataList[i] - background; 
+	}
+
+/*	cout << "magnitude   : " <<  
+	cout << "size:       : " << 	dataImage->dataList.size() << endl; 
+	cout << "RegionFile  : " << regionFileName << endl; 
+	cout << "Total Mass  : " << totalMass <<  endl; 
+	cout << "Region Mass : " << regionMass << endl ;
+	cout << "Luminosity  : " << luminosity << endl; 
+	cout << "Ratio:        " << regionMass/totalMass << endl; 
+	cout << "==========" << endl; 
+*/
+	return luminosity; 
+
+}
 
 
 

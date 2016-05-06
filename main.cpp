@@ -39,9 +39,9 @@ int main(int argc, char* argv[]) {
 
 	// Assign arguments: 
 
-	string dir = argv[1]; 
-	string strConf = argv[2]; 
-	string output = argv[3]; 
+	string dir 		= argv[1]; 
+	string strConf 	= argv[2]; 
+	string output 	= argv[3]; 
 	/***** prepare*****/
 	string confFileName = dir+ strConf; 
 	map<string, string> mapConf = parseConfigure(confFileName);
@@ -67,7 +67,27 @@ int main(int argc, char* argv[]) {
 	param.mix(); 	 // update 'AllMixModels'; 
 
 
-	gridSearch(conf, param,  dataImage, d, dir, output);	
+
+
+	for(int i=0; i<6; ++i) {
+		string smallMassRegion = "horseshoe_test/reg_" + to_string(i) + ".reg" ; 
+		Image* lensImage1 = new Image("horseshoe_test/img_lens.fits"); 
+		string imgName = "color_test/f814_cut.fits"; 
+		
+
+		Image* dataImage1 = new Image(imgName);
+		double 	background = 0.0 ; 
+		background = 0.020 ; // f475 
+		background = 0.044 ; // f606
+		background = 0.0248 ; // f814
+
+		double luminosity =  getMassLuminosity(lensImage1, dataImage1, smallMassRegion,  background) ; 
+		cout << "Luminosity for " << imgName << "\t Region: "  << i << "\t "<< luminosity << endl;  
+		//delete lensImage1, dataImage1 ; 
+	
+	} 
+
+	//gridSearch(conf, param,  dataImage, d, dir, output);	
 
 	delete conf; 
 	delete dataImage; 

@@ -118,6 +118,8 @@ vector<string> splitString(string s);
 double	lm_arccosh(double x); 
 double	lm_nfw_mass(double x); 
 
+double getMassLuminosity(Image* lensImage, Image* dataImage,  string regionFileName, double background); 
+
 //vector<double> getCritCaustic(Conf* conf, Model* model); 
 
 

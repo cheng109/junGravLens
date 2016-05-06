@@ -149,9 +149,11 @@ void gridSearch(Conf* conf, MultModelParam param_old, Image* dataImage, vec d, s
 	// Print out the best model : 
 	cout << "************************\nThe best models : " << minScatter << endl;
 	cout << model->param.printCurrentModels(minIndexScatter).at(1);
-	cout << model->param.printCurrentModels(maxIndex[0]).at(1); 
-	cout << model->param.printCurrentModels(maxIndex[1]).at(1);
-	cout << model->param.printCurrentModels(maxIndex[2]).at(1); 
+	if(conf->verbose) {
+		cout << model->param.printCurrentModels(maxIndex[0]).at(1); 
+		cout << model->param.printCurrentModels(maxIndex[1]).at(1);
+		cout << model->param.printCurrentModels(maxIndex[2]).at(1); 
+	}
 	cout << "************************\n" << endl;
  
 	delete model;

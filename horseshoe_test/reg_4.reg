@@ -1,0 +1,6 @@
+# Region file format: DS9 version 4.1
+# Filename: horseshoe_test/HorseShoe_large.fits
+global color=green dashlist=8 3 width=1 font="helvetica 10 normal roman" select=1 highlite=1 dash=0 fixed=0 edit=1 move=1 delete=1 include=1 source=1
+image
+polygon(241.75922,286.213,241.76855,286.213,241.76855,286.20367,241.75922,286.20367)
+polygon(339.31982,185.68018,389.51351,185.68018,376.08333,136.41667,349.41667,102.25,316.08333,65.583333,274.41667,51.416667,274.41667,79.75,284.41667,85.583333,307.75,107.25,325.25,136.41667)
