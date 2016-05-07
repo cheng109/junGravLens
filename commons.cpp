@@ -184,6 +184,8 @@ string parseReagionFile(string regionFileName, vector<double> *xpos, vector<doub
 			}
 
 
+
+
 			if(line.substr(0,6)=="circle") {
 				pos1 = line.find_first_of("(", pos);
 				pos2 = line.find_first_of(")", pos);
@@ -199,6 +201,24 @@ string parseReagionFile(string regionFileName, vector<double> *xpos, vector<doub
 				ypos->push_back(stod(token));
 
 				regionType = "circle"; 
+			}
+
+
+			//  (centerX, centerY, x-major, y-minor, rotation); 
+			if(line.substr(0,7)=="ellipse") {
+				pos1 = line.find_first_of("(", pos);
+				pos2 = line.find_first_of(")", pos);
+				istringstream ss(line.substr(pos1+1, pos2-pos1));	
+				for (int j=0;j<4 ; ++j) {
+					getline(ss, token, ','); 
+					xpos->push_back(stod(token));
+					ypos->push_back(stod(token));
+				}
+				getline(ss, token, ')'); 
+				xpos->push_back(stod(token)); 
+				ypos->push_back(stod(token));
+
+				regionType = "ellipse"; 
 			}
 		}
 

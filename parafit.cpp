@@ -32,8 +32,6 @@ void gridSearch(Conf* conf, MultModelParam param_old, Image* dataImage, vec d, s
 	ofstream output; 
 	output.open(outputFileName); 
 	//MultModelParam newParam (param);  
-
-
 	clock_t	begin = clock(); 
 
 	cout << model->param.nComb << endl; 

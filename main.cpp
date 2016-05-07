@@ -67,7 +67,7 @@ int main(int argc, char* argv[]) {
 	param.mix(); 	 // update 'AllMixModels'; 
 
 
-
+/*
 
 	for(int i=0; i<6; ++i) {
 		string smallMassRegion = "horseshoe_test/reg_" + to_string(i) + ".reg" ; 
@@ -87,7 +87,9 @@ int main(int argc, char* argv[]) {
 	
 	} 
 
-	//gridSearch(conf, param,  dataImage, d, dir, output);	
+*/
+
+	gridSearch(conf, param,  dataImage, d, dir, output);	
 
 	delete conf; 
 	delete dataImage; 

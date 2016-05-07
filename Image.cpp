@@ -408,6 +408,40 @@ void Image::updateFilterImage(string regionFileName, int flag) {
 			}	
 
 		}
+
+		else if(regionType == "ellipse") {
+
+			// xpos and ypos contain the same values:  [centerx, centery, sizex, sizey, rotation] // rotation will be always '0'
+			double ellipseCenterX 	= xpos[0]; 
+			double ellipseCenterY 	= xpos[1]; 
+			double a				= xpos[2]; 
+			double b				= xpos[3]; 
+			double A 				= xpos[4];   // rotation angle; 
+
+
+			for (int i=0; i<5; ++i) {
+
+
+				cout << xpos[i] << endl; 
+			}
+
+			for(int i=0; i<naxis1; ++i) {
+				for (int j=0; j<naxis2; ++j) {
+					int dx= i - ellipseCenterX;
+					int dy= j - ellipseCenterY;
+
+					double dr2 = ((dx*cos(A) + dy*sin(A))/a)*((dx*cos(A) + dy*sin(A))/a) 
+									+ ((dx*sin(A) - dy*cos(A))/b)*((dx*sin(A) - dy*cos(A))/b); 
+					if( dr2 < 1) {
+						dataList.push_back(data[j*naxis1 + i]);
+						xList.push_back(i);
+						yList.push_back(j);
+					}
+				}
+			}	
+
+		}
+
 		else {
 			cout << "Region type is not supported! " << endl; 
 			//return 1; 
