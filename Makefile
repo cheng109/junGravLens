@@ -1,5 +1,6 @@
 WORK_DIR := $(shell pwd)
 CXX := g++
+FC 	:= gfortran
 INC := -I$(WORK_DIR)/lib/cfitsio -I$(WORK_DIR)/lib/eigen_include
 CXXFLAGS := -Wall -O3 -g -std=c++11 $(INC)
 LDFLAGS := -L. -L$(WORK_DIR)/lib/cfitsio -L/usr/local/gfortran/lib
@@ -33,7 +34,7 @@ $(appname): $(OBJS) libfortranstuff.a
 	$(CXX) $(CXXFLAGS) -MM $^>>./.depend;
 
 clean:
-	rm -f $(OBJS) $(appname) output.txt
+	rm -f $(OBJS) $(appname) output.txt libfortranstuff.a
 
 
 dist-clean: clean

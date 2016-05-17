@@ -10,12 +10,12 @@
 #include "fitsio.h"
 #include "Model.h"
 #include "parafit.h"
-#include "gsl/gsl_multimin.h"
+//#include "gsl/gsl_multimin.h"
 //#include <armadillo>
 #include <tuple>
 #include <map>
 //#include <boost/python.hpp>
-#include "gl_crit.h"
+//#include "gl_crit.h"
 //#include "gl_crit.h"
 
 #include <Eigen/SparseCholesky>
