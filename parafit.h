@@ -8,7 +8,7 @@
 #ifndef PARAFIT_H_
 #define PARAFIT_H_
 
-#include "gsl/gsl_multimin.h"
+//#include "gsl/gsl_multimin.h"
 #include "Model.h"
 #include "Image.h"
 #include <iostream>
@@ -23,9 +23,10 @@ typedef struct minimiser_params {
 
 
 
-static double penalty_func(const gsl_vector *v, void *voidparams);
-int	gsl_min_wrap(minimiser_params *params);
-void gridSearch(Conf* conf, MultModelParam param, Image* dataImage, vec d, string dir, string outputFileName);
+//static double penalty_func(const gsl_vector *v, void *voidparams);
+//int	gsl_min_wrap(minimiser_params *params);
+void gridSearch       (Conf* conf, MultModelParam param, Image* dataImage, vec d, string dir, string outputFileName);
+void gridSearchVegetti(Conf* conf, MultModelParam param, Image* dataImage, vec d, string dir, string outputFileName) ; 
 
 
 

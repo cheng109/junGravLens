@@ -18,10 +18,77 @@
 
 using namespace std;
 //
+
+void gridSearchVegetti(Conf* conf, MultModelParam param_old, Image* dataImage, vec d, string dir, string outputFileName) {
+	Model *model = new Model(conf, param_old, 0.1);
+	//vector<vector<double> > critical;  
+
+	vector<int> maxIndex(3,0); 
+	vector<double> maxObjFunc(3, -1.0); 
+
+	int minIndexScatter = 0 ; 
+	double minScatter = std::numeric_limits<double>::max(); 
+
+	ofstream output; 
+	output.open(outputFileName); 
+	//MultModelParam newParam (param);  
+	clock_t	begin = clock(); 
+
+	cout << model->param.nComb << endl; 
+	for(int i=0 ; i< model->param.nComb ; ++i) {
+		
+		model->clearVectors(); 
+		for(int j=0; j<model->param.nLens; ++j) {   // max of j is 3; 
+			SingleModelParam s; 
+			s.name = model->param.mixAllModels[i][j].name; 
+			if(s.name=="PTMASS") {			
+				s.critRad = model->param.mixAllModels[i][j].paraList[0]; 
+				s.centerX = model->param.mixAllModels[i][j].paraList[1]; 
+				s.centerY = model->param.mixAllModels[i][j].paraList[2]; 
+				model->param.parameter.push_back(s); 
+			}
+
+
+			if(s.name=="SIE") {
+				s.critRad = model->param.mixAllModels[i][j].paraList[0]; 
+				s.centerX = model->param.mixAllModels[i][j].paraList[1]; 
+				s.centerY = model->param.mixAllModels[i][j].paraList[2]; 
+				s.e       = model->param.mixAllModels[i][j].paraList[3]; 
+				s.PA 	  = model->param.mixAllModels[i][j].paraList[4];
+				s.core 	  = model->param.mixAllModels[i][j].paraList[5];  
+				model->param.parameter.push_back(s); 
+			}
+		}	
+
+		model->updateLensAndRegularMatrix(dataImage, conf);
+		model->updateGradient(dataImage);
+		model->updatePenalty(&dataImage->invC, d);
+
+
+		vector<double> sBright = dataImage->dataList; 
+		model->updatePosMapping(dataImage, conf);
+
+	}
+	output.close(); 
+	
+
+	clock_t end = clock(); 
+	double elapsed_secs = double(end-begin)/CLOCKS_PER_SEC; 
+	cout << "Time used: " << elapsed_secs << " seconds. "<< endl; 
+
+	// Print out the best model : 
+	cout << "************************\nThe best models : " << minScatter << endl;
+	cout << "************************\n" << endl;
+ 
+	delete model;
+
+}
+
+
 void gridSearch(Conf* conf, MultModelParam param_old, Image* dataImage, vec d, string dir, string outputFileName) {
 	Model *model = new Model(conf, param_old, 0.1);
 	
-	vector<vector<double> > critical;  
+	//vector<vector<double> > critical;  
 
 	vector<int> maxIndex(3,0); 
 	vector<double> maxObjFunc(3, -1.0); 
@@ -62,6 +129,8 @@ void gridSearch(Conf* conf, MultModelParam param_old, Image* dataImage, vec d, s
 
 		vector<double> sBright = dataImage->dataList; 
 		model->updatePosMapping(dataImage, conf);
+
+
 
 
 

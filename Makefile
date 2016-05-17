@@ -24,7 +24,7 @@ all: $(appname)
 	./$(appname) $(ARG1) $(ARG2) $(ARG3)
 	@#valgrind --tool=memcheck --leak-check=full --verbose --log-file=memcheck.log --track-origins=yes ./$(appname)
 
-$(appname): $(OBJS) libfortranstuff.a
+$(appname): libfortranstuff.a $(OBJS) 
 	$(CXX) $(LDFLAGS) -o $(appname) $(OBJS) $(LDLIBS)
 
 #depend: .depend
@@ -34,7 +34,8 @@ $(appname): $(OBJS) libfortranstuff.a
 	$(CXX) $(CXXFLAGS) -MM $^>>./.depend;
 
 clean:
-	rm -f $(OBJS) $(appname) output.txt libfortranstuff.a
+	rm -f $(OBJS) $(appname) output.txt libfortranstuff.a *.o
+
 
 
 dist-clean: clean
@@ -43,6 +44,7 @@ dist-clean: clean
 libfortranstuff.a:
 	@$(FC) -O -c slatec/src/*.f fastell.f 
 	@ar -r libfortranstuff.a *.o
+	rm *.o
 
 plot:
 	@./plotScript
