@@ -14,7 +14,7 @@
 #include <fstream>
 #include <limits>
 #include <ctime> 
-
+#include "parafit.h"
 
 using namespace std;
 //
@@ -60,27 +60,47 @@ void gridSearchVegetti(Conf* conf, MultModelParam param_old, Image* dataImage, v
 			}
 		}	
 
-		model->updateLensAndRegularMatrix(dataImage, conf);
-		model->updateGradient(dataImage);
-		model->updatePenalty(&dataImage->invC, d);
+		// model->updateLensAndRegularMatrix(dataImage, conf);
+		// model->updateGradient(dataImage);
+		// model->updatePenalty(&dataImage->invC, d);
 
 
 		vector<double> sBright = dataImage->dataList; 
-		model->updatePosMapping(dataImage, conf);
+		double penalty = getPenalty(&sBright,  model,  dataImage, conf) ; 
+
+		cout <<"Penalty: " << penalty << endl; 
 
 	}
 	output.close(); 
-	
 
 	clock_t end = clock(); 
 	double elapsed_secs = double(end-begin)/CLOCKS_PER_SEC; 
 	cout << "Time used: " << elapsed_secs << " seconds. "<< endl; 
 
-	// Print out the best model : 
-	cout << "************************\nThe best models : " << minScatter << endl;
-	cout << "************************\n" << endl;
- 
 	delete model;
+
+}
+
+
+double getPenalty(vector<double>* sBright, Model* model, Image* dataImage, Conf* conf) {
+
+	model->updatePosMapping(dataImage, conf); 
+	model->updateLensAndRegularMatrix(dataImage, conf);  // get matrix 'L' and 'RTR'; 
+
+	vec s = cV_to_eigenV (sBright) ; 
+	vec d = cV_to_eigenV (&dataImage->dataList); 
+	vec res = ( model->L * s - d) ; 
+	vec chi2 = res.transpose() *  dataImage->invC * res ; 
+	vec srcR = s  .transpose() *  model->HtH      * s   ; 
+
+	double lambdaS = 10; 
+	double penalty = chi2[0] + lambdaS*lambdaS * srcR[0]; 
+
+	return penalty; 
+
+
+
+
 
 }
 

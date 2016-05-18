@@ -326,15 +326,15 @@ vector<double> getTriWeight(Point A, Point B, Point C, Point P) {
 	return w;
 }
 
-double getPenalty(sp_mat* M, vec* r, vec* d, sp_mat* invC) {
+// double getPenalty(sp_mat* M, vec* r, vec* d, sp_mat* invC) {
 
-	//  chi2 =  (M*r-d)^T(M*r-d)
-	//cout << *M << endl;
-	vec res = (*M)*(*r)-(*d);
-	vec chi2 =  res.transpose()*(*invC)*res;
+// 	//  chi2 =  (M*r-d)^T(M*r-d)
+// 	//cout << *M << endl;
+// 	vec res = (*M)*(*r)-(*d);
+// 	vec chi2 =  res.transpose()*(*invC)*res;
 
-	return chi2(0,0);
-}
+// 	return chi2(0,0);
+// }
 
 
 void getLinearInterpolate(Point A, Point B,  Point C,  Point *P,  char direction) {
@@ -525,22 +525,22 @@ int sign(double x) {
 	return 0;
 }
 
-vec cV_to_eigenV(vector<double> s) {
-	int n = s.size();
+vec cV_to_eigenV(vector<double>* s) {
+	int n = s->size();
 	vec v(n);
 	for (int i=0; i<n; ++i) {
-		v(i) = s[i];
+		v(i) = (*s)[i];
 
 	}
 	return v;
 
 }
 
-vector<double> eigenV_to_cV(vec v) {
-	int n = v.size();
+vector<double> eigenV_to_cV(vec *v) {
+	int n = v->size();
 	vector<double> s(n);
 	for (int i=0; i<n; ++i) {
-			s[i] = v(i);
+			s[i] = (*v)(i);
 
 	}
 	return s;

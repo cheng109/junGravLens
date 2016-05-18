@@ -57,7 +57,7 @@ Model::Model(Conf* conf, MultModelParam param, double lambdaS):
 	nLens = param.parameter.size();
 	occupation  = 0 ; 
 
-	/*
+	
 
 	for(int i=0; i<nLens; ++i) {
 
@@ -90,7 +90,7 @@ Model::Model(Conf* conf, MultModelParam param, double lambdaS):
 	for(int i=0; i<conf->srcSize[0]*conf->srcSize[1]; ++i) {
 			H0.insert(i, i)= 1;
 	}
-	*/
+	
 	
 
 }
@@ -513,41 +513,41 @@ void Model::updateSrc(sp_mat* invC, vec d) {
 
 void Model::updatePenalty(sp_mat* invC, vec d) {
 
-	// problem:  Ax=b
-	sp_mat A = M.transpose()*(*invC)*M + RtR;
+	// // problem:  Ax=b
+	// sp_mat A = M.transpose()*(*invC)*M + RtR;
 
-	vec b = M.transpose()*(*invC)*d;
-	// sp_mat A1 = A.submat(0, 0, length-1, length-1);
-	sp_mat A1 = A.block(0,0, length, length);
-	vec b1 = b.head(length);
+	// vec b = M.transpose()*(*invC)*d;
+	// // sp_mat A1 = A.submat(0, 0, length-1, length-1);
+	// sp_mat A1 = A.block(0,0, length, length);
+	// vec b1 = b.head(length);
 
-	// Using Eigen methods;
-	Eigen::SimplicialCholesky<Eigen::SparseMatrix<double> > chol(A1);
-	s = chol.solve(b1);
+	// // Using Eigen methods;
+	// Eigen::SimplicialCholesky<Eigen::SparseMatrix<double> > chol(A1);
+	// s = chol.solve(b1);
 
-	// get Penalty Function;
-	for(int i=0; i<length; ++i) {
-		r(i) = s(i);
-		new_r(i) = d(i);
-	}
+	// // get Penalty Function;
+	// for(int i=0; i<length; ++i) {
+	// 	r(i) = s(i);
+	// 	new_r(i) = d(i);
+	// }
 
-	for(int i=length; i<2*length; ++i) {
-		r(i) = 0;
-		new_r(i) = 0;
-	}
-	vec res = M*r-d;
-	res_img = eigenV_to_cV(res);
-	simple_res_img = eigenV_to_cV(M*new_r-d);
+	// for(int i=length; i<2*length; ++i) {
+	// 	r(i) = 0;
+	// 	new_r(i) = 0;
+	// }
+	// vec res = M*r-d;
+	// res_img = eigenV_to_cV(res);
+	// simple_res_img = eigenV_to_cV(M*new_r-d);
 
-	mod_img = eigenV_to_cV(M*new_r);
+	// mod_img = eigenV_to_cV(M*new_r);
 
-	vec temp1 =  res.transpose()*(*invC)*res;
-	//cout << "HtH: " << HtH << endl ;
-	double temp2 = s.transpose()*HtH*s;
-	//cout << "source regularization: " << temp2 << endl;
-	srcR =  lambdaS*lambdaS*temp2;
-	chi2 = temp1(0,0);
-	penalty = chi2 + srcR;
+	// vec temp1 =  res.transpose()*(*invC)*res;
+	// //cout << "HtH: " << HtH << endl ;
+	// double temp2 = s.transpose()*HtH*s;
+	// //cout << "source regularization: " << temp2 << endl;
+	// srcR =  lambdaS*lambdaS*temp2;
+	// chi2 = temp1(0,0);
+	// penalty = chi2 + srcR;
 
 
 }
@@ -579,7 +579,7 @@ Image Model::getFullResidual(Image* dataImage) {
 }
 
 void Model::writeSrcImage(string outFileName, Conf* conList) {
-	vector<double> sBright = eigenV_to_cV(s);
+	vector<double> sBright = eigenV_to_cV(&s);
 	Image* srcImg = new Image(srcPosXListPixel, srcPosYListPixel, &sBright, conList->srcSize[0], conList->srcSize[1], conList->bitpix);
 	srcImg->writeToFile(outFileName);
 	delete srcImg;
