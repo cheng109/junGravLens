@@ -158,8 +158,13 @@ public:
 	//
 	sp_mat Ds;
 	sp_mat Dphi;
+
+
 	sp_mat_row Hs1;
 	sp_mat_row Hs2;
+	sp_mat H_zero; 
+	sp_mat H0H; 
+
 	sp_mat Hphi;
 	sp_mat HtH;
 	sp_mat HphiH;
@@ -171,6 +176,7 @@ public:
 	sp_mat H1;  // gradient-order regularization;
 	sp_mat H2;  // curvature-order regularization;
 	double lambdaS;
+	double lambdaC; 
 	double lambdaPhi;
 
 
@@ -196,8 +202,9 @@ typedef	struct	_lmDeflCache {
 public:
 	Model();
 	Model(Conf* conList, MultModelParam multModelParam, double lambdaS);
-	void updateReserve(); 
+	void updateReserve(Conf* conf); 
 	void updateMatrixT(Conf* conf);
+	void update_H_zero(Conf* conf); 
 	static vector<double> getDeflectionAngle(Conf* conList, double pfX, double pfY, double *pDeltaX, double *pDeltaY,  MultModelParam * param);
 	void updatePosMapping(Image* image,  Conf* conList);
 	void updateLensAndRegularMatrix(Image* dataImage,  Conf* constList);

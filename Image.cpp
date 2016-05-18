@@ -489,7 +489,7 @@ Returns:		void;
 void Image::updateGridPointType() {
 	for(int i=0; i<length; ++i) {
 		if((xList[i]+yList[i])%2==0)
-			type.push_back(0); // should be zero; 
+			type.push_back(1); // should be zero; 
 		else
 			type.push_back(1);
 	}
@@ -504,16 +504,17 @@ sp_mat Image::getVarMatrix()  {
 	sp_mat invC(n, n);
 	invC.reserve(n);
 	for(int i=0; i<n; ++i) {
-		invC.insert(i,i)= 1.0; ///varList[i];
+		invC.insert(i,i)= 1.0/varList[i];
 		//cout << dataList[i] << endl;
 	}
 	return invC;
 }
 
-void Image::updateVarList(double threshold, double backVar) {
+void Image::updateVarList(double threshold, double back_mean, double back_std) {
+	double back_var = back_std*back_std ; 
 	for(int i=0; i<length; ++i) {
 		if(dataList[i]<threshold) {
-			varList.push_back(backVar);
+			varList.push_back(back_var);
 		}
 		else
 			varList.push_back(dataList[i]);

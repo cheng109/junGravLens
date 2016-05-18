@@ -46,6 +46,8 @@ Model::Model(Conf* conf, MultModelParam param, double lambdaS):
 		Dphi(2*length,length),
 		Hs1(length, length),
 		Hs2(length, length),
+		H_zero(conf->srcSize[0]*conf->srcSize[1], length),
+		H0H(length, length),
 		Hphi(length, length),
 		HtH(length, length),
 		HphiH(length, length),
@@ -58,7 +60,7 @@ Model::Model(Conf* conf, MultModelParam param, double lambdaS):
 	nLens = param.parameter.size();
 	occupation  = 0 ; 
 
-	
+	lambdaC = 1.0; 
 
 	for(int i=0; i<nLens; ++i) {
 
@@ -84,7 +86,7 @@ Model::Model(Conf* conf, MultModelParam param, double lambdaS):
 
 
 
-void Model:: updateReserve() {
+void Model:: updateReserve(Conf* conf) {
 	L.	 reserve(Eigen::VectorXi::Constant(length,3));
 	Ds.  reserve(2*length);
 	Dphi.reserve(2*length);
@@ -92,34 +94,12 @@ void Model:: updateReserve() {
 	Hs2. reserve(Eigen::VectorXi::Constant(length,10));
 	RtR. reserve(200*length);
 	T.   reserve(length);
+
+	H_zero.reserve(Eigen::VectorXi::Constant(length, 2)); 
+	//H0H.reserve(3*conf)
 }
 
-/***************************
-Function:   	updateMatrixT
-Description:  	(1) Member function of class Model;
-				(2) T is matrix convert an adaptive grid to a regular grid;
-				(3) T*S_adpative = S_regular ;
-				(4) It will use the position of adaptive grid nodes:  srcPosXList, srcPosYList.
-Arguments:		Conf*
-Returns:		None
-****************************/
-void Model::updateMatrixT(Conf* conf) {
 
-	// T size:  [srcSize[0]*srcSize[1],  2*length]
-	int x, y, iList;
-	for(int i=0; i<length; ++i) {
-		x = nearbyint(srcPosXList[i]);
-		y = nearbyint(srcPosYList[i]);
-
-		if(x>0 && x< conf->srcSize[0] && y>0 && y<conf->srcSize[1]) {
-			iList = conf->srcSize[0]*y+x;
-			cout << iList << "\t ";
-			T.insert(iList, i) = 1;
-		}
-	}
-
-	cout << endl;
-}
 
 vector<double> Model::getDeflectionAngle(Conf* conf, double pfX, double pfY, double *pDeltaX, double *pDeltaY, MultModelParam * param) {
 	double fDenom = 0 ; 
@@ -345,27 +325,70 @@ void Model::updatePosMapping(Image* image, Conf* conf) {
 
 }
 
+
+/***************************
+Function:   	updateMatrixT
+Description:  	(1) Member function of class Model;
+				(2) T is matrix convert an adaptive grid to a regular grid;
+				(3) T*S_adpative = S_regular ;
+				(4) It will use the position of adaptive grid nodes:  srcPosXList, srcPosYList.
+Arguments:		Conf*
+Returns:		None
+****************************/
+void Model::update_H_zero(Conf* conf) {
+
+	// T size:  [srcSize[0]*srcSize[1],  2*length]
+	int x, y, iList;
+
+	clock_t begin = clock();
+	for(int i=0; i<length; ++i) {
+		x = nearbyint(srcPosXList[i]);
+		y = nearbyint(srcPosYList[i]);
+		if(x>0 && x< conf->srcSize[0] && y>0 && y<conf->srcSize[1]) {
+			iList = conf->srcSize[0]*y+x;
+			H_zero.insert(iList, i) = 1;
+		}
+	}
+	//cout << "Time_test: " << double(clock()-begin)/CLOCKS_PER_SEC << endl;
+
+}
+
+
+
+// void Model::update_H_zero(Conf* conf) {
+
+	
+	
+	
+
+// 	for(int i=0; i<conf->length; ++i) {
+
+// 		int col = int(srcPosXListPixel[i]); 
+// 		int row = int(srcPosYListPixel[i]); 
+// 		int index = row* conf->srcSize[0] + col; 
+
+
+// 		//cout << srcPosXListPixel[i] << "\t" << srcPosYListPixel[i] << "\t" <<   index << endl; 
+// 		H_zero.insert(index, i) = 1; 
+// 	}
+
+	 
+
+// }
+
 void Model::updateLensAndRegularMatrix(Image* dataImage,  Conf* constList) {
 
 	map<pair<int, int>,int>::iterator left, right, up, down;
 	vector<double> w, w5;
 
 
-	clock_t begin, end; 
-	double elapsed_secs; 
-	begin = clock(); 
+	 
 
-	double time1 = 0; 
-	double time2 = 0; 
-	double time3 = 0; 
-	double time4 = 0; 
-
-	
 	for (int i=0; i<constList->length; ++i) {
 
 	//	if(dataImage->type[i]==1) {// || dataImage->type[i]==0) {
 
-			begin = clock(); 
+			
 			//L.insert(i,i)=1;
 
 			left  = posMap.find(make_pair(dataImage->xList[i]-1, dataImage->yList[i]));
@@ -404,48 +427,38 @@ void Model::updateLensAndRegularMatrix(Image* dataImage,  Conf* constList) {
 				Hs2.insert(i, i		) 	= w5[7];
 				Hs2.insert(i, iDown	) 	= w5[8];
 				Hs2.insert(i, iRight) 	= w5[9]; 
-
-				
 			}
 
-				
-
-
-		
 		if(dataImage->type[i]==1) {
 			L.insert(i,i)=1;
 
 		}
 
+		// if(dataImage->type[i]==0) {
+		// 	if(left!=posMap.end() && up!=posMap.end() && down!=posMap.end()) {
+		// 		int iLeft = left->second;
+		// 		int iUp   = up  ->second;
+		// 		int iDown = down->second;
 
-		begin = clock(); 
-		
-	
-		if(dataImage->type[i]==0) {
-			if(left!=posMap.end() && up!=posMap.end() && down!=posMap.end()) {
-				int iLeft = left->second;
-				int iUp   = up  ->second;
-				int iDown = down->second;
+		// 		Point A(srcPosXList[iLeft], srcPosYList[iLeft], s(iLeft));
+		// 		Point B(srcPosXList[iUp  ], srcPosYList[iUp	 ], s(iUp  ));
+		// 		Point C(srcPosXList[iDown], srcPosYList[iDown], s(iDown));
+		// 		Point P(srcPosXList[i	 ], srcPosYList[i	 ], s(i    ));
 
-				Point A(srcPosXList[iLeft], srcPosYList[iLeft], s(iLeft));
-				Point B(srcPosXList[iUp  ], srcPosYList[iUp	 ], s(iUp  ));
-				Point C(srcPosXList[iDown], srcPosYList[iDown], s(iDown));
-				Point P(srcPosXList[i	 ], srcPosYList[i	 ], s(i    ));
+		// 		w = getTriWeight( A, B, C, P);
+		// 		L.insert(i, iLeft) 	= w[0];
+		// 		L.insert(i, iUp	 )  = w[1];
+		// 		L.insert(i, iDown) 	= w[2];
 
-				w = getTriWeight( A, B, C, P);
-				L.insert(i, iLeft) 	= w[0];
-				L.insert(i, iUp	 )  = w[1];
-				L.insert(i, iDown) 	= w[2];
+		// 		normVec n = getNormVector(A, B, C);
+		// 		normV[iLeft].push_back(n);
+		// 		normV[iUp  ].push_back(n);
+		// 		normV[iDown].push_back(n);
+		// 	}
+		// 	else L.insert(i, i) = 1;
+		// }
 
-				normVec n = getNormVector(A, B, C);
-				normV[iLeft].push_back(n);
-				normV[iUp  ].push_back(n);
-				normV[iDown].push_back(n);
-			}
-			else L.insert(i, i) = 1;
-		}
-
-		time1 += (clock() - begin) ; 
+		//time1 += (clock() - begin) ; 
 		
 	}
 
@@ -523,11 +536,18 @@ void Model::Logging(Image* dataImage, Conf* conList, string outFileName) {
 void Model::solveSource(sp_mat* invC, vec d) {
 
 	// // problem:  Ax=b
-	sp_mat 	A = L.transpose()*(*invC)*L + lambdaS * lambdaS  * HtH;
-	vec 	b = L.transpose()*(*invC)*d;
+	H0H = H_zero.transpose()*H_zero; 
+	sp_mat 	A = lambdaC * lambdaC * L.transpose()*(*invC)*L + lambdaS * lambdaS  * HtH;
+	//sp_mat 	A = L.transpose()*(*invC)*L + lambdaS * lambdaS  * HtH;
+	vec 	b = lambdaC * lambdaC * L.transpose()*(*invC)*d;
 	// Using Eigen methods;
+
 	Eigen::SimplicialCholesky<Eigen::SparseMatrix<double> > chol(A);
 	s = chol.solve(b);
+
+
+	//cout << A.norm() << "\t" << b.norm() << "\t" << s.norm() << endl; 
+
 	// int counterS = 0; 
 	// int counterD = 0; 
 	// for(int i=0; i<s.size(); ++i) {
@@ -1239,7 +1259,8 @@ void Model::clearVectors() {
 	H0.setZero(); 
 	H1.setZero(); 
 	H2.setZero(); 
-
+	H0H.setZero(); 
+	H_zero.setZero(); 
 
 
 

@@ -20,7 +20,7 @@ using namespace std;
 //
 
 void gridSearchVegetti(Conf* conf, MultModelParam param_old, Image* dataImage, vec d, string dir, string outputFileName) {
-	double lambdaS = 10.0; 
+	double lambdaS = 0.1; 
 
 	Model *model = new Model(conf, param_old, lambdaS);
 	//vector<vector<double> > critical;  
@@ -40,7 +40,8 @@ void gridSearchVegetti(Conf* conf, MultModelParam param_old, Image* dataImage, v
 	for(int i=0 ; i< model->param.nComb ; ++i) {
 		
 		model->clearVectors (); 
-		model->updateReserve(); 
+		model->updateReserve(conf); 
+
 		for(int j=0; j<model->param.nLens; ++j) {   // max of j is 3; 
 			SingleModelParam s; 
 			s.name = model->param.mixAllModels[i][j].name; 
@@ -63,9 +64,21 @@ void gridSearchVegetti(Conf* conf, MultModelParam param_old, Image* dataImage, v
 			}
 		}	
 		vector<double> sBright = dataImage->dataList; 
-		double penalty = getPenalty(&sBright,  model,  dataImage, conf) ; 
+		vector<double> penalty = getPenalty(&sBright,  model,  dataImage, conf) ; 
+		vector<double> s = eigenV_to_cV(&model->s); 
 
-		output << model->param.printCurrentModels(i).at(0) << "\t" << penalty << endl; 
+		if(conf->outputSrcImg) {
+			Image* srcImg 	= new Image(model->srcPosXListPixel, model->srcPosYListPixel, &s, conf->srcSize[0], conf->srcSize[1], conf->bitpix);		
+			string outputSrcName = dir + "img_src_" + to_string(i) +".fits"; 
+			if (conf->srcBackground) {
+				srcImg -> writeToFile(outputSrcName, conf->back_mean, conf->back_std ) ;
+			}
+			else 
+				srcImg -> writeToFile(outputSrcName) ; 
+			delete srcImg; 
+
+		}
+		output << model->param.printCurrentModels(i).at(0) << "\t" << penalty[0] <<"\t" <<penalty[1] << "\t" << penalty[2]  << endl; 
 
 	}
 	output.close(); 
@@ -79,22 +92,31 @@ void gridSearchVegetti(Conf* conf, MultModelParam param_old, Image* dataImage, v
 }
 
 
-double getPenalty(vector<double>* sBright, Model* model, Image* dataImage, Conf* conf) {
+vector<double> getPenalty(vector<double>* sBright, Model* model, Image* dataImage, Conf* conf) {
 	
 
 
 	vec d = cV_to_eigenV (&dataImage->dataList); 
 
 	model->updatePosMapping(dataImage, conf);  // time used: 0.03s; 
+	model->update_H_zero(conf); 
 	model->updateLensAndRegularMatrix(dataImage, conf);  // get matrix 'L' and 'RTR'; most time consuming part; 
 	model->solveSource(&dataImage->invC, d); 
 	vec &s = model->s; 
 	
 	vec res = ( model->L * s - d) ; 
-	vec chi2 = res.transpose() *  dataImage->invC * res ; 
-	vec srcR = s  .transpose() *  model->HtH      * s   ; 
+	vec chi2 = res.transpose() *  dataImage->invC * res * model->lambdaC* model->lambdaC  ; 
+	vec srcR = s  .transpose() *  model->HtH      * s   * model->lambdaS* model->lambdaS  ; 
 
-	double penalty = chi2[0] + model->lambdaS* model->lambdaS * srcR[0]; 
+
+
+	vector<double> penalty(3); 
+	penalty[0] = chi2[0]; 
+	penalty[1] = srcR[0]; 
+	penalty[2] = chi2[0] + srcR[0]; 
+
+	cout << model->param.parameter[0].critRad << "\t" <<chi2[0] << "\t" << srcR[0] << "\t" << penalty[2] << "\t" << s.norm() <<endl; 
+
 
 	return penalty; 
 
