@@ -88,6 +88,8 @@ int main(int argc, char* argv[]) {
 
 	gridSearchVegetti(conf, param,  dataImage, d, dir, output);	
 
+
+	
 	delete conf; 
 	delete dataImage; 
 	return 0;

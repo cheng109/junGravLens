@@ -31,6 +31,10 @@ double getPenalty(vector<double>* sBright, Model* model, Image* dataImage, Conf*
 
 
 
+
+
+
+
 #endif /* PARAFIT_H_ */
 
 

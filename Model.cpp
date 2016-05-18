@@ -22,6 +22,7 @@
 #include <Eigen/SparseCholesky>
 #include <Eigen/Dense>
 #include <assert.h>
+#include <stdlib.h>
 using namespace std;
 //using namespace arma;
 using namespace Eigen;
@@ -64,21 +65,10 @@ Model::Model(Conf* conf, MultModelParam param, double lambdaS):
 		totalParam += param.nParam[i];
 	}
 	
-	L.	 reserve(3*length);
-	Ds.  reserve(2*length);
-	Dphi.reserve(2*length);
-	Hs1. reserve(VectorXi::Constant(length,10));
-	Hs2. reserve(VectorXi::Constant(length,10));
-	RtR. reserve(200*length);
-	H0.  reserve(conf->srcSize[0]*conf->srcSize[1]);
-	T.   reserve(length);
-
 	normVec n(0, 0, 0);
 	vector<normVec> temp;
 	temp.push_back(n);
 
-	//lambdaS = 0.001; //0.01; //0.01;
-	//lambdaS = 0.0;
 	for(int i=0; i<conf->length; ++i) {
 		//s.push_back(0);
 		normV.push_back(temp);
@@ -89,9 +79,19 @@ Model::Model(Conf* conf, MultModelParam param, double lambdaS):
 	for(int i=0; i<conf->srcSize[0]*conf->srcSize[1]; ++i) {
 			H0.insert(i, i)= 1;
 	}
-	
-	
+}
 
+
+
+
+void Model:: updateReserve() {
+	L.	 reserve(Eigen::VectorXi::Constant(length,3));
+	Ds.  reserve(2*length);
+	Dphi.reserve(2*length);
+	Hs1. reserve(Eigen::VectorXi::Constant(length,10));
+	Hs2. reserve(Eigen::VectorXi::Constant(length,10));
+	RtR. reserve(200*length);
+	T.   reserve(length);
 }
 
 /***************************
@@ -360,6 +360,7 @@ void Model::updateLensAndRegularMatrix(Image* dataImage,  Conf* constList) {
 	double time3 = 0; 
 	double time4 = 0; 
 
+	
 	for (int i=0; i<constList->length; ++i) {
 
 	//	if(dataImage->type[i]==1) {// || dataImage->type[i]==0) {
@@ -371,11 +372,6 @@ void Model::updateLensAndRegularMatrix(Image* dataImage,  Conf* constList) {
 			right = posMap.find(make_pair(dataImage->xList[i]+1, dataImage->yList[i]));
 			up    = posMap.find(make_pair(dataImage->xList[i], dataImage->yList[i]+1));
 			down  = posMap.find(make_pair(dataImage->xList[i], dataImage->yList[i]-1));
-
-			time1 +=  (clock()-begin); 
-
-			begin= clock(); 	
-
 
 //			left  = posMap.find(make_pair(dataImage->xList[i]-1, dataImage->yList[i]-1));
 //			right = posMap.find(make_pair(dataImage->xList[i]+1, dataImage->yList[i]+1));
@@ -395,72 +391,72 @@ void Model::updateLensAndRegularMatrix(Image* dataImage,  Conf* constList) {
 				
 				w5 = getPentWeigth(A, B, C, D, E);
 
-				begin = clock(); 
+				//cout << "index: " << iLeft << "\t" << iUp << "\t" <<i << "\t" << iDown << "\t" << iRight << endl; 
+		
+
 				Hs1.insert(i, iLeft	) 	= w5[0];
 				Hs1.insert(i, iUp	) 	= w5[1];
 				Hs1.insert(i, i		) 	= w5[2];
 				Hs1.insert(i, iDown	) 	= w5[3];
 				Hs1.insert(i, iRight) 	= w5[4];
-
-				
-
-				time2 +=  (clock()-begin); 
-				begin= clock();
-
-
 				Hs2.insert(i, iLeft	) 	= w5[5];
 				Hs2.insert(i, iUp	) 	= w5[6];
 				Hs2.insert(i, i		) 	= w5[7];
 				Hs2.insert(i, iDown	) 	= w5[8];
-				Hs2.insert(i, iRight) 	= w5[9];
+				Hs2.insert(i, iRight) 	= w5[9]; 
 
-				time3 +=  (clock()-begin); 
-				begin= clock();
+				
 			}
 
 				
 
 
-
+		
 		if(dataImage->type[i]==1) {
 			L.insert(i,i)=1;
 
 		}
 
+
+		begin = clock(); 
 		
 	
-		// if(dataImage->type[i]==0) {
-		// 	if(left!=posMap.end() && up!=posMap.end() && down!=posMap.end()) {
-		// 		int iLeft = left->second;
-		// 		int iUp   = up  ->second;
-		// 		int iDown = down->second;
+		if(dataImage->type[i]==0) {
+			if(left!=posMap.end() && up!=posMap.end() && down!=posMap.end()) {
+				int iLeft = left->second;
+				int iUp   = up  ->second;
+				int iDown = down->second;
 
-		// 		Point A(srcPosXList[iLeft], srcPosYList[iLeft], s(iLeft));
-		// 		Point B(srcPosXList[iUp  ], srcPosYList[iUp	 ], s(iUp  ));
-		// 		Point C(srcPosXList[iDown], srcPosYList[iDown], s(iDown));
-		// 		Point P(srcPosXList[i	 ], srcPosYList[i	 ], s(i    ));
+				Point A(srcPosXList[iLeft], srcPosYList[iLeft], s(iLeft));
+				Point B(srcPosXList[iUp  ], srcPosYList[iUp	 ], s(iUp  ));
+				Point C(srcPosXList[iDown], srcPosYList[iDown], s(iDown));
+				Point P(srcPosXList[i	 ], srcPosYList[i	 ], s(i    ));
 
-		// 		w = getTriWeight( A, B, C, P);
-		// 		L.insert(i, iLeft) 	= w[0];
-		// 		L.insert(i, iUp	 )  = w[1];
-		// 		L.insert(i, iDown) 	= w[2];
+				w = getTriWeight( A, B, C, P);
+				L.insert(i, iLeft) 	= w[0];
+				L.insert(i, iUp	 )  = w[1];
+				L.insert(i, iDown) 	= w[2];
 
-		// 		normVec n = getNormVector(A, B, C);
-		// 		normV[iLeft].push_back(n);
-		// 		normV[iUp  ].push_back(n);
-		// 		normV[iDown].push_back(n);
-		// 	}
-		// 	else L.insert(i, i) = 1;
-		// }
+				normVec n = getNormVector(A, B, C);
+				normV[iLeft].push_back(n);
+				normV[iUp  ].push_back(n);
+				normV[iDown].push_back(n);
+			}
+			else L.insert(i, i) = 1;
+		}
+
+		time1 += (clock() - begin) ; 
+		
 	}
 
 	HtH = Hs1.transpose()*Hs1 + Hs2.transpose()*Hs2;
 	//RtR = lambdaS*lambdaS*HtH;
 	//RtR.conservativeResize(2*constList->length, 2*constList->length);
 
-	cout << "Time1: " << double(time1)/CLOCKS_PER_SEC << endl; 
-	cout << "Time2: " << double(time2)/CLOCKS_PER_SEC << endl; 
-	cout << "Time3: " << double(time3)/CLOCKS_PER_SEC << endl; 
+	// cout << "Time1: " << double(time1)/CLOCKS_PER_SEC << endl; 
+	// cout << "Time2: " << double(time2)/CLOCKS_PER_SEC << endl; 
+	// cout << "Time3: " << double(time3)/CLOCKS_PER_SEC << endl; 
+	// cout << "Time4: " << double(time4)/CLOCKS_PER_SEC << endl; 
 
 
 }

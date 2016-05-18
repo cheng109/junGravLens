@@ -20,7 +20,7 @@ using namespace std;
 //
 
 void gridSearchVegetti(Conf* conf, MultModelParam param_old, Image* dataImage, vec d, string dir, string outputFileName) {
-	double lambdaS = 0.0002; 
+	double lambdaS = 10.0; 
 
 	Model *model = new Model(conf, param_old, lambdaS);
 	//vector<vector<double> > critical;  
@@ -39,7 +39,8 @@ void gridSearchVegetti(Conf* conf, MultModelParam param_old, Image* dataImage, v
 	cout << model->param.nComb << endl; 
 	for(int i=0 ; i< model->param.nComb ; ++i) {
 		
-		model->clearVectors(); 
+		model->clearVectors (); 
+		model->updateReserve(); 
 		for(int j=0; j<model->param.nLens; ++j) {   // max of j is 3; 
 			SingleModelParam s; 
 			s.name = model->param.mixAllModels[i][j].name; 
@@ -96,9 +97,6 @@ double getPenalty(vector<double>* sBright, Model* model, Image* dataImage, Conf*
 	double penalty = chi2[0] + model->lambdaS* model->lambdaS * srcR[0]; 
 
 	return penalty; 
-
-
-
 
 
 }

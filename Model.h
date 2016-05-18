@@ -23,6 +23,7 @@
 #define NUM_SERSIC_PARAM 	7
 
 typedef Eigen::SparseMatrix<double> sp_mat;
+typedef Eigen::SparseMatrix<double,Eigen::RowMajor> sp_mat_row; 
 typedef Eigen::VectorXd vec;
 
 using namespace std;
@@ -147,7 +148,7 @@ public:
 	//vector<double> s;
 
 	vector<double> something;
-	sp_mat L;
+	sp_mat_row L;
 	sp_mat M;
 	vec r;
 	vec new_r;
@@ -157,8 +158,8 @@ public:
 	//
 	sp_mat Ds;
 	sp_mat Dphi;
-	sp_mat Hs1;
-	sp_mat Hs2;
+	sp_mat_row Hs1;
+	sp_mat_row Hs2;
 	sp_mat Hphi;
 	sp_mat HtH;
 	sp_mat HphiH;
@@ -195,6 +196,7 @@ typedef	struct	_lmDeflCache {
 public:
 	Model();
 	Model(Conf* conList, MultModelParam multModelParam, double lambdaS);
+	void updateReserve(); 
 	void updateMatrixT(Conf* conf);
 	static vector<double> getDeflectionAngle(Conf* conList, double pfX, double pfY, double *pDeltaX, double *pDeltaY,  MultModelParam * param);
 	void updatePosMapping(Image* image,  Conf* conList);

@@ -19,6 +19,7 @@ using namespace std;
 // typedef Eigen::VectorXd vec;
 
 typedef Eigen::SparseMatrix<double> sp_mat;
+typedef Eigen::SparseMatrix<double,Eigen::RowMajor> sp_mat_row; 
 typedef Eigen::VectorXd vec;
 
 class Conf;

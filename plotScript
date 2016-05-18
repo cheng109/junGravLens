@@ -2,9 +2,9 @@
 fileName="output.txt"
 set title fileName
 column=system("echo $column")
-plot fileName using 2:26 with linespoints title "occupation ", \
-	 fileName using 2:28 with linespoints title "zeroth order", \
-	 fileName using 2:29 with linespoints title "first order ", \
-	 fileName using 2:30 with linespoints title "cubic order "
+plot fileName using 1:25 with linespoints title "occupation "
+	 #fileName using 2:28 with linespoints title "zeroth order", \
+	 #fileName using 2:29 with linespoints title "first order ", \
+	 #fileName using 2:30 with linespoints title "cubic order "
 pause -1
 EOF

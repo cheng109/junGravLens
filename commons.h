@@ -19,11 +19,13 @@
 // typedef Eigen::SparseMatrix<double> sp_mat;
 // typedef Eigen::VectorXd vec;
 
+using namespace std;
 
 typedef Eigen::SparseMatrix<double> sp_mat;
+typedef Eigen::SparseMatrix<double,Eigen::RowMajor> sp_mat_row; 
 typedef Eigen::VectorXd vec;
 
-using namespace std;
+
 //using namespace arma;
 
 struct normVec{ 
