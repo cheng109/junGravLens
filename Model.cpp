@@ -64,22 +64,21 @@ Model::Model(Conf* conf, MultModelParam param, double lambdaS):
 		totalParam += param.nParam[i];
 	}
 	
-	L.reserve(3*length);
-	Ds.reserve(2*length);
+	L.	 reserve(3*length);
+	Ds.  reserve(2*length);
 	Dphi.reserve(2*length);
-	Hs1.reserve(6*length);
-	Hs2.reserve(6*length);
-	RtR.reserve(200*length);
-	H0.reserve(conf->srcSize[0]*conf->srcSize[1]);
-
-	T.reserve(length);
+	Hs1. reserve(VectorXi::Constant(length,10));
+	Hs2. reserve(VectorXi::Constant(length,10));
+	RtR. reserve(200*length);
+	H0.  reserve(conf->srcSize[0]*conf->srcSize[1]);
+	T.   reserve(length);
 
 	normVec n(0, 0, 0);
 	vector<normVec> temp;
 	temp.push_back(n);
 
 	//lambdaS = 0.001; //0.01; //0.01;
-	lambdaPhi = 10;
+	//lambdaS = 0.0;
 	for(int i=0; i<conf->length; ++i) {
 		//s.push_back(0);
 		normV.push_back(temp);
@@ -352,11 +351,20 @@ void Model::updateLensAndRegularMatrix(Image* dataImage,  Conf* constList) {
 	vector<double> w, w5;
 
 
+	clock_t begin, end; 
+	double elapsed_secs; 
+	begin = clock(); 
+
+	double time1 = 0; 
+	double time2 = 0; 
+	double time3 = 0; 
+	double time4 = 0; 
+
 	for (int i=0; i<constList->length; ++i) {
 
 	//	if(dataImage->type[i]==1) {// || dataImage->type[i]==0) {
 
-
+			begin = clock(); 
 			//L.insert(i,i)=1;
 
 			left  = posMap.find(make_pair(dataImage->xList[i]-1, dataImage->yList[i]));
@@ -364,13 +372,17 @@ void Model::updateLensAndRegularMatrix(Image* dataImage,  Conf* constList) {
 			up    = posMap.find(make_pair(dataImage->xList[i], dataImage->yList[i]+1));
 			down  = posMap.find(make_pair(dataImage->xList[i], dataImage->yList[i]-1));
 
+			time1 +=  (clock()-begin); 
+
+			begin= clock(); 	
+
+
 //			left  = posMap.find(make_pair(dataImage->xList[i]-1, dataImage->yList[i]-1));
 //			right = posMap.find(make_pair(dataImage->xList[i]+1, dataImage->yList[i]+1));
 //			up    = posMap.find(make_pair(dataImage->xList[i]-1, dataImage->yList[i]+1));
 //			down  = posMap.find(make_pair(dataImage->xList[i]+1, dataImage->yList[i]-1));
 
 			if(left!=posMap.end() && up!=posMap.end() && down!=posMap.end() && right!=posMap.end()) {
-
 				int iLeft = left->second;
 				int iUp   = up  ->second;
 				int iDown = down->second;
@@ -380,73 +392,76 @@ void Model::updateLensAndRegularMatrix(Image* dataImage,  Conf* constList) {
 				Point C(srcPosXList[i     ], srcPosYList[i     ], s(i     ));
 				Point D(srcPosXList[iDown ], srcPosYList[iDown ], s(iDown ));
 				Point E(srcPosXList[iRight], srcPosYList[iRight], s(iRight));
+				
 				w5 = getPentWeigth(A, B, C, D, E);
+
+				begin = clock(); 
 				Hs1.insert(i, iLeft	) 	= w5[0];
 				Hs1.insert(i, iUp	) 	= w5[1];
 				Hs1.insert(i, i		) 	= w5[2];
 				Hs1.insert(i, iDown	) 	= w5[3];
 				Hs1.insert(i, iRight) 	= w5[4];
 
+				
+
+				time2 +=  (clock()-begin); 
+				begin= clock();
+
+
 				Hs2.insert(i, iLeft	) 	= w5[5];
 				Hs2.insert(i, iUp	) 	= w5[6];
 				Hs2.insert(i, i		) 	= w5[7];
 				Hs2.insert(i, iDown	) 	= w5[8];
 				Hs2.insert(i, iRight) 	= w5[9];
+
+				time3 +=  (clock()-begin); 
+				begin= clock();
 			}
 
+				
 
-		//}
+
+
 		if(dataImage->type[i]==1) {
 			L.insert(i,i)=1;
 
 		}
-		if(dataImage->type[i]==0) {
-			if(left!=posMap.end() && up!=posMap.end() && down!=posMap.end()) {
-				int iLeft = left->second;
-				int iUp   = up  ->second;
-				int iDown = down->second;
 
-				Point A(srcPosXList[iLeft], srcPosYList[iLeft], s(iLeft));
-				Point B(srcPosXList[iUp  ], srcPosYList[iUp	 ], s(iUp  ));
-				Point C(srcPosXList[iDown], srcPosYList[iDown], s(iDown));
-				Point P(srcPosXList[i	 ], srcPosYList[i	 ], s(i    ));
+		
+	
+		// if(dataImage->type[i]==0) {
+		// 	if(left!=posMap.end() && up!=posMap.end() && down!=posMap.end()) {
+		// 		int iLeft = left->second;
+		// 		int iUp   = up  ->second;
+		// 		int iDown = down->second;
 
-				w = getTriWeight( A, B, C, P);
-				L.insert(i, iLeft) 	= w[0];
-				L.insert(i, iUp	 )  = w[1];
-				L.insert(i, iDown) 	= w[2];
+		// 		Point A(srcPosXList[iLeft], srcPosYList[iLeft], s(iLeft));
+		// 		Point B(srcPosXList[iUp  ], srcPosYList[iUp	 ], s(iUp  ));
+		// 		Point C(srcPosXList[iDown], srcPosYList[iDown], s(iDown));
+		// 		Point P(srcPosXList[i	 ], srcPosYList[i	 ], s(i    ));
 
-				normVec n = getNormVector(A, B, C);
-				normV[iLeft].push_back(n);
-				normV[iUp  ].push_back(n);
-				normV[iDown].push_back(n);
-			}
-			else L.insert(i, i) = 1;
-		}
+		// 		w = getTriWeight( A, B, C, P);
+		// 		L.insert(i, iLeft) 	= w[0];
+		// 		L.insert(i, iUp	 )  = w[1];
+		// 		L.insert(i, iDown) 	= w[2];
+
+		// 		normVec n = getNormVector(A, B, C);
+		// 		normV[iLeft].push_back(n);
+		// 		normV[iUp  ].push_back(n);
+		// 		normV[iDown].push_back(n);
+		// 	}
+		// 	else L.insert(i, i) = 1;
+		// }
 	}
 
-
-
 	HtH = Hs1.transpose()*Hs1 + Hs2.transpose()*Hs2;
+	//RtR = lambdaS*lambdaS*HtH;
+	//RtR.conservativeResize(2*constList->length, 2*constList->length);
 
-	// test a new HtH
-	//updateMatrixT(constList);
-	//sp_mat uH = H0*T;
-	//cout << H0.rows() << " " << H0.cols() << endl;
-	//cout << T.rows() << " " << T.cols() << endl;
+	cout << "Time1: " << double(time1)/CLOCKS_PER_SEC << endl; 
+	cout << "Time2: " << double(time2)/CLOCKS_PER_SEC << endl; 
+	cout << "Time3: " << double(time3)/CLOCKS_PER_SEC << endl; 
 
-	//HtH = uH.transpose()*uH;
-	//cout << "H0: " << H0 << endl;
-	// end test
-
-
-
-	//start = std::chrono::system_clock::now();
-	//for (int k=0; k<HtH.outerSize(); ++k)
-	//  for (SparseMatrix<double>::InnerIterator it(HtH,k); it; ++it)
-	//	  RtR.insert(it.row(), it.col()) = it.value()*lambdaS*lambdaS;
-	RtR = lambdaS*lambdaS*HtH;
-	RtR.conservativeResize(2*constList->length, 2*constList->length);
 
 }
 
@@ -477,10 +492,10 @@ void Model::updateGradient(Image* dataImage) {
 		Ds.coeffRef(i, 2*i+1) = vSy2(i);
 	}
 
-	sp_mat extension = -1*Ds*Dphi;
-	M.resize(L.rows(), L.cols()+extension.cols());
-	M.middleCols(0,L.cols()) = L;
-	M.middleCols(L.cols(), extension.cols()) = extension;
+	// sp_mat extension = -1*Ds*Dphi;
+	// M.resize(L.rows(), L.cols()+extension.cols());
+	// M.middleCols(0,L.cols()) = L;
+	// M.middleCols(L.cols(), extension.cols()) = extension;
 
 
 }
@@ -507,50 +522,80 @@ void Model::Logging(Image* dataImage, Conf* conList, string outFileName) {
 	f.close();
 }
 
-void Model::updateSrc(sp_mat* invC, vec d) {
 
-}
 
-void Model::updatePenalty(sp_mat* invC, vec d) {
+void Model::solveSource(sp_mat* invC, vec d) {
 
 	// // problem:  Ax=b
-	// sp_mat A = M.transpose()*(*invC)*M + RtR;
-
-	// vec b = M.transpose()*(*invC)*d;
-	// // sp_mat A1 = A.submat(0, 0, length-1, length-1);
-	// sp_mat A1 = A.block(0,0, length, length);
-	// vec b1 = b.head(length);
-
-	// // Using Eigen methods;
-	// Eigen::SimplicialCholesky<Eigen::SparseMatrix<double> > chol(A1);
-	// s = chol.solve(b1);
-
-	// // get Penalty Function;
-	// for(int i=0; i<length; ++i) {
-	// 	r(i) = s(i);
-	// 	new_r(i) = d(i);
+	sp_mat 	A = L.transpose()*(*invC)*L + lambdaS * lambdaS  * HtH;
+	vec 	b = L.transpose()*(*invC)*d;
+	// Using Eigen methods;
+	Eigen::SimplicialCholesky<Eigen::SparseMatrix<double> > chol(A);
+	s = chol.solve(b);
+	// int counterS = 0; 
+	// int counterD = 0; 
+	// for(int i=0; i<s.size(); ++i) {
+	// 	if (s[i]<0) 
+	// 		counterS ++; 
+	// 	else
+	// 		continue; 
 	// }
 
-	// for(int i=length; i<2*length; ++i) {
-	// 	r(i) = 0;
-	// 	new_r(i) = 0;
+	// for(int i=0; i<d.size(); ++i) {
+	// 	if (d[i]<0) 
+	// 		counterD ++; 
+	// 	else
+	// 		continue; 
 	// }
-	// vec res = M*r-d;
-	// res_img = eigenV_to_cV(res);
-	// simple_res_img = eigenV_to_cV(M*new_r-d);
 
-	// mod_img = eigenV_to_cV(M*new_r);
-
-	// vec temp1 =  res.transpose()*(*invC)*res;
-	// //cout << "HtH: " << HtH << endl ;
-	// double temp2 = s.transpose()*HtH*s;
-	// //cout << "source regularization: " << temp2 << endl;
-	// srcR =  lambdaS*lambdaS*temp2;
-	// chi2 = temp1(0,0);
-	// penalty = chi2 + srcR;
+	// cout << "residual norm: " << (d-s).norm() << endl; 
+	// cout << "negative percentage S: " << 1.0*counterS/s.size() << endl; 
+	// cout << "negative percentage D: " << 1.0*counterD/d.size() << endl; 
 
 
 }
+
+
+// void Model::solveSource1(sp_mat* invC, vec d) {
+
+// 	// // problem:  Ax=b
+// 	sp_mat A = M.transpose()*(*invC)*M + RtR;
+
+// 	vec b = M.transpose()*(*invC)*d;
+// 	// sp_mat A1 = A.submat(0, 0, length-1, length-1);
+// 	sp_mat A1 = A.block(0,0, length, length);
+// 	vec b1 = b.head(length);
+
+// 	// Using Eigen methods;
+// 	Eigen::SimplicialCholesky<Eigen::SparseMatrix<double> > chol(A1);
+// 	s = chol.solve(b1);
+
+// 	// // get Penalty Function;
+// 	// for(int i=0; i<length; ++i) {
+// 	// 	r(i) = s(i);
+// 	// 	new_r(i) = d(i);
+// 	// }
+
+// 	// for(int i=length; i<2*length; ++i) {
+// 	// 	r(i) = 0;
+// 	// 	new_r(i) = 0;
+// 	// }
+// 	// vec res = M*r-d;
+// 	// res_img = eigenV_to_cV(res);
+// 	// simple_res_img = eigenV_to_cV(M*new_r-d);
+
+// 	// mod_img = eigenV_to_cV(M*new_r);
+
+// 	// vec temp1 =  res.transpose()*(*invC)*res;
+// 	// //cout << "HtH: " << HtH << endl ;
+// 	// double temp2 = s.transpose()*HtH*s;
+// 	// //cout << "source regularization: " << temp2 << endl;
+// 	// srcR =  lambdaS*lambdaS*temp2;
+// 	// chi2 = temp1(0,0);
+// 	// penalty = chi2 + srcR;
+
+
+// }
 
 
 
@@ -1157,6 +1202,54 @@ void Model::clearVectors() {
 	*/
 
 
+	// sp_mat L;
+	// sp_mat M;
+	// vec r;
+	// vec new_r;
+	// vec s;
+	// vec phi;
+	// vec square_s;
+	// //
+	// sp_mat Ds;
+	// sp_mat Dphi;
+	// sp_mat Hs1;
+	// sp_mat Hs2;
+	// sp_mat Hphi;
+	// sp_mat HtH;
+	// sp_mat HphiH;
+	// sp_mat T;
+
+	// sp_mat RtR;
+
+	// sp_mat H0;  // zeroth-order regularization;
+	// sp_mat H1;  // gradient-order regularization;
+	// sp_mat H2;  // curvature-order regularization;
+
+	L.setZero();
+	M.setZero(); 
+	r.setZero(); 
+	new_r.setZero(); 
+	s.setZero(); 
+	phi.setZero(); 
+	square_s.setZero(); 
+	Ds.setZero(); 
+	Dphi.setZero(); 
+	Hs1.setZero(); 
+	Hs2.setZero(); 
+	Hphi.setZero(); 
+	HphiH.setZero(); 
+	T.setZero(); 
+	RtR.setZero(); 
+	H0.setZero(); 
+	H1.setZero(); 
+	H2.setZero(); 
+
+
+
+
+	vector<vector<normVec> > normV;
+	vector<normVec> meanNormV;
+
 
 	param.parameter.clear(); 
 	srcPosXListPixel.clear(); 
@@ -1171,6 +1264,9 @@ void Model::clearVectors() {
 	res_full_img.clear(); 
 	simple_res_img.clear(); 
 	mod_img.clear(); 
+
+
+
 
 
 }

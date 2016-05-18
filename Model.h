@@ -200,10 +200,11 @@ public:
 	void updatePosMapping(Image* image,  Conf* conList);
 	void updateLensAndRegularMatrix(Image* dataImage,  Conf* constList);
 	void updateGradient(Image* dataImage);
-	void updateSrc(sp_mat* invC, vec d);
 	void Logging(Image* dataImage, Conf* conList, string outFileName);
 	void updateRegularMatrix();
-	void updatePenalty( sp_mat* invC, vec d);
+	void solveSource1( sp_mat* invC, vec d);
+	void solveSource( sp_mat* invC, vec d);
+
 	void writeSrcImage(string outFileName, Conf* conList);
 	//void updateCritCaustic(Image* dataImage,  Conf* constList);
 	virtual ~Model();

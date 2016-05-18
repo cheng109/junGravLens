@@ -20,7 +20,9 @@ using namespace std;
 //
 
 void gridSearchVegetti(Conf* conf, MultModelParam param_old, Image* dataImage, vec d, string dir, string outputFileName) {
-	Model *model = new Model(conf, param_old, 0.1);
+	double lambdaS = 0.0002; 
+
+	Model *model = new Model(conf, param_old, lambdaS);
 	//vector<vector<double> > critical;  
 
 	vector<int> maxIndex(3,0); 
@@ -32,7 +34,7 @@ void gridSearchVegetti(Conf* conf, MultModelParam param_old, Image* dataImage, v
 	ofstream output; 
 	output.open(outputFileName); 
 	//MultModelParam newParam (param);  
-	clock_t	begin = clock(); 
+	
 
 	cout << model->param.nComb << endl; 
 	for(int i=0 ; i< model->param.nComb ; ++i) {
@@ -59,23 +61,17 @@ void gridSearchVegetti(Conf* conf, MultModelParam param_old, Image* dataImage, v
 				model->param.parameter.push_back(s); 
 			}
 		}	
-
-		// model->updateLensAndRegularMatrix(dataImage, conf);
-		// model->updateGradient(dataImage);
-		// model->updatePenalty(&dataImage->invC, d);
-
-
 		vector<double> sBright = dataImage->dataList; 
 		double penalty = getPenalty(&sBright,  model,  dataImage, conf) ; 
 
-		cout <<"Penalty: " << penalty << endl; 
+		output << model->param.printCurrentModels(i).at(0) << "\t" << penalty << endl; 
 
 	}
 	output.close(); 
 
-	clock_t end = clock(); 
-	double elapsed_secs = double(end-begin)/CLOCKS_PER_SEC; 
-	cout << "Time used: " << elapsed_secs << " seconds. "<< endl; 
+	// clock_t end = clock(); 
+	// double elapsed_secs = double(end-begin)/CLOCKS_PER_SEC; 
+	// cout << "Time used: " << elapsed_secs << " seconds. "<< endl; 
 
 	delete model;
 
@@ -83,18 +79,21 @@ void gridSearchVegetti(Conf* conf, MultModelParam param_old, Image* dataImage, v
 
 
 double getPenalty(vector<double>* sBright, Model* model, Image* dataImage, Conf* conf) {
+	
 
-	model->updatePosMapping(dataImage, conf); 
-	model->updateLensAndRegularMatrix(dataImage, conf);  // get matrix 'L' and 'RTR'; 
 
-	vec s = cV_to_eigenV (sBright) ; 
 	vec d = cV_to_eigenV (&dataImage->dataList); 
+
+	model->updatePosMapping(dataImage, conf);  // time used: 0.03s; 
+	model->updateLensAndRegularMatrix(dataImage, conf);  // get matrix 'L' and 'RTR'; most time consuming part; 
+	model->solveSource(&dataImage->invC, d); 
+	vec &s = model->s; 
+	
 	vec res = ( model->L * s - d) ; 
 	vec chi2 = res.transpose() *  dataImage->invC * res ; 
 	vec srcR = s  .transpose() *  model->HtH      * s   ; 
 
-	double lambdaS = 10; 
-	double penalty = chi2[0] + lambdaS*lambdaS * srcR[0]; 
+	double penalty = chi2[0] + model->lambdaS* model->lambdaS * srcR[0]; 
 
 	return penalty; 
 

@@ -489,7 +489,7 @@ Returns:		void;
 void Image::updateGridPointType() {
 	for(int i=0; i<length; ++i) {
 		if((xList[i]+yList[i])%2==0)
-			type.push_back(0);
+			type.push_back(1); // should be zero; 
 		else
 			type.push_back(1);
 	}

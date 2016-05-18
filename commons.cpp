@@ -20,8 +20,7 @@
 #include <ctime>
 
 
-typedef Eigen::SparseMatrix<double> sp_mat;
-typedef Eigen::VectorXd vec;
+
 
 #define buffsize 1000
 using namespace std;

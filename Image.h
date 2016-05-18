@@ -15,6 +15,9 @@
 //#include "Model.h"
 using namespace std;
 #include <Eigen/Sparse>
+// typedef Eigen::SparseMatrix<double> sp_mat;
+// typedef Eigen::VectorXd vec;
+
 typedef Eigen::SparseMatrix<double> sp_mat;
 typedef Eigen::VectorXd vec;
 

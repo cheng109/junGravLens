@@ -14,9 +14,6 @@
 //#include <armadillo>
 #include <tuple>
 #include <map>
-//#include <boost/python.hpp>
-//#include "gl_crit.h"
-//#include "gl_crit.h"
 
 #include <Eigen/SparseCholesky>
 #include <Eigen/Dense>
@@ -51,7 +48,7 @@ int main(int argc, char* argv[]) {
 	dataImage->updateFilterImage(mapConf["regionFileName"], stoi(mapConf["usingRegion"]));
 
 	Conf *conf = new Conf(dataImage, mapConf);
-	dataImage->updateBackSubtract(conf->back_mean, conf->back_std); 
+	//dataImage->updateBackSubtract(conf->back_mean, conf->back_std); 
 	dataImage->updateGridPointType();
 	dataImage->updateVarList(1, 0.1); // (threshold, var);
 	dataImage->invC = dataImage->getVarMatrix();
