@@ -618,10 +618,10 @@ void Model::solveSource(sp_mat* invC, vec d) {
 
 
 Image Model::getFullResidual(Image* dataImage) {
-	// Assume "mod_image" is known; 
-	mod_img = dataImage->dataList; 
+	// Assume "mod_image" is known;  's' is the source brightness after solve the linear equaion; 
+	mod_img = eigenV_to_cV(&s); 
 	Image fullResidualImage(* dataImage); 
-	map<pair<int, int>, double> modMap; 
+	//map<pair<int, int>, double> modMap; 
 	for(int i=0; i< mod_img.size(); ++i)  {
 		int pos = dataImage->yList[i] * dataImage->naxis1 + dataImage->xList[i]; 
 		fullResidualImage.data[pos] -= mod_img[i]; 

@@ -48,7 +48,7 @@ int main(int argc, char* argv[]) {
 	dataImage->updateFilterImage(mapConf["regionFileName"], stoi(mapConf["usingRegion"]));
 
 	Conf *conf = new Conf(dataImage, mapConf);
-	//dataImage->updateBackSubtract(conf->back_mean, conf->back_std); 
+	dataImage->updateBackSubtract(conf->back_mean, conf->back_std); 
 	dataImage->updateGridPointType();
 	dataImage->updateVarList(0.028, conf->back_mean, conf->back_std); // (threshold, var);
 	dataImage->invC = dataImage->getVarMatrix();

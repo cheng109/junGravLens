@@ -20,7 +20,7 @@ using namespace std;
 //
 
 void gridSearchVegetti(Conf* conf, MultModelParam param_old, Image* dataImage, vec d, string dir, string outputFileName) {
-	double lambdaS = 0.1; 
+	double lambdaS = 1.0; 
 
 	Model *model = new Model(conf, param_old, lambdaS);
 	//vector<vector<double> > critical;  
@@ -63,11 +63,12 @@ void gridSearchVegetti(Conf* conf, MultModelParam param_old, Image* dataImage, v
 				model->param.parameter.push_back(s); 
 			}
 		}	
-		vector<double> sBright = dataImage->dataList; 
-		vector<double> penalty = getPenalty(&sBright,  model,  dataImage, conf) ; 
-		vector<double> s = eigenV_to_cV(&model->s); 
+		//vector<double> sBright = dataImage->dataList; 
+		vector<double> penalty = getPenalty(model,  dataImage, conf) ; 
+		
 
 		if(conf->outputSrcImg) {
+			vector<double> s = eigenV_to_cV(&model->s); 
 			Image* srcImg 	= new Image(model->srcPosXListPixel, model->srcPosYListPixel, &s, conf->srcSize[0], conf->srcSize[1], conf->bitpix);		
 			string outputSrcName = dir + "img_src_" + to_string(i) +".fits"; 
 			if (conf->srcBackground) {
@@ -78,6 +79,17 @@ void gridSearchVegetti(Conf* conf, MultModelParam param_old, Image* dataImage, v
 			delete srcImg; 
 
 		}
+
+
+		if(conf->outputModImg) {
+			vector<double> s = eigenV_to_cV(&model->s); 
+			Image fullResidualImage = model->getFullResidual(dataImage);
+			Image* modelImg = new Image(dataImage->xList, dataImage->yList, &s, conf->imgSize[0], conf->imgSize[1], conf->bitpix);
+			fullResidualImage.writeToFile(dir + "img_res_" + to_string(i) + ".fits");
+			modelImg->writeToFile	(dir + "img_mod_" + to_string(i) +".fits");
+			delete modelImg; 
+		}
+
 		output << model->param.printCurrentModels(i).at(0) << "\t" << penalty[0] <<"\t" <<penalty[1] << "\t" << penalty[2]  << endl; 
 
 	}
@@ -92,7 +104,7 @@ void gridSearchVegetti(Conf* conf, MultModelParam param_old, Image* dataImage, v
 }
 
 
-vector<double> getPenalty(vector<double>* sBright, Model* model, Image* dataImage, Conf* conf) {
+vector<double> getPenalty(Model* model, Image* dataImage, Conf* conf) {
 	
 
 
@@ -168,10 +180,6 @@ void gridSearch(Conf* conf, MultModelParam param_old, Image* dataImage, vec d, s
 
 		vector<double> sBright = dataImage->dataList; 
 		model->updatePosMapping(dataImage, conf);
-
-
-
-
 
 		double scatter 			= model->getScatterReg(); 
 		if(scatter < minScatter)  {
