@@ -41,12 +41,13 @@ Model::Model(Conf* conf, MultModelParam param, double lambdaS):
 		new_r(2*length),
 		s(length),
 		phi(length),
-		square_s(conf->srcSize[0]*conf->srcSize[1]),
 		Ds(length, 2*length),
 		Dphi(2*length,length),
 		Hs1(length, length),
 		Hs2(length, length),
 		H_zero(conf->srcSize[0]*conf->srcSize[1], length),
+		H_grad(conf->srcSize[0]*conf->srcSize[1], length),
+		H_curv(conf->srcSize[0]*conf->srcSize[1], length),
 		H0H(length, length),
 		Hphi(length, length),
 		HtH(length, length),
@@ -81,24 +82,6 @@ Model::Model(Conf* conf, MultModelParam param, double lambdaS):
 	for(int i=0; i<conf->srcSize[0]*conf->srcSize[1]; ++i) {
 			H0.insert(i, i)= 1;
 	}
-}
-
-
-
-
-void Model:: updateReserve(Conf* conf) {
-	// L.	 reserve(Eigen::VectorXi::Constant(length,3));
-	// Ds.  reserve(2*length);
-	// Dphi.reserve(2*length);
-	// Hs1. reserve(Eigen::VectorXi::Constant(length,10));
-	// Hs2. reserve(Eigen::VectorXi::Constant(length,10));
-	// RtR. reserve(200*length);
-	// T.   reserve(length);
-
-	// H_zero.reserve(Eigen::VectorXi::Constant(length, 2)); 
-
-
-	//	H0H.reserve()
 }
 
 
@@ -329,11 +312,11 @@ void Model::updatePosMapping(Image* image, Conf* conf) {
 
 
 /***************************
-Function:   	updateMatrixT
+Function:   	update_H_zero
 Description:  	(1) Member function of class Model;
-				(2) T is matrix convert an adaptive grid to a regular grid;
-				(3) T*S_adpative = S_regular ;
-				(4) It will use the position of adaptive grid nodes:  srcPosXList, srcPosYList.
+				(2) H_zero is matrix convert an adaptive grid to a regular grid;
+				(3) H_zero*S_adpative = S_regular ;
+				(4) It will use the position of adaptive grid nodes:  srcPosXListPixel, srcPosYListPixel.
 Arguments:		Conf*
 Returns:		None
 ****************************/
@@ -357,27 +340,31 @@ void Model::update_H_zero(Conf* conf) {
 }
 
 
+void Model::update_H_grad(Conf* conf) {
 
-// void Model::update_H_zero(Conf* conf) {
+	// T size:  [srcSize[0]*srcSize[1],  2*length]
+	// int x, y, iList;
+
+	// clock_t begin = clock();
+	// for(int i=0; i<length; ++i) {
+	// 	x = nearbyint(srcPosXListPixel[i]);
+	// 	y = nearbyint(srcPosYListPixel[i]);
+	// 	//cout << x << "\t" << y << "\t" << endl;  
+	// 	if(x>0 && x< conf->srcSize[0] && y>0 && y<conf->srcSize[1]) {
+	// 		iList = conf->srcSize[0]*y+x;
+	// 		H_zero.insert(iList, i) = 1.0;
+	// 	}
+	// }
+	//cout << "Time_test: " << double(clock()-begin)/CLOCKS_PER_SEC << endl;
+
+}
+
+void update_H_curve(Conf* conf) {
+
 
 	
-	
-	
+}
 
-// 	for(int i=0; i<conf->length; ++i) {
-
-// 		int col = int(srcPosXListPixel[i]); 
-// 		int row = int(srcPosYListPixel[i]); 
-// 		int index = row* conf->srcSize[0] + col; 
-
-
-// 		//cout << srcPosXListPixel[i] << "\t" << srcPosYListPixel[i] << "\t" <<   index << endl; 
-// 		H_zero.insert(index, i) = 1; 
-// 	}
-
-	 
-
-// }
 
 void Model::updateLensAndRegularMatrix(Image* dataImage,  Conf* constList) {
 
@@ -1244,26 +1231,26 @@ void Model::resetVectors(Conf* conf) {
 	// sp_mat H1;  // gradient-order regularization;
 	// sp_mat H2;  // curvature-order regularization;
 
-	L.setZero();
-	M.setZero(); 
-	r.setZero(); 
-	new_r.setZero(); 
-	s.setZero(); 
-	phi.setZero(); 
-	square_s.setZero(); 
-	Ds.setZero(); 
-	Dphi.setZero(); 
-	Hs1.setZero(); 
-	Hs2.setZero(); 
-	Hphi.setZero(); 
-	HphiH.setZero(); 
-	T.setZero(); 
-	RtR.setZero(); 
-	H0.setZero(); 
-	H1.setZero(); 
-	H2.setZero(); 
-	H0H.setZero(); 
-	H_zero.setZero(); 
+	L.		setZero();
+	M.		setZero(); 
+	r.		setZero(); 
+	new_r.	setZero(); 
+	s.		setZero(); 
+	phi.	setZero(); 
+	//square_s.setZero(); 
+	Ds.		setZero(); 
+	Dphi.	setZero(); 
+	Hs1.	setZero(); 
+	Hs2.	setZero(); 
+	Hphi.	setZero(); 
+	HphiH.	setZero(); 
+	T.		setZero(); 
+	RtR.	setZero(); 
+	H0.		setZero(); 
+	H1.		setZero(); 
+	H2.		setZero(); 
+	H0H.	setZero(); 
+	H_zero.	setZero(); 
 
 
 
@@ -1271,19 +1258,19 @@ void Model::resetVectors(Conf* conf) {
 	vector<normVec> meanNormV;
 
 
-	param.parameter.clear(); 
-	srcPosXListPixel.clear(); 
-	srcPosYListPixel.clear(); 
-	srcPosXList.clear(); 
-	srcPosYList.clear(); 
-	pDeltaX.clear(); 
-	pDeltaY.clear(); 
-	critical.clear();
+	param.parameter.	clear(); 
+	srcPosXListPixel.	clear(); 
+	srcPosYListPixel.	clear(); 
+	srcPosXList.		clear(); 
+	srcPosYList.		clear(); 
+	pDeltaX.			clear(); 
+	pDeltaY.			clear(); 
+	critical.			clear();
 
-	res_img.clear(); 
-	res_full_img.clear(); 
-	simple_res_img.clear(); 
-	mod_img.clear(); 
+	res_img.			clear(); 
+	res_full_img.		clear(); 
+	simple_res_img.		clear(); 
+	mod_img.			clear(); 
 
 
 	L.	 reserve(Eigen::VectorXi::Constant(length,3));
@@ -1295,6 +1282,8 @@ void Model::resetVectors(Conf* conf) {
 	T.   reserve(length);
 
 	H_zero.reserve(Eigen::VectorXi::Constant(length, 2)); 
+	H_grad.reserve(Eigen::VectorXi::Constant(length, 5)); 
+	H_curv.reserve(Eigen::VectorXi::Constant(length, 10)); 
 
 
 
@@ -1567,15 +1556,10 @@ Image* createLensImage(Conf* conf, MultModelParam * param) {
 				double coeff =1 ; // sqrt(q/(1-q*q)); 
 				val[j] += critRad*coeff /sqrt(new_x*new_x*q + new_y*new_y/q + core*core); 
 			}
-
-
 		}
 		if(param->parameter[i].name =="NFW") {
 		}
 	}
-
-
-
 	cout << "val: " << xList[0] << "\t" << val[0] << endl; 
 	Image* lensImg = new Image(xList, yList, &val, conf->imgSize[0]*level, conf->imgSize[1]*level, conf->bitpix);
 

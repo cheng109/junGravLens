@@ -154,7 +154,7 @@ public:
 	vec new_r;
 	vec s;
 	vec phi;
-	vec square_s;
+	//vec square_s;
 	//
 	sp_mat Ds;
 	sp_mat Dphi;
@@ -206,9 +206,10 @@ typedef	struct	_lmDeflCache {
 public:
 	Model();
 	Model(Conf* conList, MultModelParam multModelParam, double lambdaS);
-	void updateReserve(Conf* conf); 
-	void updateMatrixT(Conf* conf);
 	void update_H_zero(Conf* conf); 
+	void update_H_grad(Conf* conf); 
+	void update_H_curv(Conf* conf); 
+
 	static vector<double> getDeflectionAngle(Conf* conList, double pfX, double pfY, double *pDeltaX, double *pDeltaY,  MultModelParam * param);
 	void updatePosMapping(Image* image,  Conf* conList);
 	void updateLensAndRegularMatrix(Image* dataImage,  Conf* constList);
