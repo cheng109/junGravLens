@@ -23,13 +23,9 @@ void gridSearchVegetti(Conf* conf, MultModelParam param_old, Image* dataImage, v
 	double lambdaS = 100.0; 
 
 	Model *model = new Model(conf, param_old, lambdaS);
-	//vector<vector<double> > critical;  
-
-	vector<int> maxIndex(3,0); 
-	vector<double> maxObjFunc(3, -1.0); 
-
-	int minIndexScatter = 0 ; 
-	double minScatter = std::numeric_limits<double>::max(); 
+		
+	int minIndex = 0; 
+	double minPenalty = std::numeric_limits<double>::max(); 
 
 	ofstream output; 
 	output.open(outputFileName); 
@@ -38,8 +34,8 @@ void gridSearchVegetti(Conf* conf, MultModelParam param_old, Image* dataImage, v
 	cout << model->param.nComb << endl; 
 	for(int i=0 ; i< model->param.nComb ; ++i) {
 		
-		model->clearVectors (); 
-		model->updateReserve(conf); 
+		model->resetVectors (conf); 
+		//model->updateReserve(conf); 
 
 		for(int j=0; j<model->param.nLens; ++j) {   // max of j is 3; 
 			SingleModelParam s; 
@@ -65,33 +61,24 @@ void gridSearchVegetti(Conf* conf, MultModelParam param_old, Image* dataImage, v
 		//vector<double> sBright = dataImage->dataList; 
 		vector<double> penalty = getPenalty(model,  dataImage, conf) ; 
 		
-
-		if(conf->outputSrcImg) {
-			vector<double> s = eigenV_to_cV(&model->s); 
-			Image* srcImg 	= new Image(model->srcPosXListPixel, model->srcPosYListPixel, &s, conf->srcSize[0], conf->srcSize[1], conf->bitpix);		
-			string outputSrcName = dir + "img_src_" + to_string(i) +".fits"; 
-			if (conf->srcBackground) {
-				srcImg -> writeToFile(outputSrcName, conf->back_mean, conf->back_std ) ;
-			}
-			else 
-				srcImg -> writeToFile(outputSrcName) ; 
-			delete srcImg; 
-
+		if(minPenalty > penalty[2]) {
+			minPenalty = penalty[2]; 
+			minIndex = i; 
 		}
 
+		cout << "[" + to_string(i+1) + "/" + to_string(model->param.nComb) + "]\t" << endl; 
 
-		if(conf->outputModImg) {
-			vector<double> s = eigenV_to_cV(&model->s); 
-			Image fullResidualImage = model->getFullResidual(dataImage);
-			Image* modelImg = new Image(dataImage->xList, dataImage->yList, &s, conf->imgSize[0], conf->imgSize[1], conf->bitpix);
-			fullResidualImage.writeToFile(dir + "img_res_" + to_string(i) + ".fits");
-			modelImg->writeToFile	(dir + "img_mod_" + to_string(i) +".fits");
-			delete modelImg; 
-		}
+		writeSrcModResImage(model,dataImage,conf, to_string(i), dir) ; 
+
 
 		output << model->param.printCurrentModels(i).at(0) << "\t" << penalty[0] <<"\t" <<penalty[1] << "\t" << penalty[2]  << endl; 
 
 	}
+
+	cout << "************************\nThe best models : " << minPenalty << endl;
+	cout << model->param.printCurrentModels(minIndex).at(1);
+	cout << "************************\n" << endl;
+
 	output.close(); 
 
 	// clock_t end = clock(); 
@@ -126,10 +113,7 @@ vector<double> getPenalty(Model* model, Image* dataImage, Conf* conf) {
 	penalty[1] = srcR[0]; 
 	penalty[2] = chi2[0] + srcR[0]; 
 
-	cout << model->param.parameter[0].critRad << "\t" <<chi2[0] << "\t" << srcR[0] << "\t" << penalty[2] << "\t" << model->H_zero.nonZeros()<< endl; 
-	//cout << (model->H_zero) <<endl; 
-
-
+	//cout << model->param.parameter[0].critRad << "\t" <<chi2[0] << "\t" << srcR[0] << "\t" << penalty[2] << "\t" << model->H_zero.nonZeros()<< endl; 
 	return penalty; 
 
 
@@ -155,7 +139,7 @@ void gridSearch(Conf* conf, MultModelParam param_old, Image* dataImage, vec d, s
 	cout << model->param.nComb << endl; 
 	for(int i=0 ; i< model->param.nComb ; ++i) {
 		
-		model->clearVectors(); 
+		model->resetVectors(conf); 
 		for(int j=0; j<model->param.nLens; ++j) {   // max of j is 3; 
 			SingleModelParam s; 
 			s.name = model->param.mixAllModels[i][j].name; 
@@ -218,40 +202,10 @@ void gridSearch(Conf* conf, MultModelParam param_old, Image* dataImage, vec d, s
 			output  << pStatus << model->param.printCurrentModels(i).at(0) << resultStatus ; 		
 		}
 
-		if(conf->outputSrcImg) {
-			Image* srcImg 	= new Image(model->srcPosXListPixel, model->srcPosYListPixel, &sBright, conf->srcSize[0], conf->srcSize[1], conf->bitpix);		
-			string outputSrcName = dir + "img_src_" + to_string(i) +".fits"; 
-			if (conf->srcBackground) {
-				srcImg -> writeToFile(outputSrcName, conf->back_mean, conf->back_std ) ;
-			}
-			else 
-				srcImg -> writeToFile(outputSrcName) ; 
-			delete srcImg; 
-		}
-		if(conf->outputModImg) {
-			//model->updateLensAndRegularMatrix(dataImage, conf);
-			//model->updateGradient(dataImage);
-			//model->updatePenalty(&dataImage->invC, d);
-			Image fullResidualImage = model->getFullResidual(dataImage);
-			Image* modelImg = new Image(dataImage->xList, dataImage->yList, &model->mod_img, conf->imgSize[0], conf->imgSize[1], conf->bitpix);
-			fullResidualImage.writeToFile(dir + "img_res_" + to_string(i) + ".fits");
-			modelImg->writeToFile	(dir + "img_mod_" + to_string(i) +".fits");
-			delete modelImg; 
-		}
-		if(conf->outputCritImg) {
-			vector<Image* > curve =  getCritCaustic(conf, &model->param); 
-			Image* critImg = curve[0]; 
-			Image* causImg = curve[1]; 
-			critImg->writeToFile(dir + "img_crit.fits");
-			causImg->writeToFile(dir + "img_caus.fits");
-			delete critImg; 
-			delete causImg; 
-		}	
-		if(conf->outputLensImg) {
-			Image* lensImg = createLensImage(conf, &model->param); 
-			lensImg->writeToFile(dir + "img_lens.fits");
-			delete lensImg; 
-		}	
+		//writeSrcModResImage(model,dataImage,conf, to_string(i), dir) ; 
+
+	
+		
 	}
 	output.close(); 
 	

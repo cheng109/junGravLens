@@ -162,7 +162,11 @@ public:
 
 	sp_mat_row Hs1;
 	sp_mat_row Hs2;
+
 	sp_mat H_zero; 
+	sp_mat H_grad; 
+	sp_mat H_curv; 
+
 	sp_mat H0H; 
 
 	sp_mat Hphi;
@@ -217,7 +221,7 @@ public:
 	void writeSrcImage(string outFileName, Conf* conList);
 	//void updateCritCaustic(Image* dataImage,  Conf* constList);
 	virtual ~Model();
-	Image getFullResidual(Image* dataImage);
+	Image* getFullResidual(Image* dataImage);
 	double getRegularizationSrcValue (vec d);
 
 
@@ -230,12 +234,12 @@ public:
 
 	//vector<string> &split(string &s, char delim, vector<string> &elems) ; 
 
-	void clearVectors();
+	void resetVectors(Conf* conf);
 };
 
 vector<Image* > getCritCaustic(Conf* conf, MultModelParam * param); 
 void createDs9Contour(vector<double>* xList, vector<double>* yList, double level, string contourCritName) ; 
 Image* createLensImage(Conf* conf, MultModelParam * param) ; 
-
+void writeSrcModResImage(Model* model, Image* dataImage, Conf* conf, string fileName, string dir) ; 
 
 #endif /* MODEL_H_ */

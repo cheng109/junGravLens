@@ -87,15 +87,17 @@ Model::Model(Conf* conf, MultModelParam param, double lambdaS):
 
 
 void Model:: updateReserve(Conf* conf) {
-	L.	 reserve(Eigen::VectorXi::Constant(length,3));
-	Ds.  reserve(2*length);
-	Dphi.reserve(2*length);
-	Hs1. reserve(Eigen::VectorXi::Constant(length,10));
-	Hs2. reserve(Eigen::VectorXi::Constant(length,10));
-	RtR. reserve(200*length);
-	T.   reserve(length);
+	// L.	 reserve(Eigen::VectorXi::Constant(length,3));
+	// Ds.  reserve(2*length);
+	// Dphi.reserve(2*length);
+	// Hs1. reserve(Eigen::VectorXi::Constant(length,10));
+	// Hs2. reserve(Eigen::VectorXi::Constant(length,10));
+	// RtR. reserve(200*length);
+	// T.   reserve(length);
 
-	H_zero.reserve(Eigen::VectorXi::Constant(length, 2)); 
+	// H_zero.reserve(Eigen::VectorXi::Constant(length, 2)); 
+
+
 	//	H0H.reserve()
 }
 
@@ -618,14 +620,14 @@ void Model::solveSource(sp_mat* invC, vec d) {
 
 
 
-Image Model::getFullResidual(Image* dataImage) {
+Image* Model::getFullResidual(Image* dataImage) {
 	// Assume "mod_image" is known;  's' is the source brightness after solve the linear equaion; 
 	mod_img = eigenV_to_cV(&s); 
-	Image fullResidualImage(* dataImage); 
+	Image* fullResidualImage = new Image(* dataImage); 
 	//map<pair<int, int>, double> modMap; 
 	for(int i=0; i< mod_img.size(); ++i)  {
 		int pos = dataImage->yList[i] * dataImage->naxis1 + dataImage->xList[i]; 
-		fullResidualImage.data[pos] -= mod_img[i]; 
+		fullResidualImage->data[pos] -= mod_img[i]; 
 	}
 
 	return fullResidualImage; 	
@@ -1198,7 +1200,7 @@ vector<string> MultModelParam::printCurrentModels(int curr) {
 }
 
 
-void Model::clearVectors() {
+void Model::resetVectors(Conf* conf) {
 
 	/*vector<double> srcPosXListPixel;	  // Source position after deflection in X direction, in pixel;
 	vector<double> srcPosYListPixel;	  // Source position after deflection in Y direction, in pixel;
@@ -1282,6 +1284,17 @@ void Model::clearVectors() {
 	res_full_img.clear(); 
 	simple_res_img.clear(); 
 	mod_img.clear(); 
+
+
+	L.	 reserve(Eigen::VectorXi::Constant(length,3));
+	Ds.  reserve(2*length);
+	Dphi.reserve(2*length);
+	Hs1. reserve(Eigen::VectorXi::Constant(length,10));
+	Hs2. reserve(Eigen::VectorXi::Constant(length,10));
+	RtR. reserve(200*length);
+	T.   reserve(length);
+
+	H_zero.reserve(Eigen::VectorXi::Constant(length, 2)); 
 
 
 
@@ -1559,10 +1572,6 @@ Image* createLensImage(Conf* conf, MultModelParam * param) {
 		}
 		if(param->parameter[i].name =="NFW") {
 		}
-
-
-		
-
 	}
 
 
@@ -1575,6 +1584,32 @@ Image* createLensImage(Conf* conf, MultModelParam * param) {
 
 }
 
+
+
+void writeSrcModResImage(Model* model, Image* dataImage, Conf* conf, string fileName, string dir) {
+
+	// Part I:  output 'src', 'mod', and 'res' images: 
+	// Part II: output 'crit', 'caus' and 'lens' images; 
+	vector<double> s = eigenV_to_cV(&model->s); 
+	Image* srcImg = new Image(model->srcPosXListPixel, model->srcPosYListPixel, &s, conf->srcSize[0], conf->srcSize[1], conf->bitpix);		
+	Image* modImg = new Image(dataImage->xList, dataImage->yList, &s, conf->imgSize[0], conf->imgSize[1], conf->bitpix);
+	Image* resImg = model->getFullResidual(dataImage);
+	srcImg -> writeToFile (dir + "img_src_" + fileName + ".fits", conf->back_mean, conf->back_std ) ;
+	resImg -> writeToFile (dir + "img_res_" + fileName + ".fits");
+	modImg -> writeToFile (dir + "img_mod_" + fileName + ".fits");
+	delete srcImg, modImg, resImg; 
+
+	vector<Image* > curve =  getCritCaustic(conf, &model->param); 
+	Image* critImg = curve[0]; 
+	Image* causImg = curve[1]; 
+	Image* lensImg = createLensImage(conf, &model->param); 
+	lensImg -> writeToFile(dir + "img_lens_" + fileName + ".fits");
+	critImg -> writeToFile(dir + "img_crit_" + fileName + ".fits");
+	causImg -> writeToFile(dir + "img_caus_" + fileName + ".fits");
+	delete critImg, causImg, lensImg ; 
+
+
+}
 
 #if 0
 #endif 
