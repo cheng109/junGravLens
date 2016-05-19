@@ -20,7 +20,7 @@ using namespace std;
 //
 
 void gridSearchVegetti(Conf* conf, MultModelParam param_old, Image* dataImage, vec d, string dir, string outputFileName) {
-	double lambdaS = 1.0; 
+	double lambdaS = 100.0; 
 
 	Model *model = new Model(conf, param_old, lambdaS);
 	//vector<vector<double> > critical;  
@@ -33,7 +33,6 @@ void gridSearchVegetti(Conf* conf, MultModelParam param_old, Image* dataImage, v
 
 	ofstream output; 
 	output.open(outputFileName); 
-	//MultModelParam newParam (param);  
 	
 
 	cout << model->param.nComb << endl; 
@@ -118,7 +117,7 @@ vector<double> getPenalty(Model* model, Image* dataImage, Conf* conf) {
 	
 	vec res = ( model->L * s - d) ; 
 	vec chi2 = res.transpose() *  dataImage->invC * res * model->lambdaC* model->lambdaC  ; 
-	vec srcR = s  .transpose() *  model->HtH      * s   * model->lambdaS* model->lambdaS  ; 
+	vec srcR = s  .transpose() *  model->H0H      * s   * model->lambdaS* model->lambdaS  ; 
 
 
 
@@ -127,7 +126,8 @@ vector<double> getPenalty(Model* model, Image* dataImage, Conf* conf) {
 	penalty[1] = srcR[0]; 
 	penalty[2] = chi2[0] + srcR[0]; 
 
-	cout << model->param.parameter[0].critRad << "\t" <<chi2[0] << "\t" << srcR[0] << "\t" << penalty[2] << "\t" << s.norm() <<endl; 
+	cout << model->param.parameter[0].critRad << "\t" <<chi2[0] << "\t" << srcR[0] << "\t" << penalty[2] << "\t" << model->H_zero.nonZeros()<< endl; 
+	//cout << (model->H_zero) <<endl; 
 
 
 	return penalty; 

@@ -96,7 +96,7 @@ void Model:: updateReserve(Conf* conf) {
 	T.   reserve(length);
 
 	H_zero.reserve(Eigen::VectorXi::Constant(length, 2)); 
-	//H0H.reserve(3*conf)
+	//	H0H.reserve()
 }
 
 
@@ -342,11 +342,12 @@ void Model::update_H_zero(Conf* conf) {
 
 	clock_t begin = clock();
 	for(int i=0; i<length; ++i) {
-		x = nearbyint(srcPosXList[i]);
-		y = nearbyint(srcPosYList[i]);
+		x = nearbyint(srcPosXListPixel[i]);
+		y = nearbyint(srcPosYListPixel[i]);
+		//cout << x << "\t" << y << "\t" << endl;  
 		if(x>0 && x< conf->srcSize[0] && y>0 && y<conf->srcSize[1]) {
 			iList = conf->srcSize[0]*y+x;
-			H_zero.insert(iList, i) = 1;
+			H_zero.insert(iList, i) = 1.0;
 		}
 	}
 	//cout << "Time_test: " << double(clock()-begin)/CLOCKS_PER_SEC << endl;
@@ -536,8 +537,8 @@ void Model::Logging(Image* dataImage, Conf* conList, string outFileName) {
 void Model::solveSource(sp_mat* invC, vec d) {
 
 	// // problem:  Ax=b
-	H0H = H_zero.transpose()*H_zero; 
-	sp_mat 	A = lambdaC * lambdaC * L.transpose()*(*invC)*L + lambdaS * lambdaS  * HtH;
+	H0H =  H_zero.transpose()*H_zero; 
+	sp_mat 	A = lambdaC * lambdaC * L.transpose()*(*invC)*L + lambdaS * lambdaS  * H0H;
 	//sp_mat 	A = L.transpose()*(*invC)*L + lambdaS * lambdaS  * HtH;
 	vec 	b = lambdaC * lambdaC * L.transpose()*(*invC)*d;
 	// Using Eigen methods;
