@@ -51,6 +51,7 @@ public:
 	long length;
 
 	sp_mat invC;
+	vec d; 
 
 public:
 	Image();

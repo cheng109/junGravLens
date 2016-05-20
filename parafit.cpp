@@ -20,7 +20,7 @@ using namespace std;
 //
 
 void gridSearchVegetti(Conf* conf, MultModelParam param_old, Image* dataImage, vec d, string dir, string outputFileName) {
-	double lambdaS = 100.0; 
+	double lambdaS = 100; 
 
 	Model *model = new Model(conf, param_old, lambdaS);
 		
@@ -59,7 +59,7 @@ void gridSearchVegetti(Conf* conf, MultModelParam param_old, Image* dataImage, v
 			}
 		}	
 		//vector<double> sBright = dataImage->dataList; 
-		vector<double> penalty = getPenalty(model,  dataImage, conf) ; 
+		vector<double> penalty = getPenalty(model,  dataImage, conf, "zero") ; 
 		
 		if(minPenalty > penalty[2]) {
 			minPenalty = penalty[2]; 
@@ -90,7 +90,7 @@ void gridSearchVegetti(Conf* conf, MultModelParam param_old, Image* dataImage, v
 }
 
 
-vector<double> getPenalty(Model* model, Image* dataImage, Conf* conf) {
+vector<double> getPenalty(Model* model, Image* dataImage, Conf* conf, string R_type) {
 	
 
 
@@ -99,12 +99,13 @@ vector<double> getPenalty(Model* model, Image* dataImage, Conf* conf) {
 	model->updatePosMapping(dataImage, conf);  // time used: 0.03s; 
 	model->update_H_zero(conf); 
 	model->updateLensAndRegularMatrix(dataImage, conf);  // get matrix 'L' and 'RTR'; most time consuming part; 
-	model->solveSource(&dataImage->invC, d); 
+
+	model->solveSource(&dataImage->invC, &dataImage->d, R_type); 
 	vec &s = model->s; 
 	
-	vec res = ( model->L * s - d) ; 
+	vec res = ( model->L * s - dataImage->d) ; 
 	vec chi2 = res.transpose() *  dataImage->invC * res * model->lambdaC* model->lambdaC  ; 
-	vec srcR = s  .transpose() *  model->H0H      * s   * model->lambdaS* model->lambdaS  ; 
+	vec srcR = s  .transpose() *  model->REG     * s   * model->lambdaS* model->lambdaS  ; 
 
 
 

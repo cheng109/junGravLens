@@ -45,6 +45,7 @@ Model::Model(Conf* conf, MultModelParam param, double lambdaS):
 		Dphi(2*length,length),
 		Hs1(length, length),
 		Hs2(length, length),
+		Hessian_grad(conf->srcSize[0]*conf->srcSize[1], conf->srcSize[0]*conf->srcSize[1]),
 		H_zero(conf->srcSize[0]*conf->srcSize[1], length),
 		H_grad(conf->srcSize[0]*conf->srcSize[1], length),
 		H_curv(conf->srcSize[0]*conf->srcSize[1], length),
@@ -82,6 +83,11 @@ Model::Model(Conf* conf, MultModelParam param, double lambdaS):
 	for(int i=0; i<conf->srcSize[0]*conf->srcSize[1]; ++i) {
 			H0.insert(i, i)= 1;
 	}
+
+	Hessian_grad.reserve(Eigen::VectorXi::Constant(conf->srcSize[0]*conf->srcSize[1], 6));  
+	update_H_grad(conf); 
+	 
+
 }
 
 
@@ -342,27 +348,41 @@ void Model::update_H_zero(Conf* conf) {
 
 void Model::update_H_grad(Conf* conf) {
 
-	// T size:  [srcSize[0]*srcSize[1],  2*length]
-	// int x, y, iList;
+	int src_length = conf->srcSize[0]*conf->srcSize[1]; 
+	//sp_mat_row Hessian_grad(src_length, src_length); 
+	
 
-	// clock_t begin = clock();
-	// for(int i=0; i<length; ++i) {
-	// 	x = nearbyint(srcPosXListPixel[i]);
-	// 	y = nearbyint(srcPosYListPixel[i]);
-	// 	//cout << x << "\t" << y << "\t" << endl;  
-	// 	if(x>0 && x< conf->srcSize[0] && y>0 && y<conf->srcSize[1]) {
-	// 		iList = conf->srcSize[0]*y+x;
-	// 		H_zero.insert(iList, i) = 1.0;
-	// 	}
-	// }
-	//cout << "Time_test: " << double(clock()-begin)/CLOCKS_PER_SEC << endl;
+	clock_t begin = clock();
+
+	for(int i=0; i<src_length; ++i) {
+		int y = i/conf->srcSize[0]; 
+		int x = i%conf->srcSize[0]; 
+
+
+		vector<int> neighbors; 
+		neighbors.push_back(i-1);  			// Left
+		neighbors.push_back(i+1);  			// Right
+		neighbors.push_back(i+conf->srcSize[0]);  // Up
+		neighbors.push_back(i-conf->srcSize[0]);  // Down
+
+		for(int n: neighbors) {
+			if(n > 0 and n <src_length)  
+				Hessian_grad.insert(i, n) = -1; 
+
+		}
+		Hessian_grad.insert(i, i) = 4; 
+	}
+
+	//Hessian_grad = H_zero.transpose() * Hessian_grad * H_zero; 
+
+	cout << "Time_test: " << double(clock()-begin)/CLOCKS_PER_SEC << endl;
 
 }
 
 void update_H_curve(Conf* conf) {
 
 
-	
+
 }
 
 
@@ -523,18 +543,35 @@ void Model::Logging(Image* dataImage, Conf* conList, string outFileName) {
 
 
 
-void Model::solveSource(sp_mat* invC, vec d) {
+void Model::solveSource(sp_mat* invC, vec* d , string R_type) {
 
 	// // problem:  Ax=b
-	H0H =  H_zero.transpose()*H_zero; 
-	sp_mat 	A = lambdaC * lambdaC * L.transpose()*(*invC)*L + lambdaS * lambdaS  * H0H;
+
+	clock_t begin = clock(); 
+
+
+	if (R_type == "zero") 
+		REG = H_zero.transpose()*H_zero; 
+	else if(R_type == "grad")
+		REG = H_zero.transpose() * Hessian_grad * H_zero; 
+
+	else if(R_type == "vege") 
+		REG = HtH ; 
+	else {
+		cout << "Regularization type is not supported yet!" << endl; 
+		exit(1); 
+	} 
+	sp_mat 	A = lambdaC * lambdaC * L.transpose()*(*invC)*L + lambdaS * lambdaS  * REG; // Hessian_grad.transpose();
 	//sp_mat 	A = L.transpose()*(*invC)*L + lambdaS * lambdaS  * HtH;
-	vec 	b = lambdaC * lambdaC * L.transpose()*(*invC)*d;
+	vec 	b = lambdaC * lambdaC * L.transpose()*(*invC)*(*d);
 	// Using Eigen methods;
+
 
 	Eigen::SimplicialCholesky<Eigen::SparseMatrix<double> > chol(A);
 	s = chol.solve(b);
+	//cout << "solution end!" << endl;  
 
+	//cout << "Time_test_solve: " << double(clock()-begin)/CLOCKS_PER_SEC << endl;
 
 	//cout << A.norm() << "\t" << b.norm() << "\t" << s.norm() << endl; 
 
@@ -1284,10 +1321,7 @@ void Model::resetVectors(Conf* conf) {
 	H_zero.reserve(Eigen::VectorXi::Constant(length, 2)); 
 	H_grad.reserve(Eigen::VectorXi::Constant(length, 5)); 
 	H_curv.reserve(Eigen::VectorXi::Constant(length, 10)); 
-
-
-
-
+	Hessian_grad.reserve(Eigen::VectorXi::Constant(conf->srcSize[0]*conf->srcSize[1], 6)); 
 
 }
 
@@ -1533,14 +1567,13 @@ Image* createLensImage(Conf* conf, MultModelParam * param) {
 	}
 
 
-	cout << param->nLens << endl; 
+	//cout << param->nLens << endl; 
 	for(int i=0; i< param->nLens; ++i) {
 
 		if(param->parameter[i].name =="PTMASS") {
 		}
 		if (param->parameter[i].name =="SIE") {
 
-			cout << i << endl; 
 			double centerX = param->parameter[i].centerX;
 			double centerY = param->parameter[i].centerY; 
 			double critRad = param->parameter[i].critRad; 
@@ -1560,7 +1593,7 @@ Image* createLensImage(Conf* conf, MultModelParam * param) {
 		if(param->parameter[i].name =="NFW") {
 		}
 	}
-	cout << "val: " << xList[0] << "\t" << val[0] << endl; 
+	//cout << "val: " << xList[0] << "\t" << val[0] << endl; 
 	Image* lensImg = new Image(xList, yList, &val, conf->imgSize[0]*level, conf->imgSize[1]*level, conf->bitpix);
 
 	return lensImg; 

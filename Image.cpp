@@ -319,7 +319,9 @@ void Image::updateBackSubtract(double back_mean, double back_std) {
 	for (int i=0; i<dataList.size(); ++i ) {
 		double number = distribution(generator); 
 		dataList[i] -= number ; 
+		d[i] -= number; 
 	}
+
 }
 
 /***************************
@@ -466,6 +468,9 @@ void Image::updateFilterImage(string regionFileName, int flag) {
 	for(int i=0; i<dataList.size(); ++i) {
 		iList.push_back(i);
 	}
+
+
+	d = cV_to_eigenV (&dataList); 
 }
 
 

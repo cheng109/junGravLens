@@ -16,7 +16,7 @@ OBJS := $(patsubst %.cpp, %.o, $(SRCS))
 
 ARG1 :=horseshoe_test/
 ARG2 :=conf.txt
-ARG3 :=output.txt
+ARG3 :=output_new.txt
 
 appname := junGL 
 
@@ -35,8 +35,6 @@ $(appname): libfortranstuff.a $(OBJS)
 
 clean:
 	rm -f $(OBJS) $(appname) output.txt libfortranstuff.a *.o
-
-
 
 dist-clean: clean
 	rm -f *~ .depend

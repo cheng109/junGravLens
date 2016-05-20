@@ -163,9 +163,14 @@ public:
 	sp_mat_row Hs1;
 	sp_mat_row Hs2;
 
+	sp_mat_row Hessian_grad; 
+
 	sp_mat H_zero; 
 	sp_mat H_grad; 
 	sp_mat H_curv; 
+
+
+
 
 	sp_mat H0H; 
 
@@ -183,6 +188,8 @@ public:
 	double lambdaC; 
 	double lambdaPhi;
 
+
+	sp_mat REG; 
 
 	vector<vector<normVec> > normV;
 	vector<normVec> meanNormV;
@@ -216,8 +223,7 @@ public:
 	void updateGradient(Image* dataImage);
 	void Logging(Image* dataImage, Conf* conList, string outFileName);
 	void updateRegularMatrix();
-	void solveSource1( sp_mat* invC, vec d);
-	void solveSource( sp_mat* invC, vec d);
+	void solveSource( sp_mat* invC, vec* d, string R_type);
 
 	void writeSrcImage(string outFileName, Conf* conList);
 	//void updateCritCaustic(Image* dataImage,  Conf* constList);
