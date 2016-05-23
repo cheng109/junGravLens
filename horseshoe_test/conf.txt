@@ -14,7 +14,7 @@ potRes	0.1
 causticLevel  4
 
 ## Files
-imageFileName	horseshoe_test/HorseShoe_large.fits
+imageFileName	horseshoe_test/HorseShoe_large_ADU.fits
 regionFileName	horseshoe_test/mask_horseshoe_large_4.reg
 #regionFileName	horseshoe_test/mask_horseshoe_points_2.reg
 varFileName	  jun_var.fits
@@ -39,16 +39,19 @@ srcBackground	1
 srcX	100
 srcY	100
 
-back_mean 0.02
-back_std 0.0019
+#back_mean 0.02
+#back_std 0.0019
+
+back_mean 69.9
+back_std 6.4
 
 
 ## Model_PTMASS {xfrom, xto, xinc, yfrom, yto, yinc, critfrom, critto, critinc}
 ## Model_SIE {xfrom, xto, xinc, yfrom, yto, yinc, critfrom, critto, critinc, ellfrom, ellto, ellinc, pafrom, pato, painc, corefrom, coreto, coreinc}
 ##
 ##
-SIE 0.0  0.0 3.0 0.0 0.0 3.0 3.6 5.6 0.2 0.25 0.25 0.2 170.0 170.0 10.0 0.0 0.0 0.002
-SIE -152.0 -152.0 3.0 0.0 0.0 3.0 1.4 1.4 0.1 0.45 0.45 0.02 14.0 14.0 10.0 0.0 0.0 0.002
+SIE 0.0  0.0 3.0 0.0 0.0 3.0 0.0 6.0 0.3 0.25 0.25 0.2 170.0 170.0 10.0 0.0 0.0 0.002
+SIE -200.0 -100.0 10.0 0.0 0.0 3.0 0.0 3.0 0.3 0.45 0.45 0.02 14.0 14.0 10.0 0.0 0.0 0.002
 SIE 15.0 15.0 3.0 -48.0 -48.0 3.0 0.0 0.0 0.05 0.0 0.0 0.2 0.0 0.0 10.0 0.0 0.0 0.001
 
 

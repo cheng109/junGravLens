@@ -314,15 +314,29 @@ Notes:
 
 void Image::updateBackSubtract(double back_mean, double back_std) {
 
+	double sigma = 0; 
+	double counter = 0; 
 	std::default_random_engine generator; 
-	std::normal_distribution<double> distribution(back_mean, back_std); 
+	std::normal_distribution<double> distribution(back_mean, sigma); 
 	for (int i=0; i<dataList.size(); ++i ) {
 		double number = distribution(generator); 
 		dataList[i] -= number ; 
-		d[i] -= number; 
+
+		//  set dataList to be zero if it is smaller than 2 sigma. 
+		if(dataList[i] < 3* back_std) {
+			counter += 1; 
+			dataList[i] = 0; 
+		}
+		d[i] = dataList[i]; 
 	}
 
+	cout << "counter: " << counter << endl; 
+
 }
+
+
+
+
 
 /***************************
 Function:   	updateFilterImage
@@ -341,6 +355,11 @@ void Image::updateFilterImage(string regionFileName, int flag) {
 	// Flag = 1, use region file to filter the image;
 	// Flag = 0, no region filter.
 
+
+	// double back_mean = 69.9; 
+	// double back_std  = 6.4 ; 
+
+	// double factor = 3; 
 	
 	vector<double> xpos, ypos;
 	if(flag==1) {  // with region; 
@@ -350,7 +369,7 @@ void Image::updateFilterImage(string regionFileName, int flag) {
 			for(int i=0; i<naxis1*naxis2; ++i) {
 				int y=i/naxis1;
 				int x=i%naxis1;
-				if(pnpoly(xpos.size(), &xpos, &ypos,  double(x+0.5) ,  double(y+0.5))) {
+				if(pnpoly(xpos.size(), &xpos, &ypos,  double(x+0.5) ,  double(y+0.5)) ) {
 					dataList.push_back(data[i]);
 					xList.push_back(x);
 					yList.push_back(y);
@@ -380,7 +399,7 @@ void Image::updateFilterImage(string regionFileName, int flag) {
 					int dy= j - boxCenterY;
 					int dx= i - boxCenterX;
 					if(     dx <  0.5*boxSizeX and dy <  0.5*boxSizeY 
-						and dx > -0.5*boxSizeX and dy > -0.5*boxSizeY ) {
+						and dx > -0.5*boxSizeX and dy > -0.5*boxSizeY) {
 						dataList.push_back(data[j*naxis1 + i]);
 						xList.push_back(i);
 						yList.push_back(j);
@@ -401,7 +420,7 @@ void Image::updateFilterImage(string regionFileName, int flag) {
 					int dy= j - circleCenterY;
 					int dx= i - circleCenterX;
 					double dr2 = dx*dx + dy*dy; 
-					if( dr2 < circleR*circleR) {
+					if( dr2 < circleR*circleR ) {
 						dataList.push_back(data[j*naxis1 + i]);
 						xList.push_back(i);
 						yList.push_back(j);
@@ -434,7 +453,7 @@ void Image::updateFilterImage(string regionFileName, int flag) {
 
 					double dr2 = ((dx*cos(A) + dy*sin(A))/a)*((dx*cos(A) + dy*sin(A))/a) 
 									+ ((dx*sin(A) - dy*cos(A))/b)*((dx*sin(A) - dy*cos(A))/b); 
-					if( dr2 < 1) {
+					if( dr2 < 1 ) {
 						dataList.push_back(data[j*naxis1 + i]);
 						xList.push_back(i);
 						yList.push_back(j);
@@ -474,15 +493,6 @@ void Image::updateFilterImage(string regionFileName, int flag) {
 }
 
 
-vec Image::getMatrixD() {
-	vec d(length);
-	for(int i=0; i<length; ++i) {
-		d[i]= dataList[i];
-	}
-	return d;
-}
-
-
 /***************************
 Function:   	updateGridPointType
 Description:    Classify the grid points as node or interpolate.
@@ -517,13 +527,15 @@ sp_mat Image::getVarMatrix()  {
 
 void Image::updateVarList(double threshold, double back_mean, double back_std) {
 	double back_var = back_std*back_std ; 
+
+	threshold = back_mean + 2*back_std; 
 	for(int i=0; i<length; ++i) {
 		if(dataList[i]<threshold) {
 			varList.push_back(back_var);
 		}
 		else
-			varList.push_back(back_var);
-			//varList.push_back(dataList[i]);
+			//varList.push_back(back_var);
+			varList.push_back(dataList[i]);
 	}
 }
 

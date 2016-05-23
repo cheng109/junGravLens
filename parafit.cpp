@@ -19,8 +19,8 @@
 using namespace std;
 //
 
-void gridSearchVegetti(Conf* conf, MultModelParam param_old, Image* dataImage, vec d, string dir, string outputFileName) {
-	double lambdaS = 200.0; 
+void gridSearchVegetti(Conf* conf, MultModelParam param_old, Image* dataImage, string dir, string outputFileName) {
+	double lambdaS = 0.1; 
 
 	Model *model = new Model(conf, param_old, lambdaS);
 		
@@ -39,7 +39,7 @@ void gridSearchVegetti(Conf* conf, MultModelParam param_old, Image* dataImage, v
 
 		for(int j=0; j<model->param.nLens; ++j) {   // max of j is 3; 
 			SingleModelParam s; 
-			s.name = model->param.mixAllModels[i][j].name; 
+			s.name = model->param.mixAllModels[i][j].name; 	
 			if(s.name=="PTMASS") {			
 				s.critRad = model->param.mixAllModels[i][j].paraList[0]; 
 				s.centerX = model->param.mixAllModels[i][j].paraList[1]; 
@@ -59,7 +59,7 @@ void gridSearchVegetti(Conf* conf, MultModelParam param_old, Image* dataImage, v
 			}
 		}	
 		//vector<double> sBright = dataImage->dataList; 
-		vector<double> penalty = getPenalty(model,  dataImage, conf, "grad") ; 
+		vector<double> penalty = getPenalty(model,  dataImage, conf, "zero") ; 
 		
 		if(minPenalty > penalty[2]) {
 			minPenalty = penalty[2]; 
@@ -68,7 +68,7 @@ void gridSearchVegetti(Conf* conf, MultModelParam param_old, Image* dataImage, v
 
 		cout << "[" + to_string(i+1) + "/" + to_string(model->param.nComb) + "]\t" << endl; 
 
-		writeSrcModResImage(model,dataImage,conf, to_string(i), dir) ; 
+		//writeSrcModResImage(model,dataImage,conf, to_string(i), dir) ; 
 
 
 		output << model->param.printCurrentModels(i).at(0) << "\t" << penalty[0] <<"\t" <<penalty[1] << "\t" << penalty[2]  << endl; 
@@ -114,7 +114,7 @@ vector<double> getPenalty(Model* model, Image* dataImage, Conf* conf, string R_t
 	penalty[1] = srcR[0]; 
 	penalty[2] = chi2[0] + srcR[0]; 
 
-	cout << model->param.parameter[0].critRad << "\t" <<chi2[0] << "\t" << srcR[0] << "\t" << penalty[2] << "\t" << model->H_zero.nonZeros()<< endl; 
+	//cout << model->param.parameter[0].critRad << "\t" <<chi2[0] << "\t" << srcR[0] << "\t" << penalty[2] << "\t" << model->H_zero.nonZeros()<< endl; 
 	return penalty; 
 
 

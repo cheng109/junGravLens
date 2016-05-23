@@ -50,11 +50,10 @@ int main(int argc, char* argv[]) {
 	Conf *conf = new Conf(dataImage, mapConf);
 	dataImage->updateBackSubtract(conf->back_mean, conf->back_std); 
 	dataImage->updateGridPointType();
-	dataImage->updateVarList(0.028, conf->back_mean, conf->back_std); // (threshold, var);
+	dataImage->updateVarList(90, conf->back_mean, conf->back_std); // (threshold, var);
 	dataImage->invC = dataImage->getVarMatrix();
 	
  
-	vec d =dataImage->getMatrixD();
 	conf->printConfList();
 
 	//cout << "start " << endl; 
@@ -64,7 +63,8 @@ int main(int argc, char* argv[]) {
 	param.mix(); 	 // update 'AllMixModels'; 
 
 
-/*
+
+	/*
 
 	for(int i=0; i<6; ++i) {
 		string smallMassRegion = "horseshoe_test/reg_" + to_string(i) + ".reg" ; 
@@ -83,10 +83,11 @@ int main(int argc, char* argv[]) {
 		//delete lensImage1, dataImage1 ; 
 	
 	} 
-
 */
 
-	gridSearchVegetti(conf, param,  dataImage, d, dir, output);	
+
+
+	gridSearchVegetti(conf, param,  dataImage, dir, output);	
 
 
 	
