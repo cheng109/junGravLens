@@ -1,5 +1,5 @@
 #!/usr/local/bin/gnuplot
-fileName="output.txt"
+fileName="output_new.txt"
 set title fileName
 column=system("echo $column")
 plot fileName using 1:25 with linespoints title "chi2 ",\

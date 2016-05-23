@@ -1616,14 +1616,14 @@ void writeSrcModResImage(Model* model, Image* dataImage, Conf* conf, string file
 	modImg -> writeToFile (dir + "img_mod_" + fileName + ".fits");
 	delete srcImg, modImg, resImg; 
 
-	vector<Image* > curve =  getCritCaustic(conf, &model->param); 
-	Image* critImg = curve[0]; 
-	Image* causImg = curve[1]; 
-	Image* lensImg = createLensImage(conf, &model->param); 
-	lensImg -> writeToFile(dir + "img_lens_" + fileName + ".fits");
-	critImg -> writeToFile(dir + "img_crit_" + fileName + ".fits");
-	causImg -> writeToFile(dir + "img_caus_" + fileName + ".fits");
-	delete critImg, causImg, lensImg ; 
+	// vector<Image* > curve =  getCritCaustic(conf, &model->param); 
+	// Image* critImg = curve[0]; 
+	// Image* causImg = curve[1]; 
+	// Image* lensImg = createLensImage(conf, &model->param); 
+	// lensImg -> writeToFile(dir + "img_lens_" + fileName + ".fits");
+	// critImg -> writeToFile(dir + "img_crit_" + fileName + ".fits");
+	// causImg -> writeToFile(dir + "img_caus_" + fileName + ".fits");
+	// delete critImg, causImg, lensImg ; 
 
 
 }

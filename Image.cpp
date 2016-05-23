@@ -522,7 +522,8 @@ void Image::updateVarList(double threshold, double back_mean, double back_std) {
 			varList.push_back(back_var);
 		}
 		else
-			varList.push_back(dataList[i]);
+			varList.push_back(back_var);
+			//varList.push_back(dataList[i]);
 	}
 }
 
