@@ -3,7 +3,6 @@
 #include <fstream>
 #include <string>
 #include <map>
-#include <chrono>
 #include <ctime>
 #include "Image.h"
 #include "commons.h"
