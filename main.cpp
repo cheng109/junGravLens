@@ -59,7 +59,7 @@ int main(int argc, char* argv[]) {
 	MultModelParam param = MultModelParam(mapConf);
 	
 	param.printModels();
-	param.mix(); 	 // update 'AllMixModels'; 
+	param.mix(0); 	 // update 'AllMixModels'; 
 
 
 

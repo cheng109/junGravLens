@@ -7,7 +7,7 @@ LDFLAGS := -L. -L$(WORK_DIR)/lib/cfitsio -L/usr/local/gfortran/lib
 LDLIBS := -lcfitsio -lfortranstuff -lgfortran 
 #-lgsl -lgslcblas -lm -lfortranstuff
 
-SRCS := main.cpp Image.cpp commons.cpp Model.cpp parafit.cpp
+SRCS := main.cpp Image.cpp commons.cpp Model.cpp parafit.cpp parafit2.cpp mc.cpp
 OBJS := $(patsubst %.cpp, %.o, $(SRCS))
 
 ## ARG1:   working directory. 
