@@ -3,7 +3,6 @@
 #include <fstream>
 #include <string>
 #include <map>
-#include <chrono>
 #include <ctime>
 #include "Image.h"
 #include "commons.h"
@@ -60,7 +59,7 @@ int main(int argc, char* argv[]) {
 	MultModelParam param = MultModelParam(mapConf);
 	
 	param.printModels();
-	param.mix(); 	 // update 'AllMixModels'; 
+	param.mix(0); 	 // update 'AllMixModels'; 
 
 
 

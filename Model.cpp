@@ -1113,67 +1113,123 @@ void MultModelParam::printModels() {
 }
 
 
-void MultModelParam::mix() { 
+void MultModelParam::mix(int opt) { 
 	
 	
 	/*	mixModel structure:    {name, paraList[0, 0, 0, 0, 0, 0, 0, 0]}
 	*
 	*/
 
-	vector<vector<mixModels> > mix; 
+	vector<vector<mixModels> > mix;
 	for(int i=0; i<nLens; ++i) {
 
 		if (parameter[i].name=="PTMASS") {
-			vector<mixModels> v1; 
-			for (double critRad = parameter[i].critRadFrom;	critRad <= parameter[i].critRadTo; critRad += parameter[i].critRadInc) {
-				for (double centerX = parameter[i].centerXFrom;	centerX <= parameter[i].centerXTo; centerX += parameter[i].centerXInc) {
-					for (double centerY = parameter[i].centerYFrom;	centerY <= parameter[i].centerYTo; centerY += parameter[i].centerYInc) {
-						
-								mixModels sModel("PTMASS");
-								
-								sModel.paraList[0] = critRad; 
-								sModel.paraList[1] = centerX; 
-								sModel.paraList[2] = centerY; 
-								sModel.paraList[3] = 0;
-								sModel.paraList[4] = 0;
-								sModel.paraList[5] = 0;  //parameter[i].core;
-								v1.push_back(sModel); 
-					}
-				}
-			}
-		
-			mix.push_back(v1); 
+			vector<mixModels> v1;
+            if (opt == 0) {
+	        	for (double critRad = parameter[i].critRadFrom;	critRad <= parameter[i].critRadTo; critRad += parameter[i].critRadInc) {
+	        		for (double centerX = parameter[i].centerXFrom;	centerX <= parameter[i].centerXTo; centerX += parameter[i].centerXInc) {
+	        			for (double centerY = parameter[i].centerYFrom;	centerY <= parameter[i].centerYTo; centerY += parameter[i].centerYInc) {
+	        						mixModels sModel("PTMASS");
+	        						sModel.paraList[0] = critRad;
+	        						sModel.paraList[1] = centerX;
+	        						sModel.paraList[2] = centerY;
+	        						sModel.paraList[3] = 0;
+	        						sModel.paraList[4] = 0;
+	        						sModel.paraList[5] = 0;  //parameter[i].core;
+	        						v1.push_back(sModel);
+	        			}
+	        		}
+	        	}
+            } else if (opt == 1) {
+                mixModels sModel("PTMASS");
+                sModel.paraList[0] = 0.;
+                sModel.paraList[1] = 0.;
+                sModel.paraList[2] = 0.;
+                sModel.paraList[3] = 0.;
+                sModel.paraList[4] = 0.;
+                sModel.paraList[5] = 0.;
+                v1.push_back(sModel);
+                v1.push_back(sModel);
+                v1.push_back(sModel);
+                sModel.paraList[0] = parameter[i].critRadFrom;
+                sModel.paraList[1] = parameter[i].centerXFrom;
+                sModel.paraList[2] = parameter[i].centerYFrom;
+                v1.push_back(sModel);
+                v1.push_back(sModel);
+                v1.push_back(sModel);
+                v1.push_back(sModel);
+                sModel.paraList[0] = parameter[i].critRadTo;
+                sModel.paraList[1] = parameter[i].centerXTo;
+                sModel.paraList[2] = parameter[i].centerYTo;
+                v1.push_back(sModel);
+                sModel.paraList[0] = 0.1 * (parameter[i].critRadTo - parameter[i].critRadFrom);
+                sModel.paraList[1] = 0.1 * (parameter[i].centerXTo - parameter[i].centerXFrom);
+                sModel.paraList[2] = 0.1 * (parameter[i].centerYTo - parameter[i].centerYFrom);
+                v1.push_back(sModel);
+            }
+			mix.push_back(v1);
+
+		} else if (parameter[i].name=="SIE") {
+			vector<mixModels> v1;
+            if (opt == 0) {
+	        	for (double critRad = parameter[i].critRadFrom;	critRad <= parameter[i].critRadTo; critRad += parameter[i].critRadInc) {
+	        		for (double centerX = parameter[i].centerXFrom;	centerX <= parameter[i].centerXTo; centerX += parameter[i].centerXInc) {
+	        			for (double centerY = parameter[i].centerYFrom;	centerY <= parameter[i].centerYTo; centerY += parameter[i].centerYInc) {
+	        				for (double e = parameter[i].eFrom;	e <= parameter[i].eTo; e += parameter[i].eInc) {
+	        					for (double PA = parameter[i].PAFrom; PA <= parameter[i].PATo; PA += parameter[i].PAInc) {
+	        						for(double core = parameter[i].coreFrom; core <= parameter[i].coreTo; core += parameter[i].coreInc) {
+	        							mixModels sModel("SIE");
+	        							sModel.paraList[0] = critRad;
+	        							sModel.paraList[1] = centerX;
+	        							sModel.paraList[2] = centerY;
+	        							sModel.paraList[3] = e;
+	        							sModel.paraList[4] = PA;
+	        							sModel.paraList[5] = core;  //parameter[i].core;
+	        							v1.push_back(sModel);
+	        						}
+	        					}
+	        				}
+	        			}
+	        		}
+	        	}
+            } else if (opt == 1) {
+                mixModels sModel("SIE");
+                sModel.paraList[0] = 0.;
+                sModel.paraList[1] = 0.;
+                sModel.paraList[2] = 0.;
+                sModel.paraList[3] = 0.;
+                sModel.paraList[4] = 0.;
+                sModel.paraList[5] = 0.;
+                v1.push_back(sModel);
+                v1.push_back(sModel);
+                v1.push_back(sModel);
+                sModel.paraList[0] = parameter[i].critRadFrom;
+                sModel.paraList[1] = parameter[i].centerXFrom;
+                sModel.paraList[2] = parameter[i].centerYFrom;
+                sModel.paraList[3] = parameter[i].eFrom;
+                sModel.paraList[4] = parameter[i].PAFrom;
+                sModel.paraList[5] = parameter[i].coreFrom;
+                v1.push_back(sModel);
+                v1.push_back(sModel);
+                v1.push_back(sModel);
+                v1.push_back(sModel);
+                sModel.paraList[0] = parameter[i].critRadTo;
+                sModel.paraList[1] = parameter[i].centerXTo;
+                sModel.paraList[2] = parameter[i].centerYTo;
+                sModel.paraList[3] = parameter[i].eTo;
+                sModel.paraList[4] = parameter[i].PATo;
+                sModel.paraList[5] = parameter[i].coreTo;
+                v1.push_back(sModel);
+                sModel.paraList[0] = 0.1 * (parameter[i].critRadTo - parameter[i].critRadFrom);
+                sModel.paraList[1] = 0.1 * (parameter[i].centerXTo - parameter[i].centerXFrom);
+                sModel.paraList[2] = 0.1 * (parameter[i].centerYTo - parameter[i].centerYFrom);
+                sModel.paraList[3] = 0.1 * (parameter[i].eTo       - parameter[i].eFrom      );
+                sModel.paraList[4] = 0.1 * (parameter[i].PATo      - parameter[i].PAFrom     );
+                sModel.paraList[5] = 0.1 * (parameter[i].coreTo    - parameter[i].coreFrom   );
+                v1.push_back(sModel);
+            }
+			mix.push_back(v1);
 		}
-
-		if (parameter[i].name=="SIE") {
-
-			vector<mixModels> v1; 
-			for (double critRad = parameter[i].critRadFrom;	critRad <= parameter[i].critRadTo; critRad += parameter[i].critRadInc) {
-				for (double centerX = parameter[i].centerXFrom;	centerX <= parameter[i].centerXTo; centerX += parameter[i].centerXInc) {
-					for (double centerY = parameter[i].centerYFrom;	centerY <= parameter[i].centerYTo; centerY += parameter[i].centerYInc) {
-						for (double e = parameter[i].eFrom;	e <= parameter[i].eTo; e += parameter[i].eInc) {
-							for (double PA = parameter[i].PAFrom; PA <= parameter[i].PATo; PA += parameter[i].PAInc) {
-								for(double core = parameter[i].coreFrom; core <= parameter[i].coreTo; core += parameter[i].coreInc) {
-									mixModels sModel("SIE");
-									sModel.paraList[0] = critRad; 
-									sModel.paraList[1] = centerX; 
-									sModel.paraList[2] = centerY; 
-									sModel.paraList[3] = e;
-									sModel.paraList[4] = PA;
-									sModel.paraList[5] = core;  //parameter[i].core;
-									v1.push_back(sModel); 
-								}
-							}
-						}
-					}
-				}
-			}
-		
-			mix.push_back(v1); 
-		}
-
-
-
 	}
 	mix.resize(3);
     size_t ms1 = (mix[1].size() > 0) ? mix[1].size():1;
@@ -1193,7 +1249,7 @@ void MultModelParam::mix() {
         }
 
     }
-	nComb = mixAllModels.size(); 
+	nComb = mixAllModels.size();
 }
 
 
@@ -1323,6 +1379,37 @@ void Model::resetVectors(Conf* conf) {
 	H_curv.reserve(Eigen::VectorXi::Constant(length, 10)); 
 	Hessian_grad.reserve(Eigen::VectorXi::Constant(conf->srcSize[0]*conf->srcSize[1], 6)); 
 
+}
+
+void Model::copyParam(Conf* conf, int i) {
+    resetVectors(conf);
+    for (int j=0; j<param.nLens; ++j) {
+        SingleModelParam s;
+        s.name = param.mixAllModels[i][j].name;
+        if (s.name=="PTMASS") {
+            s.critRad = param.mixAllModels[i][j].paraList[0];
+            s.centerX = param.mixAllModels[i][j].paraList[1];
+            s.centerY = param.mixAllModels[i][j].paraList[2];
+            param.parameter.push_back(s);
+        }
+        else if (s.name=="SIE") {
+            s.critRad = param.mixAllModels[i][j].paraList[0];
+            s.centerX = param.mixAllModels[i][j].paraList[1];
+            s.centerY = param.mixAllModels[i][j].paraList[2];
+            s.e       = param.mixAllModels[i][j].paraList[3];
+            s.PA      = param.mixAllModels[i][j].paraList[4];
+            s.core    = param.mixAllModels[i][j].paraList[5];
+            param.parameter.push_back(s);
+        }
+    }
+}
+
+void Model::copyParam(int i1, int i2) {
+    for(int j=0; j<param.nLens; ++j) {
+        for (size_t k=0; k<param.mixAllModels[0][j].paraList.size(); ++k) {
+            param.mixAllModels[i2][j].paraList[k] = param.mixAllModels[i1][j].paraList[k];
+        }
+    }
 }
 
 
