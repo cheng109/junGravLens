@@ -20,7 +20,7 @@ using namespace std;
 //
 
 void gridSearchVegetti(Conf* conf, MultModelParam param_old, Image* dataImage, string dir, string outputFileName) {
-	double lambdaS = 0.001;  
+	double lambdaS = 0.0;  
 
 	Model *model = new Model(conf, param_old, lambdaS);
 		

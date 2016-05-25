@@ -33,8 +33,6 @@ void mcFit(Conf* conf, MultModelParam param, Image* dataImage, vec d, string dir
 
 
 
-
-
 #endif /* PARAFIT_H_ */
 
 
