@@ -153,6 +153,7 @@ public:
 	vec r;
 	vec new_r;
 	vec s;
+
 	vec phi;
 	//vec square_s;
 	//
@@ -221,6 +222,7 @@ public:
 	void updatePosMapping(Image* image,  Conf* conList);
 	void updateLensAndRegularMatrix(Image* dataImage,  Conf* constList);
 	void updateGradient(Image* dataImage);
+	void updateSource(Conf* conf); 
 	void Logging(Image* dataImage, Conf* conList, string outFileName);
 	void updateRegularMatrix();
 	void solveSource( sp_mat* invC, vec* d, string R_type);

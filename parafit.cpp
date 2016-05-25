@@ -20,7 +20,7 @@ using namespace std;
 //
 
 void gridSearchVegetti(Conf* conf, MultModelParam param_old, Image* dataImage, string dir, string outputFileName) {
-	double lambdaS = 1.0e-5;  
+	double lambdaS = 0.001;  
 
 	Model *model = new Model(conf, param_old, lambdaS);
 		
@@ -59,14 +59,16 @@ void gridSearchVegetti(Conf* conf, MultModelParam param_old, Image* dataImage, s
 			}
 		}	
 		//vector<double> sBright = dataImage->dataList; 
-		vector<double> penalty = getPenalty(model,  dataImage, conf, "vege") ; 
+		vector<double> penalty = getPenalty(model,  dataImage, conf, "zero") ; 
 		
 		if(minPenalty > penalty[2]) {
 			minPenalty = penalty[2]; 
 			minIndex = i; 
 		}
 
-		cout << "[" + to_string(i+1) + "/" + to_string(model->param.nComb) + "]\t" << endl; 
+		cout << "[" + to_string(i+1) + "/" + to_string(model->param.nComb) + "]\t" ; 
+		cout << model->param.parameter[0].critRad << "\t" <<penalty[0] << "\t" << penalty[1] << "\t" << penalty[2] << "\t" <<  endl; 
+
 
 		writeSrcModResImage(model,dataImage,conf, to_string(i), dir) ; 
 
@@ -77,7 +79,7 @@ void gridSearchVegetti(Conf* conf, MultModelParam param_old, Image* dataImage, s
 
 	cout << "************************\nThe best models : " << minPenalty << endl;
 	cout << model->param.printCurrentModels(minIndex).at(1);
-	cout << "************************\n" << endl;
+	cout << "************************\n" << endl;	
 
 	output.close(); 
 
@@ -99,8 +101,9 @@ vector<double> getPenalty(Model* model, Image* dataImage, Conf* conf, string R_t
 	model->updatePosMapping(dataImage, conf);  // time used: 0.03s; 
 	model->update_H_zero(conf); 
 	model->updateLensAndRegularMatrix(dataImage, conf);  // get matrix 'L' and 'RTR'; most time consuming part; 
-
 	model->solveSource(&dataImage->invC, &dataImage->d, R_type); 
+	model->updateSource(conf) ; // Add noise to the source; 
+
 	vec &s = model->s; 
 	
 	vec res = ( model->L * s - dataImage->d) ; 
@@ -114,7 +117,6 @@ vector<double> getPenalty(Model* model, Image* dataImage, Conf* conf, string R_t
 	penalty[1] = srcR[0]; 
 	penalty[2] = chi2[0] + srcR[0]; 
 
-	cout << model->param.parameter[0].critRad << "\t" <<chi2[0] << "\t" << srcR[0] << "\t" << penalty[2] << "\t" << model->H_zero.nonZeros()<< endl; 
 	return penalty; 
 
 
