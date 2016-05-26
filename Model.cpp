@@ -1219,15 +1219,21 @@ void MultModelParam::mix(int opt) {
                 v1.push_back(sModel);
                 v1.push_back(sModel);
                 v1.push_back(sModel);
+                sModel.paraList[0] = 0.5 * (parameter[i].critRadTo + parameter[i].critRadFrom);
+                sModel.paraList[1] = 0.5 * (parameter[i].centerXTo + parameter[i].centerXFrom);
+                sModel.paraList[2] = 0.5 * (parameter[i].centerYTo + parameter[i].centerYFrom);
+                sModel.paraList[3] = 0.5 * (parameter[i].eTo       + parameter[i].eFrom      );
+                sModel.paraList[4] = 0.5 * (parameter[i].PATo      + parameter[i].PAFrom     );
+                sModel.paraList[5] = 0.5 * (parameter[i].coreTo    + parameter[i].coreFrom   );
+                v1.push_back(sModel);
+                v1.push_back(sModel);
+                v1.push_back(sModel);
                 sModel.paraList[0] = parameter[i].critRadFrom;
                 sModel.paraList[1] = parameter[i].centerXFrom;
                 sModel.paraList[2] = parameter[i].centerYFrom;
                 sModel.paraList[3] = parameter[i].eFrom;
                 sModel.paraList[4] = parameter[i].PAFrom;
                 sModel.paraList[5] = parameter[i].coreFrom;
-                v1.push_back(sModel);
-                v1.push_back(sModel);
-                v1.push_back(sModel);
                 v1.push_back(sModel);
                 sModel.paraList[0] = parameter[i].critRadTo;
                 sModel.paraList[1] = parameter[i].centerXTo;
@@ -1252,20 +1258,27 @@ void MultModelParam::mix(int opt) {
     size_t ms2 = (mix[2].size() > 0) ? mix[2].size():1;
 
     /* for maximum 3 models:  j, k, m */
-    for(size_t j=0; j<mix[0].size(); ++j) {
-        for(size_t k=0; k<ms1; ++k ) {
-            for(size_t m=0; m<ms2; ++m) {
-                vector<mixModels> v2;
-                v2.push_back(mix[0][j]);
-                if (nLens>1) v2.push_back(mix[1][k]);
-                if (nLens>2) v2.push_back(mix[2][m]);
-                mixAllModels.push_back(v2);
+    if (opt == 0) {
+        for(size_t j=0; j<mix[0].size(); ++j) {
+            for(size_t k=0; k<ms1; ++k ) {
+                for(size_t m=0; m<ms2; ++m) {
+                    vector<mixModels> v2;
+                    v2.push_back(mix[0][j]);
+                    if (nLens>1) v2.push_back(mix[1][k]);
+                    if (nLens>2) v2.push_back(mix[2][m]);
+                    mixAllModels.push_back(v2);
+                }
             }
-
         }
-
+    } else if (opt == 1) {
+        for(size_t j=0; j<mix[0].size(); ++j) {
+            vector<mixModels> v2;
+            for(int i=0; i<nLens; ++i) v2.push_back(mix[i][j]);
+            mixAllModels.push_back(v2);
+        }
     }
 	nComb = mixAllModels.size();
+    cout<< nComb<<" "<<ms1<<" "<<ms2<<" "<< mix[0].size()<<endl;
 }
 
 

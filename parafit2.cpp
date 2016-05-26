@@ -22,9 +22,9 @@ using namespace std;
 
 void mcFit(Conf* conf, MultModelParam param_old, Image* dataImage, string dir, string outputFileName) {
     MC mc(123);
-    size_t nLoops(10), iter(0);
+    size_t nLoops(100), iter(0);
     double cfac(1.), weight(5e-2), L0;
-    double L(std::numeric_limits<double>::min());
+    double L(-std::numeric_limits<double>::max());
     double LMax(L);
     double lambdaS = 0.1;
 
@@ -38,7 +38,7 @@ void mcFit(Conf* conf, MultModelParam param_old, Image* dataImage, string dir, s
         cfac = mc.stepPar(model->param, cfac, iter);
         model->copyParam(conf, 3);
         vector<double> penalty = getPenalty(model, dataImage, conf, "zero");
-        L = penalty[2];
+        L = -penalty[0] / 2.0;
 
         cout<< loop<< " " << iter << ": " << L << " " << L0 << " " << LMax << " cfac "<<cfac<<endl;
         if (std::isnan(L) || (L<=L0 && mc.random() > exp((L-L0)*weight))) {
