@@ -47,6 +47,8 @@ public:
 	vector<int> yList;
 	vector<int> iList;
 
+
+
 	vector<int> type;
 	long length;
 

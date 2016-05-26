@@ -130,6 +130,17 @@ public:
 	vector<double> srcPosXListPixel;	  // Source position after deflection in X direction, in pixel;
 	vector<double> srcPosYListPixel;	  // Source position after deflection in Y direction, in pixel;
 
+
+	vector<double> srcPosXListPixel_increase; 
+	vector<double> srcPosYListPixel_follow; 
+	
+	vector<double> srcPosXListPixel_follow; 
+	vector<double> srcPosYListPixel_increase; 
+
+
+
+
+
 	vector<double> pDeltaX;  	// Deflection angle in X direction;
 	vector<double> pDeltaY; 	// Deflection angle in Y direction;
 	vector<double> invMag;
