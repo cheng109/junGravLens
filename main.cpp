@@ -38,6 +38,9 @@ int main(int argc, char* argv[]) {
 	string dir 		= argv[1]; 
 	string strConf 	= argv[2]; 
 	string output 	= argv[3]; 
+    int opt(0);
+    if (argc > 4) opt = atoi(argv[4]);          //0: grid, 1: mcmc
+
 	/***** prepare*****/
 	string confFileName = dir+ strConf; 
 	map<string, string> mapConf = parseConfigure(confFileName);
@@ -59,7 +62,7 @@ int main(int argc, char* argv[]) {
 	MultModelParam param = MultModelParam(mapConf);
 	
 	param.printModels();
-	param.mix(0); 	 // update 'AllMixModels'; 
+	param.mix(opt); 	 // update 'AllMixModels'; 
 
 
 
@@ -85,13 +88,14 @@ int main(int argc, char* argv[]) {
 */
 
 
+    if (opt == 0)
+        gridSearchVegetti(conf, param, dataImage, dir, output);
+    else if (opt == 1)
+        mcFit(conf, param, dataImage, dir, output);
 
-	gridSearchVegetti(conf, param,  dataImage, dir, output);	
 
-
-	
-	delete conf; 
-	delete dataImage; 
+	delete conf;
+	delete dataImage;
 	return 0;
 }
 

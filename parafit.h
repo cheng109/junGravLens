@@ -28,7 +28,7 @@ typedef struct minimiser_params {
 void gridSearch       (Conf* conf, MultModelParam param, Image* dataImage, vec d, string dir, string outputFileName);
 void gridSearchVegetti(Conf* conf, MultModelParam param, Image* dataImage, string dir, string outputFileName) ; 
 vector<double> getPenalty(Model* model, Image* dataImage, Conf* conf , string R_type) ; 
-void mcFit(Conf* conf, MultModelParam param, Image* dataImage, vec d, string dir, string outputFileName);
+void mcFit(Conf* conf, MultModelParam param, Image* dataImage, string dir, string outputFileName);
 
 
 

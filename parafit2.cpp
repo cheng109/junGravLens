@@ -20,9 +20,9 @@ using namespace std;
 
 
 
-void mcFit(Conf* conf, MultModelParam param_old, Image* dataImage, vec d, string dir, string outputFileName) {
+void mcFit(Conf* conf, MultModelParam param_old, Image* dataImage, string dir, string outputFileName) {
     MC mc(123);
-    size_t nLoops(1000), iter(0);
+    size_t nLoops(10), iter(0);
     double cfac(1.), weight(5e-2), L0;
     double L(std::numeric_limits<double>::min());
     double LMax(L);
