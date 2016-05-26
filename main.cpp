@@ -66,6 +66,10 @@ int main(int argc, char* argv[]) {
 
 
 
+	// Image* maskImg = new Image(dataImage->xList, dataImage->yList, &dataImage->dataList, conf->imgSize[0], conf->imgSize[1], conf->bitpix);
+	// maskImg -> writeToFile ("galfit_work/img_mask.fits");
+	// delete maskImg; 
+
 	/*
 
 	for(int i=0; i<6; ++i) {

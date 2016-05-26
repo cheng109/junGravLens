@@ -23,6 +23,7 @@
 #include <Eigen/Dense>
 #include <assert.h>
 #include <stdlib.h>
+#include <random>
 using namespace std;
 //using namespace arma;
 using namespace Eigen;
@@ -640,6 +641,21 @@ void Model::solveSource(sp_mat* invC, vec* d , string R_type) {
 
 // }
 
+
+void Model::updateSource(Conf* conf) {
+
+	std::default_random_engine generator; 
+	std::normal_distribution<double> distribution(conf->back_mean, conf->back_std); 
+	
+
+	for(int i=0; i<conf->length; ++i) {
+		double randNum = distribution(generator); 
+
+
+		s[i]  += randNum; 
+	}
+
+}
 
 
 
@@ -1413,6 +1429,8 @@ void Model::copyParam(int i1, int i2) {
 }
 
 
+
+
 vector<vector<double> > getCritCausticFine(vector<double> xPosListArc, vector<double> yPosListArc, Conf* conf, MultModelParam * param, int level) {
 	// level = 5; 
 	vector<double> invMag;
@@ -1698,7 +1716,8 @@ void writeSrcModResImage(Model* model, Image* dataImage, Conf* conf, string file
 	Image* srcImg = new Image(model->srcPosXListPixel, model->srcPosYListPixel, &s, conf->srcSize[0], conf->srcSize[1], conf->bitpix);		
 	Image* modImg = new Image(dataImage->xList, dataImage->yList, &s, conf->imgSize[0], conf->imgSize[1], conf->bitpix);
 	Image* resImg = model->getFullResidual(dataImage);
-	srcImg -> writeToFile (dir + "img_src_" + fileName + ".fits", conf->back_mean, conf->back_std ) ;
+	//srcImg -> writeToFile (dir + "img_src_" + fileName + ".fits", conf->back_mean, conf->back_std ) ;
+	srcImg -> writeToFile (dir + "img_src_" + fileName + ".fits");
 	resImg -> writeToFile (dir + "img_res_" + fileName + ".fits");
 	modImg -> writeToFile (dir + "img_mod_" + fileName + ".fits");
 	delete srcImg, modImg, resImg; 

@@ -37,9 +37,7 @@ Image::Image(vector<double> xpos, vector<double> ypos, vector<double> *briList, 
 		if(x>0 && x< naxis1 && y>0 && y<naxis2) {
 			iList = naxis1*y+x;
 			data[iList] += briList->at(i);
-
 		}
-
 	}
 }
 
@@ -316,6 +314,8 @@ void Image::updateBackSubtract(double back_mean, double back_std) {
 
 	double sigma = 0; 
 	double counter = 0; 
+
+	double factor = 0; 
 	std::default_random_engine generator; 
 	std::normal_distribution<double> distribution(back_mean, sigma); 
 	for (int i=0; i<dataList.size(); ++i ) {
@@ -323,10 +323,10 @@ void Image::updateBackSubtract(double back_mean, double back_std) {
 		dataList[i] -= number ; 
 
 		//  set dataList to be zero if it is smaller than 2 sigma. 
-		if(dataList[i] < 3* back_std) {
-			counter += 1; 
-			dataList[i] = 0; 
-		}
+		// if(dataList[i] < factor* back_std) {
+		// 	counter += 1; 
+		// 	dataList[i] = 0; 
+		// }
 		d[i] = dataList[i]; 
 	}
 

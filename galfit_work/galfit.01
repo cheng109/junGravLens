@@ -1,0 +1,190 @@
+
+#  Input menu file: HorseShoe.feedme
+
+#  Chi^2/nu = 1.025,  Chi^2 = 128133.711,  Ndof = 125043
+
+================================================================================
+# IMAGE and GALFIT CONTROL PARAMETERS
+A) HorseShoe_large_ADU.fits      # Input data image (FITS file)
+B) HorseShoe_output.fits      # Output data image block
+C) #HorseShoe_sigma.fits      # Sigma image name (made from data if blank or "none") 
+D) PSF.fits            # Input PSF image and (optional) diffusion kernel
+E) 1                   # PSF fine sampling factor relative to data 
+F) img_mask.fits       # Bad pixel mask (FITS image or ASCII coord list)
+G) none                # File with parameter constraints (ASCII file) 
+H) 1    461  1    361  # Image region to fit (xmin xmax ymin ymax)
+I) 40     40           # Size of the convolution box (x y)
+J) 25.723              # Magnitude photometric zeropoint 
+K) 0.040  0.040        # Plate scale (dx dy)   [arcsec per pixel]
+O) regular             # Display type (regular, curses, both)
+P) 0                   # Choose: 0=optimize, 1=model, 2=imgblock, 3=subcomps
+
+# INITIAL FITTING PARAMETERS
+#
+#   For component type, the allowed functions are: 
+#       sersic, expdisk, edgedisk, devauc, king, nuker, psf, 
+#       gaussian, moffat, ferrer, and sky. 
+#  
+#   Hidden parameters will only appear when they're specified:
+#       Bn (n=integer, Bending Modes).
+#       C0 (diskyness/boxyness), 
+#       Fn (n=integer, Azimuthal Fourier Modes).
+#       R0-R10 (coordinate rotation, for creating spiral structures).
+#       To, Ti, T0-T10 (truncation function).
+# 
+# ------------------------------------------------------------------------------
+#   par)    par value(s)    fit toggle(s)    # parameter description 
+# ------------------------------------------------------------------------------
+
+# Component number: 1
+ 0) sersic                 #  Component type
+ 1) 234.0309 180.8030 1 1  #  Position x, y
+ 3) 11.4352     1          #  Integrated magnitude 
+ 4) 107.9972    1          #  R_e (effective radius)   [pix]
+ 5) 2.7357      1          #  Sersic index n (de Vaucouleurs n=4) 
+ 6) 0.0000      0          #     ----- 
+ 7) 0.0000      0          #     ----- 
+ 8) 0.0000      0          #     ----- 
+ 9) 0.9050      1          #  Axis ratio (b/a)  
+10) -65.3855    1          #  Position angle (PA) [deg: Up=0, Left=90]
+ Z) 0                      #  Skip this model in output image?  (yes=1, no=0)
+
+# Component number: 2
+ 0) sersic                 #  Component type
+ 1) 231.5719 181.7506 1 1  #  Position x, y
+ 3) 14.2249     1          #  Integrated magnitude 
+ 4) 6.7384      1          #  R_e (effective radius)   [pix]
+ 5) 0.8462      1          #  Sersic index n (de Vaucouleurs n=4) 
+ 6) 0.0000      0          #     ----- 
+ 7) 0.0000      0          #     ----- 
+ 8) 0.0000      0          #     ----- 
+ 9) 0.5917      1          #  Axis ratio (b/a)  
+10) -4.2005     1          #  Position angle (PA) [deg: Up=0, Left=90]
+ Z) 0                      #  Skip this model in output image?  (yes=1, no=0)
+
+# Component number: 3
+ 0) psf                    #  Component type
+ 1) 198.8518 163.3204 1 1  #  Position x, y 
+ 3) 18.2133     1          #  Integrated magnitude 
+ 4) 0.0000      0          #     ----- 
+ 5) 0.0000      0          #     ----- 
+ 6) 0.0000      0          #     ----- 
+ 7) 0.0000      0          #     ----- 
+ 8) 0.0000      0          #     ----- 
+ 9) 1.0000      -1         #  Axis ratio (b/a)  
+10) 0.0000      -1         #  Position angle (PA) [deg: Up=0, Left=90]
+ Z) 0                      #  Skip this model in output image?  (yes=1, no=0)
+
+# Component number: 4
+ 0) psf                    #  Component type
+ 1) 225.7080 91.2263  1 1  #  Position x, y 
+ 3) 18.7530     1          #  Integrated magnitude 
+ 4) 0.0000      0          #     ----- 
+ 5) 0.0000      0          #     ----- 
+ 6) 0.0000      0          #     ----- 
+ 7) 0.0000      0          #     ----- 
+ 8) 0.0000      0          #     ----- 
+ 9) 1.0000      -1         #  Axis ratio (b/a)  
+10) 0.0000      -1         #  Position angle (PA) [deg: Up=0, Left=90]
+ Z) 0                      #  Skip this model in output image?  (yes=1, no=0)
+
+# Component number: 5
+ 0) moffat                 #  Component type
+ 1) 40.2762  12.4467  1 1  #  Position x, y 
+ 3) 12.2572     1          #  Integrated magnitude 
+ 4) 1.7160      1          #     FWHM       [pix]
+ 5) 1.0082      1          #  Moffat powerlaw index 
+ 6) 0.0000      0          #     ----- 
+ 7) 0.0000      0          #     ----- 
+ 8) 0.0000      0          #     ----- 
+ 9) 0.8221      1          #  Axis ratio (b/a)  
+10) 31.2817     1          #  Position angle (PA) [deg: Up=0, Left=90]
+ Z) 0                      #  Skip this model in output image?  (yes=1, no=0)
+
+# Component number: 6
+ 0) moffat                 #  Component type
+ 1) 86.8269  10.5115  1 1  #  Position x, y 
+ 3) 16.2559     1          #  Integrated magnitude 
+ 4) 4.3354      1          #     FWHM       [pix]
+ 5) 1.3226      1          #  Moffat powerlaw index 
+ 6) 0.0000      0          #     ----- 
+ 7) 0.0000      0          #     ----- 
+ 8) 0.0000      0          #     ----- 
+ 9) 0.8373      1          #  Axis ratio (b/a)  
+10) 78.3656     1          #  Position angle (PA) [deg: Up=0, Left=90]
+ Z) 0                      #  Skip this model in output image?  (yes=1, no=0)
+
+# Component number: 7
+ 0) sersic                 #  Component type
+ 1) 17.2965  33.3711  1 1  #  Position x, y
+ 3) 15.4676     1          #  Integrated magnitude 
+ 4) 23.9018     1          #  R_e (effective radius)   [pix]
+ 5) 0.3718      1          #  Sersic index n (de Vaucouleurs n=4) 
+ 6) 0.0000      0          #     ----- 
+ 7) 0.0000      0          #     ----- 
+ 8) 0.0000      0          #     ----- 
+ 9) 0.1113      1          #  Axis ratio (b/a)  
+10) -62.6307    1          #  Position angle (PA) [deg: Up=0, Left=90]
+ Z) 0                      #  Skip this model in output image?  (yes=1, no=0)
+
+# Component number: 8
+ 0) psf                    #  Component type
+ 1) 14.4939  47.6541  1 1  #  Position x, y 
+ 3) 19.1560     1          #  Integrated magnitude 
+ 4) 0.0000      0          #     ----- 
+ 5) 0.0000      0          #     ----- 
+ 6) 0.0000      0          #     ----- 
+ 7) 0.0000      0          #     ----- 
+ 8) 0.0000      0          #     ----- 
+ 9) 1.0000      -1         #  Axis ratio (b/a)  
+10) 0.0000      -1         #  Position angle (PA) [deg: Up=0, Left=90]
+ Z) 0                      #  Skip this model in output image?  (yes=1, no=0)
+
+# Component number: 9
+ 0) psf                    #  Component type
+ 1) 16.4352  287.8990 1 1  #  Position x, y 
+ 3) 19.1427     1          #  Integrated magnitude 
+ 4) 0.0000      0          #     ----- 
+ 5) 0.0000      0          #     ----- 
+ 6) 0.0000      0          #     ----- 
+ 7) 0.0000      0          #     ----- 
+ 8) 0.0000      0          #     ----- 
+ 9) 1.0000      -1         #  Axis ratio (b/a)  
+10) 0.0000      -1         #  Position angle (PA) [deg: Up=0, Left=90]
+ Z) 0                      #  Skip this model in output image?  (yes=1, no=0)
+
+# Component number: 10
+ 0) psf                    #  Component type
+ 1) 19.9198  356.3233 1 1  #  Position x, y 
+ 3) 19.5630     1          #  Integrated magnitude 
+ 4) 0.0000      0          #     ----- 
+ 5) 0.0000      0          #     ----- 
+ 6) 0.0000      0          #     ----- 
+ 7) 0.0000      0          #     ----- 
+ 8) 0.0000      0          #     ----- 
+ 9) 1.0000      -1         #  Axis ratio (b/a)  
+10) 0.0000      -1         #  Position angle (PA) [deg: Up=0, Left=90]
+ Z) 0                      #  Skip this model in output image?  (yes=1, no=0)
+
+# Component number: 11
+ 0) sersic                 #  Component type
+ 1) 163.4185 343.7603 1 1  #  Position x, y
+ 3) 17.2133     1          #  Integrated magnitude 
+ 4) 14.5939     1          #  R_e (effective radius)   [pix]
+ 5) 0.4108      1          #  Sersic index n (de Vaucouleurs n=4) 
+ 6) 0.0000      0          #     ----- 
+ 7) 0.0000      0          #     ----- 
+ 8) 0.0000      0          #     ----- 
+ 9) 0.1081      1          #  Axis ratio (b/a)  
+10) 73.5936     1          #  Position angle (PA) [deg: Up=0, Left=90]
+ Z) 0                      #  Skip this model in output image?  (yes=1, no=0)
+
+# Component number: 12
+ 0) sky                    #  Component type
+ 1) 69.6479     1          #  Sky background at center of fitting region [ADUs]
+ 2) 6.176e-05      1       #  dsky/dx (sky gradient in x)     [ADUs/pix]
+ 3) 3.051e-04      1       #  dsky/dy (sky gradient in y)     [ADUs/pix]
+ Z) 0                      #  Skip this model in output image?  (yes=1, no=0)
+
+================================================================================
+
