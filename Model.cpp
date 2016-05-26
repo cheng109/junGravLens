@@ -393,10 +393,99 @@ void Model::updateLensAndRegularMatrix(Image* dataImage,  Conf* constList) {
 	vector<double> w, w5;
 
 
-	 
+	// Make pair; 
+	Conf* conf = constList; 
+	// vector<pair<double, double>> coordPair(conf->length); 
+	// for(int i=0; i<conf->length; ++i) 
+	// 	coordPair[i] = make_pair(srcPosXListPixel[i], srcPosYListPixel[i]); 
 
-	for (int i=0; i<constList->length; ++i) {
+	// sort(coordPair.begin(), coordPair.end(), [=](pair<double, double>& a,  pair<double, double> & b) {
+	// 	return a.first < b.first; 
+	// }); 
 
+
+	
+
+	for (int i=0; i<conf->length; ++i) {
+		double largeNumber = 10000; 
+		double distRegion1 = largeNumber; 
+		double distRegion2 = largeNumber; 
+		double distRegion3 = largeNumber; 
+		double distRegion4 = largeNumber; 
+
+		int indexRegion1 = -1; 
+		int indexRegion2 = -1; 
+		int indexRegion3 = -1; 
+		int indexRegion4 = -1; 
+		for(int j=0; j<conf->length; ++j) {
+			if (j == i ) 	continue; 
+			double dx = srcPosXListPixel[j] - srcPosXListPixel[i] ; 
+			double dy = srcPosYListPixel[j] - srcPosYListPixel[i] ; 
+			double dist = dx * dx + dy * dy; 
+
+			if(srcPosXListPixel[j] > srcPosXListPixel[i] and srcPosYListPixel[j] > srcPosYListPixel[i] and dist<distRegion1 ) {   // in region1; 
+					distRegion1 = dist ; 
+					indexRegion1 = j ;  
+			}
+
+			else if(srcPosXListPixel[j] < srcPosXListPixel[i] and srcPosYListPixel[j] > srcPosYListPixel[i]  and dist<distRegion2 ) {   // in region2; 
+					distRegion2 = dist ; 
+					indexRegion2 = j ;  
+			}
+
+
+			else if(srcPosXListPixel[j] < srcPosXListPixel[i] and srcPosYListPixel[j] < srcPosYListPixel[i] and dist<distRegion3 ) {   // in region3; 
+					distRegion3 = dist ; 
+					indexRegion3 = j ;  
+			}
+
+			else if(srcPosXListPixel[j] > srcPosXListPixel[i] and srcPosYListPixel[j] < srcPosYListPixel[i]  and dist<distRegion4 ) {   // in region4; 
+					distRegion4 = dist ; 
+					indexRegion4 = j ;  
+			}
+
+		}
+
+		if (indexRegion1 > 0 and indexRegion2 > 0  and indexRegion3 > 0 and indexRegion4 > 0 )  {
+
+			Point A(srcPosXList[indexRegion3 ], srcPosYList[indexRegion3 ], s(indexRegion3 ));
+			Point B(srcPosXList[indexRegion2 ], srcPosYList[indexRegion2 ], s(indexRegion2 ));
+			Point C(srcPosXList[i            ], srcPosYList[i            ], s(i            ));
+			Point D(srcPosXList[indexRegion4 ], srcPosYList[indexRegion4 ], s(indexRegion4 ));
+			Point E(srcPosXList[indexRegion1 ], srcPosYList[indexRegion1 ], s(indexRegion1 ));
+
+			w5 = getPentWeigth(A, B, C, D, E);
+
+			// cout << i << "\t" << indexRegion1 << "\t" << indexRegion2 << "\t" << indexRegion3 << "\t" << indexRegion4 << "\t"  << endl; 
+			
+			// cout << srcPosXList[indexRegion1 ] << "\t" << srcPosYList[indexRegion1 ] << endl; 
+			// cout << srcPosXList[indexRegion2 ] << "\t" << srcPosYList[indexRegion2 ] << endl; 
+			// cout << srcPosXList[indexRegion3 ] << "\t" << srcPosYList[indexRegion3 ] << endl; 
+			// cout << srcPosXList[indexRegion4 ] << "\t" << srcPosYList[indexRegion4 ] << endl; 
+			// cout << srcPosXList[i ] << "\t" << srcPosYList[i ] << endl; 
+
+			Hs1.insert(i, indexRegion3	) 	= w5[0];
+			Hs1.insert(i, indexRegion2	) 	= w5[1];
+			Hs1.insert(i, i				) 	= w5[2];
+			Hs1.insert(i, indexRegion4	) 	= w5[3];
+			Hs1.insert(i, indexRegion1	) 	= w5[4];
+
+			Hs2.insert(i, indexRegion3	) 	= w5[5];
+			Hs2.insert(i, indexRegion2	) 	= w5[6];
+			Hs2.insert(i, i				) 	= w5[7];
+			Hs2.insert(i, indexRegion4	) 	= w5[8];
+			Hs2.insert(i, indexRegion1	) 	= w5[9]; 
+
+
+		}
+		L.insert(i,i)=1;
+
+
+
+	}
+	
+	if(0) {
+	for (int i=0; i<conf->length; ++i) {
 	//	if(dataImage->type[i]==1) {// || dataImage->type[i]==0) {
 
 			
@@ -407,10 +496,6 @@ void Model::updateLensAndRegularMatrix(Image* dataImage,  Conf* constList) {
 			up    = posMap.find(make_pair(dataImage->xList[i], dataImage->yList[i]+1));
 			down  = posMap.find(make_pair(dataImage->xList[i], dataImage->yList[i]-1));
 
-//			left  = posMap.find(make_pair(dataImage->xList[i]-1, dataImage->yList[i]-1));
-//			right = posMap.find(make_pair(dataImage->xList[i]+1, dataImage->yList[i]+1));
-//			up    = posMap.find(make_pair(dataImage->xList[i]-1, dataImage->yList[i]+1));
-//			down  = posMap.find(make_pair(dataImage->xList[i]+1, dataImage->yList[i]-1));
 
 			if(left!=posMap.end() && up!=posMap.end() && down!=posMap.end() && right!=posMap.end()) {
 				int iLeft = left->second;
@@ -433,6 +518,7 @@ void Model::updateLensAndRegularMatrix(Image* dataImage,  Conf* constList) {
 				Hs1.insert(i, i		) 	= w5[2];
 				Hs1.insert(i, iDown	) 	= w5[3];
 				Hs1.insert(i, iRight) 	= w5[4];
+
 				Hs2.insert(i, iLeft	) 	= w5[5];
 				Hs2.insert(i, iUp	) 	= w5[6];
 				Hs2.insert(i, i		) 	= w5[7];
@@ -472,6 +558,8 @@ void Model::updateLensAndRegularMatrix(Image* dataImage,  Conf* constList) {
 		//time1 += (clock() - begin) ; 
 		
 	}
+
+}
 
 	HtH = Hs1.transpose()*Hs1 + Hs2.transpose()*Hs2;
 	//RtR = lambdaS*lambdaS*HtH;
