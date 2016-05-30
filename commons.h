@@ -12,21 +12,17 @@
 #include <string>
 #include <vector>
 #include "Image.h"
+#include "nanoflann.hpp"
 //#include "Model.h"
 #include <map>
-//#include <armadillo>
 #include <Eigen/Sparse>
-// typedef Eigen::SparseMatrix<double> sp_mat;
-// typedef Eigen::VectorXd vec;
 
 using namespace std;
+using namespace nanoflann; 
 
 typedef Eigen::SparseMatrix<double> sp_mat;
 typedef Eigen::SparseMatrix<double,Eigen::RowMajor> sp_mat_row; 
 typedef Eigen::VectorXd vec;
-
-
-//using namespace arma;
 
 struct normVec{ 
 	double n0;  
@@ -42,6 +38,44 @@ struct Point{
 	double z;
 	Point(double a, double b, double c):x(a), y(b), z(c) {};
 }; 
+
+
+template <typename T>
+struct PointCloud
+{
+	struct Point
+	{
+		T  x,y,z;
+	};
+
+	vector<Point>  pts;
+
+	// Must return the number of data points
+	inline size_t kdtree_get_point_count() const { return pts.size(); }
+
+	// Returns the distance between the vector "p1[0:size-1]" and the data point with index "idx_p2" stored in the class:
+	inline T kdtree_distance(const T *p1, const size_t idx_p2,size_t /*size*/) const
+	{
+		const T d0=p1[0]-pts[idx_p2].x;
+		const T d1=p1[1]-pts[idx_p2].y;
+		//const T d2=p1[2]-pts[idx_p2].z;
+		return d0*d0+d1*d1 ; 
+	}
+
+	inline T kdtree_get_pt(const size_t idx, int dim) const
+	{
+		if (dim==0) return pts[idx].x;
+		else if (dim==1) return pts[idx].y;
+		else return pts[idx].z;
+	}
+	template <class BBOX>
+	bool kdtree_get_bbox(BBOX& /*bb*/) const { return false; }
+};
+
+
+
+
+
 
 class Conf{
 public:
@@ -82,6 +116,9 @@ public:
 	double back_mean; 
 	double back_std; 
 
+	double srcRegLevel; 
+	string srcRegType; 
+
 	long potN;
 	int bitpix;
 
@@ -105,7 +142,8 @@ void printerror( int status);
 
 bool pnpoly(size_t nvert, vector<double> *vertx, vector<double> *verty, double testx, double testy);
 void updateConf(string confFileName);
-string parseReagionFile(string regionFileName, vector<double> *xpos, vector<double> *ypos);
+vector<string> parseRegionFile(string regionFileName, vector<vector<double> > *xpos, vector<vector<double> > *ypos); 
+
 map<string, string> parseConfigure(string confFileName) ;
 //double getPenalty(sp_mat* M, vec* r, vec* d, sp_mat* C);
 double lm_arctanh(double x);

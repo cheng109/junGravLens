@@ -37,6 +37,7 @@ struct mixModels {
 }; 
 
 
+
 struct SingleModelParam {
 	string name;
 	double mass;
@@ -257,6 +258,7 @@ public:
 	void resetVectors(Conf* conf);
     void copyParam(Conf* conf, int i);
     void copyParam(int i1, int i2);
+    void updateVegettiRegularization(); 
 
 };
 

@@ -20,7 +20,7 @@ using namespace std;
 //
 
 void gridSearchVegetti(Conf* conf, MultModelParam param_old, Image* dataImage, string dir, string outputFileName) {
-	double lambdaS = 0.1;  
+	double lambdaS = conf->srcRegLevel;  
 
 	Model *model = new Model(conf, param_old, lambdaS);
 		
@@ -59,7 +59,7 @@ void gridSearchVegetti(Conf* conf, MultModelParam param_old, Image* dataImage, s
 			}
 		}	
 		//vector<double> sBright = dataImage->dataList; 
-		vector<double> penalty = getPenalty(model,  dataImage, conf, "zero") ; 
+		vector<double> penalty = getPenalty(model,  dataImage, conf) ; 
 		
 		if(minPenalty > penalty[2]) {
 			minPenalty = penalty[2]; 
@@ -68,7 +68,6 @@ void gridSearchVegetti(Conf* conf, MultModelParam param_old, Image* dataImage, s
 
 		cout << "[" + to_string(i+1) + "/" + to_string(model->param.nComb) + "]\t" ; 
 		cout << model->param.parameter[0].critRad << "\t" <<penalty[0] << "\t" << penalty[1] << "\t" << penalty[2] << "\t" <<  endl; 
-
 
 		writeSrcModResImage(model,dataImage,conf, to_string(i), dir) ; 
 
@@ -92,25 +91,40 @@ void gridSearchVegetti(Conf* conf, MultModelParam param_old, Image* dataImage, s
 }
 
 
-vector<double> getPenalty(Model* model, Image* dataImage, Conf* conf, string R_type) {
+vector<double> getPenalty(Model* model, Image* dataImage, Conf* conf) {
 	
-
-
 	vec d = cV_to_eigenV (&dataImage->dataList); 
 
 	model->updatePosMapping(dataImage, conf);  // time used: 0.03s; 
 	model->update_H_zero(conf); 
 	model->updateLensAndRegularMatrix(dataImage, conf);  // get matrix 'L' and 'RTR'; most time consuming part; 
-	model->solveSource(&dataImage->invC, &dataImage->d, R_type); 
-	model->updateSource(conf) ; // Add noise to the source; 
-
+	model->solveSource(&dataImage->invC, &dataImage->d, conf->srcRegType); 
+	//model->updateSource(conf) ; // Add noise to the source; 
 	vec &s = model->s; 
-	
 	vec res = ( model->L * s - dataImage->d) ; 
 	vec chi2 = res.transpose() *  dataImage->invC * res * model->lambdaC* model->lambdaC  ; 
 	vec srcR = s  .transpose() *  model->REG      * s   * model->lambdaS* model->lambdaS  ; 
 
 
+
+	// vector<double> newListX , newListY, srcList; 
+	// for(int i=0; i<conf->length; ++i) {
+	// 	if (model->srcPosXListPixel[i] <52 and model->srcPosXListPixel[i] > 49
+	// 		and model->srcPosYListPixel[i] <60 and model->srcPosYListPixel[i] > 40 ) {
+	// 		newListX.push_back(dataImage->xList[i]); 
+	// 		newListY.push_back(dataImage->yList[i]); 
+	// 		srcList.push_back(1.0); 
+	// 		cout << dataImage->xList[i] << "\t" << dataImage->yList[i] << ";\t" ; 
+
+	// 	}
+
+	// }
+	//cout << endl; 
+	//Image* newImage = new Image(newListX,  newListY, &srcList, conf->imgSize[0], conf->imgSize[1], conf->bitpix); 
+
+	//newImage -> writeToFile ( "check.fits");
+
+	//delete newImage; 
 
 	vector<double> penalty(3); 
 	penalty[0] = chi2[0]; 
@@ -118,120 +132,5 @@ vector<double> getPenalty(Model* model, Image* dataImage, Conf* conf, string R_t
 	penalty[2] = chi2[0] + srcR[0]; 
 
 	return penalty; 
-
-
 }
-
-
-// void gridSearch(Conf* conf, MultModelParam param_old, Image* dataImage, vec d, string dir, string outputFileName) {
-// 	Model *model = new Model(conf, param_old, 0.1);
-	
-// 	//vector<vector<double> > critical;  
-
-// 	vector<int> maxIndex(3,0); 
-// 	vector<double> maxObjFunc(3, -1.0); 
-
-// 	int minIndexScatter = 0 ; 
-// 	double minScatter = std::numeric_limits<double>::max(); 
-
-// 	ofstream output; 
-// 	output.open(outputFileName); 
-// 	//MultModelParam newParam (param);  
-// 	clock_t	begin = clock(); 
-
-// 	cout << model->param.nComb << endl; 
-// 	for(int i=0 ; i< model->param.nComb ; ++i) {
-		
-// 		model->resetVectors(conf); 
-// 		for(int j=0; j<model->param.nLens; ++j) {   // max of j is 3; 
-// 			SingleModelParam s; 
-// 			s.name = model->param.mixAllModels[i][j].name; 
-// 			if(s.name=="PTMASS") {			
-// 				s.critRad = model->param.mixAllModels[i][j].paraList[0]; 
-// 				s.centerX = model->param.mixAllModels[i][j].paraList[1]; 
-// 				s.centerY = model->param.mixAllModels[i][j].paraList[2]; 
-// 				model->param.parameter.push_back(s); 
-// 			}
-
-
-// 			if(s.name=="SIE") {
-// 				s.critRad = model->param.mixAllModels[i][j].paraList[0]; 
-// 				s.centerX = model->param.mixAllModels[i][j].paraList[1]; 
-// 				s.centerY = model->param.mixAllModels[i][j].paraList[2]; 
-// 				s.e       = model->param.mixAllModels[i][j].paraList[3]; 
-// 				s.PA 	  = model->param.mixAllModels[i][j].paraList[4];
-// 				s.core 	  = model->param.mixAllModels[i][j].paraList[5];  
-// 				model->param.parameter.push_back(s); 
-// 			}
-// 		}	
-
-// 		vector<double> sBright = dataImage->dataList; 
-// 		model->updatePosMapping(dataImage, conf);
-
-// 		double scatter 			= model->getScatterReg(); 
-// 		if(scatter < minScatter)  {
-// 			minScatter = scatter; 
-// 			minIndexScatter = i; 
-// 		}
-
-// 		double zerothOrder, gradientOrder, curvatureOrder; 
-// 		if (1) {
-// 			zerothOrder 		= model->getZerothOrderReg   (conf, sBright);
-// 			if(zerothOrder > maxObjFunc[0])  {
-// 				maxObjFunc[0] = zerothOrder; 
-// 				maxIndex[0] = i; 
-// 			}
-// 			gradientOrder 	= model->getGradientOrderReg (conf, sBright); 
-// 			if(gradientOrder > maxObjFunc[1])  {
-// 				maxObjFunc[1] = gradientOrder; 
-// 				maxIndex[1] = i; 
-// 			}
-// 			curvatureOrder 	= model->getCurvatureOrderReg(conf, sBright);
-// 			if(curvatureOrder > maxObjFunc[2])  {
-// 				maxObjFunc[2] = curvatureOrder; 
-// 				maxIndex[2] = i; 
-// 			}
-// 		}	
-
-
-// 		if(conf->verbose) {
-// 			string pStatus = "[" + to_string(i+1) + "/" + to_string(model->param.nComb) + "]\t" ; 
-// 			string resultStatus =  to_string(scatter) + "\t"
-// 				+ to_string(zerothOrder) + "\t" 
-// 				+ to_string(gradientOrder) + "\t" 
-// 				+ to_string(curvatureOrder)  
-// 				+ "\n"; 
-// 			cout 	<< pStatus << resultStatus ; 
-// 			output  << pStatus << model->param.printCurrentModels(i).at(0) << resultStatus ; 		
-// 		}
-
-// 		//writeSrcModResImage(model,dataImage,conf, to_string(i), dir) ; 
-
-	
-		
-// 	}
-// 	output.close(); 
-	
-
-// 	clock_t end = clock(); 
-// 	double elapsed_secs = double(end-begin)/CLOCKS_PER_SEC; 
-// 	cout << "Time used: " << elapsed_secs << " seconds. "<< endl; 
-
-// 	// Print out the best model : 
-// 	cout << "************************\nThe best models : " << minScatter << endl;
-// 	cout << model->param.printCurrentModels(minIndexScatter).at(1);
-// 	if(conf->verbose) {
-// 		cout << model->param.printCurrentModels(maxIndex[0]).at(1); 
-// 		cout << model->param.printCurrentModels(maxIndex[1]).at(1);
-// 		cout << model->param.printCurrentModels(maxIndex[2]).at(1); 
-// 	}
-// 	cout << "************************\n" << endl;
- 
-// 	delete model;
-
-
-	
-// }
-
-
 

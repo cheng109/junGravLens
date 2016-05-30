@@ -13,7 +13,7 @@
 //#include <armadillo>
 #include <tuple>
 #include <map>
-
+//#include "QuadTree.h"
 #include <Eigen/SparseCholesky>
 #include <Eigen/Dense>
 
@@ -46,10 +46,14 @@ int main(int argc, char* argv[]) {
 	Image* dataImage = new Image(mapConf["imageFileName"]);
 	dataImage->updateFilterImage(mapConf["regionFileName"], stoi(mapConf["usingRegion"]));
 
+
+	
+
 	Conf *conf = new Conf(dataImage, mapConf);
+	dataImage->updateVarList(90, conf->back_mean, conf->back_std); // (threshold, var);
 	dataImage->updateBackSubtract(conf->back_mean, conf->back_std); 
 	dataImage->updateGridPointType();
-	dataImage->updateVarList(90, conf->back_mean, conf->back_std); // (threshold, var);
+	
 	dataImage->invC = dataImage->getVarMatrix();
 	
  
@@ -61,36 +65,43 @@ int main(int argc, char* argv[]) {
 	param.printModels();
 	param.mix(0); 	 // update 'AllMixModels'; 
 
+	Image* regionTestImg = new Image(dataImage->xList, dataImage->yList, &dataImage->dataList, conf->imgSize[0], conf->imgSize[1], conf->bitpix);
+	regionTestImg->writeToFile("regionTestImg.fits"); 
+
+
 
 
 	// Image* maskImg = new Image(dataImage->xList, dataImage->yList, &dataImage->dataList, conf->imgSize[0], conf->imgSize[1], conf->bitpix);
 	// maskImg -> writeToFile ("galfit_work/img_mask.fits");
 	// delete maskImg; 
 
-	/*
-
-	for(int i=0; i<6; ++i) {
-		string smallMassRegion = "horseshoe_test/reg_" + to_string(i) + ".reg" ; 
-		Image* lensImage1 = new Image("horseshoe_test/img_lens.fits"); 
-		string imgName = "color_test/f814_cut.fits"; 
-		
-
-		Image* dataImage1 = new Image(imgName);
-		double 	background = 0.0 ; 
-		background = 0.020 ; // f475 
-		background = 0.044 ; // f606
-		background = 0.0248 ; // f814
-
-		double luminosity =  getMassLuminosity(lensImage1, dataImage1, smallMassRegion,  background) ; 
-		cout << "Luminosity for " << imgName << "\t Region: "  << i << "\t "<< luminosity << endl;  
-		//delete lensImage1, dataImage1 ; 
 	
-	} 
-*/
+
+	// for(int i=0; i<8; ++i) {
+
+	// 	map<string, double> backMap; 
+	// 	backMap["f475"] = 69.6  ; 
+	// 	backMap["f606"] = 67.6  ;  
+	// 	backMap["f814"] = 83.09 ; 
+	// 	backMap["f110"] = 722.56; 
+	// 	backMap["f160"] = 685.76; 
 
 
+	// 	string smallMassRegion = "horseshoe_test/new_reg_" + to_string(i) + "_IR.reg" ; 
 
-	gridSearchVegetti(conf, param,  dataImage, dir, output);	
+	// 	string filterName = "f160" ; 
+
+
+	// 	Image* lensImage1 = new Image("horseshoe_test/color_test/f110_clean.fits"); 
+	// 	string imgName = "galfit_work/" + filterName + "_ADU.fits"; 
+	// 	Image* dataImage1 = new Image(imgName);
+	// 	double luminosity =  getMassLuminosity(lensImage1, dataImage1, smallMassRegion,  backMap[filterName]) ; 
+	// 	cout << luminosity << "\t "; 
+	// } 
+	// cout << endl; 
+	
+
+	//gridSearchVegetti(conf, param,  dataImage, dir, output);	
 
 
 	

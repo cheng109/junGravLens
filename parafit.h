@@ -27,7 +27,7 @@ typedef struct minimiser_params {
 //int	gsl_min_wrap(minimiser_params *params);
 void gridSearch       (Conf* conf, MultModelParam param, Image* dataImage, vec d, string dir, string outputFileName);
 void gridSearchVegetti(Conf* conf, MultModelParam param, Image* dataImage, string dir, string outputFileName) ; 
-vector<double> getPenalty(Model* model, Image* dataImage, Conf* conf , string R_type) ; 
+vector<double> getPenalty(Model* model, Image* dataImage, Conf* conf) ; 
 void mcFit(Conf* conf, MultModelParam param, Image* dataImage, vec d, string dir, string outputFileName);
 
 

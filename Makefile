@@ -7,7 +7,7 @@ LDFLAGS := -L. -L$(WORK_DIR)/lib/cfitsio -L/usr/local/gfortran/lib
 LDLIBS := -lcfitsio -lfortranstuff -lgfortran 
 #-lgsl -lgslcblas -lm -lfortranstuff
 
-SRCS := main.cpp Image.cpp commons.cpp Model.cpp parafit.cpp parafit2.cpp mc.cpp
+SRCS := main.cpp Image.cpp commons.cpp Model.cpp parafit.cpp mc.cpp
 OBJS := $(patsubst %.cpp, %.o, $(SRCS))
 
 ## ARG1:   working directory. 
@@ -22,7 +22,7 @@ appname := junGL
 
 all: $(appname)
 	./$(appname) $(ARG1) $(ARG2) $(ARG3)
-	@#valgrind --tool=memcheck --leak-check=full --verbose --log-file=memcheck.log --track-origins=yes ./$(appname)
+	@#valgrind --tool=memcheck --leak-check=full --verbose --log-file=memcheck.log --show-leak-kinds=all --track-origins=yes ./$(appname) $(ARG1) $(ARG2) $(ARG3)
 
 $(appname): libfortranstuff.a $(OBJS) 
 	$(CXX) $(LDFLAGS) -o $(appname) $(OBJS) $(LDLIBS)

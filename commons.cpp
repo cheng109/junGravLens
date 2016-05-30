@@ -69,6 +69,8 @@ Conf::Conf(Image* dataImage, map<string, string> confMap) {
 		back_mean = stod(confMap["back_mean"]); 
 		back_std = stod(confMap["back_std"]);
 
+		srcRegLevel = stod(confMap["srcRegLevel"]); 
+		srcRegType = confMap["srcRegType"]; 
 
 		verbose		  = stoi(confMap["verbose"]); 
 		usingRegion   = stoi(confMap["usingRegion"]); 
@@ -125,7 +127,7 @@ bool pnpoly(size_t nvert, vector<double> *vertx, vector<double> *verty, double t
 }
 
 
-string parseReagionFile(string regionFileName, vector<double> *xpos, vector<double> *ypos) {
+vector<string> parseRegionFile(string regionFileName, vector<vector<double> > *xposList, vector<vector<double> > *yposList) {
 	// regionType = 0:   not supported yet; 
 	// regionType = 1:   Polygon region;
 	// regionType = 2:   Point region; 
@@ -133,95 +135,115 @@ string parseReagionFile(string regionFileName, vector<double> *xpos, vector<doub
 	ifstream regionFile(regionFileName.c_str());
 	string line, token;
 	size_t pos=0;
-	string regionType; 
+	vector<string> regionType; 
 	size_t pos1 = 0; 
 	size_t pos2 = 0; 
+
 	while (getline(regionFile, line)) {
+		
+
 		if (line[0]!='#' && line.substr(0, 6)!="global" && line.substr(0, 5)!="image") {
 			// For polygon region file
+			//cout << "line: " << line << "\n" << endl; 
 			if(line.substr(0,7)=="polygon") {
 				pos1 = line.find_first_of("(", pos);
 				pos2 = line.find_first_of(")", pos);
 
 				istringstream ss(line.substr(pos1+1, pos2-pos1));
 				int flag=-1;
+				vector<double> xpos, ypos; 
 				while(getline(ss, token, ',' )){
-					if(flag<0) xpos->push_back(stod(token));
-					if(flag>0) ypos->push_back(stod(token));
+					if(flag<0) xpos.push_back(stod(token));
+					if(flag>0) ypos.push_back(stod(token));
 					//cout << token << endl;
 					flag = (-1)*flag;
 				};
-				regionType = "polygon"; 
+				regionType.push_back("polygon"); 
+
+				xposList->push_back(xpos); 
+				yposList->push_back(ypos); 
 			}	
 			if(line.substr(0,5)=="point") { 
+				vector<double> xpos, ypos; 
 				pos1 = line.find_first_of("(", pos);
 				pos2 = line.find_first_of(")", pos);
 
 				istringstream ss(line.substr(pos1+1, pos2-pos1));	
 				getline(ss, token, ','); 
-				xpos->push_back(stod(token));
+				xpos.push_back(stod(token));
 				getline(ss, token, ')'); 
-				ypos->push_back(stod(token)); 
+				ypos.push_back(stod(token)); 
 				//cout << token << endl; 
-				regionType = "point"; 
+				regionType.push_back("point"); 
+				xposList->push_back(xpos); 
+				yposList->push_back(ypos); 
 			}
 
 			if(line.substr(0,3)=="box") {
+				vector<double> xpos, ypos; 
 				pos1 = line.find_first_of("(", pos);
 				pos2 = line.find_first_of(")", pos);
 				istringstream ss(line.substr(pos1+1, pos2-pos1));	
 				for (int j=0;j<4 ; ++j) {
 					getline(ss, token, ','); 
-					xpos->push_back(stod(token));
-					ypos->push_back(stod(token));
+					xpos.push_back(stod(token));
+					ypos.push_back(stod(token));
 				}
 				getline(ss, token, ')'); 
-				xpos->push_back(stod(token)); 
-				ypos->push_back(stod(token));
+				xpos.push_back(stod(token)); 
+				ypos.push_back(stod(token));
 
-				regionType = "box"; 
+				regionType.push_back("box"); 
+				xposList->push_back(xpos); 
+				yposList->push_back(ypos); 
 			}
 
 
 
 
 			if(line.substr(0,6)=="circle") {
+				vector<double> xpos, ypos; 
 				pos1 = line.find_first_of("(", pos);
 				pos2 = line.find_first_of(")", pos);
 				istringstream ss(line.substr(pos1+1, pos2-pos1));	
 				for (int j=0;j<2 ; ++j) {
 					getline(ss, token, ','); 
 					//cout << stod(token) << endl; 
-					xpos->push_back(stod(token));
-					ypos->push_back(stod(token));
+					xpos.push_back(stod(token));
+					ypos.push_back(stod(token));
 				}
 				getline(ss, token, ')'); 
-				xpos->push_back(stod(token)); 
-				ypos->push_back(stod(token));
+				xpos.push_back(stod(token)); 
+				ypos.push_back(stod(token));
 
-				regionType = "circle"; 
+				regionType.push_back("circle"); 
+				xposList->push_back(xpos); 
+				yposList->push_back(ypos); 
 			}
 
 
 			//  (centerX, centerY, x-major, y-minor, rotation); 
 			if(line.substr(0,7)=="ellipse") {
+				vector<double> xpos, ypos; 
 				pos1 = line.find_first_of("(", pos);
 				pos2 = line.find_first_of(")", pos);
 				istringstream ss(line.substr(pos1+1, pos2-pos1));	
 				for (int j=0;j<4 ; ++j) {
 					getline(ss, token, ','); 
-					xpos->push_back(stod(token));
-					ypos->push_back(stod(token));
+					xpos.push_back(stod(token));
+					ypos.push_back(stod(token));
 				}
 				getline(ss, token, ')'); 
-				xpos->push_back(stod(token)); 
-				ypos->push_back(stod(token));
+				xpos.push_back(stod(token)); 
+				ypos.push_back(stod(token));
 
-				regionType = "ellipse"; 
+				regionType.push_back("ellipse"); 
+				xposList->push_back(xpos); 
+				yposList->push_back(ypos); 
 			}
 		}
 
-		if(xpos->size()!=ypos->size())
+		if(xposList->size()!=yposList->size())
 			cout << "Error when reading region File!" << endl;
 	}
 	return regionType; 
@@ -723,12 +745,33 @@ double getMassLuminosity(Image* lensImage, Image* dataImage,  string regionFileN
 	//dataImage->writeFilterImage(regionFileName + "_cut_data.fits"); 
 
 
+	double mean = 0; 
+	double std = 0; 
+
+	for(int i=0; i<lensImage->dataList.size(); ++i) {
+		mean += dataImage->dataList[i] ; 
+
+	}
+	mean = mean / dataImage->dataList.size() ; 
+	//cout <<  "Mean: " << mean << endl; 
+
+	for(int i=0; i<lensImage->dataList.size(); ++i) {
+		std += (dataImage->dataList[i] - mean) * (dataImage->dataList[i] - mean) ; 
+
+	}
+	std = sqrt(std/dataImage->dataList.size()); 
+
+	//cout <<  "STD: " << std  << endl; 
+
+
 	 
-	
 	for(int i=0; i<lensImage->dataList.size(); ++i) {
 		regionMass += lensImage->dataList[i]; 
 	}
 	for(int i=0; i<dataImage->dataList.size(); ++i) {
+		//cout << dataImage->dataList[i] << endl; 
+	
+
 		luminosity += dataImage->dataList[i] - background; 
 	}
 

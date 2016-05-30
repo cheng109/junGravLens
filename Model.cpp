@@ -17,8 +17,7 @@
 #include <cmath>
 #include <fstream>
 #include "fastell.h"
-//#include "libiomp/omp.h"
-//#include "gsl/gsl_multimin.h"
+#include "nanoflann.hpp"
 #include <Eigen/SparseCholesky>
 #include <Eigen/Dense>
 #include <assert.h>
@@ -27,7 +26,10 @@
 using namespace std;
 //using namespace arma;
 using namespace Eigen;
-#define DIFF 0.00000001
+using namespace nanoflann; 
+#define DIFF 0.000000001
+
+
 
 /* Model::Model() {
 	// TODO Auto-generated constructor stub
@@ -278,10 +280,6 @@ vector<double> Model::getDeflectionAngle(Conf* conf, double pfX, double pfY, dou
 }
 
 
-Model::~Model() {
-	// TODO Auto-generated destructor stub
-}
-
 
 
 void Model::updatePosMapping(Image* image, Conf* conf) {
@@ -301,17 +299,12 @@ void Model::updatePosMapping(Image* image, Conf* conf) {
 		double pfY = (imgY - conf->imgYCenter ) * conf->imgRes;
 
 		srcPos = getDeflectionAngle(conf,pfX, pfY, &defX, &defY, &param);
-
-
 		pDeltaX.push_back(defX);
 		pDeltaY.push_back(defY);
-
 		srcPosXList.push_back(srcPos[0]);
 		srcPosYList.push_back(srcPos[1]);
-		
 		srcPosXListPixel.push_back(srcPos[0]/conf->srcRes+conf->srcXCenter);
 		srcPosYListPixel.push_back(srcPos[1]/conf->srcRes+conf->srcYCenter);
-
 		posMap[make_pair(imgX, imgY)] = i;
 	}
 
@@ -332,17 +325,14 @@ void Model::update_H_zero(Conf* conf) {
 	// T size:  [srcSize[0]*srcSize[1],  2*length]
 	int x, y, iList;
 
-	clock_t begin = clock();
 	for(int i=0; i<length; ++i) {
 		x = nearbyint(srcPosXListPixel[i]);
 		y = nearbyint(srcPosYListPixel[i]);
-		//cout << x << "\t" << y << "\t" << endl;  
 		if(x>0 && x< conf->srcSize[0] && y>0 && y<conf->srcSize[1]) {
 			iList = conf->srcSize[0]*y+x;
 			H_zero.insert(iList, i) = 1.0;
 		}
 	}
-	//cout << "Time_test: " << double(clock()-begin)/CLOCKS_PER_SEC << endl;
 
 }
 
@@ -358,8 +348,6 @@ void Model::update_H_grad(Conf* conf) {
 	for(int i=0; i<src_length; ++i) {
 		int y = i/conf->srcSize[0]; 
 		int x = i%conf->srcSize[0]; 
-
-
 		vector<int> neighbors; 
 		neighbors.push_back(i-1);  			// Left
 		neighbors.push_back(i+1);  			// Right
@@ -375,26 +363,20 @@ void Model::update_H_grad(Conf* conf) {
 	}
 
 	//Hessian_grad = H_zero.transpose() * Hessian_grad * H_zero; 
-
-	cout << "Time_test: " << double(clock()-begin)/CLOCKS_PER_SEC << endl;
-
-}
-
-void update_H_curve(Conf* conf) {
-
-
-
+	//cout << "Time_test: " << double(clock()-begin)/CLOCKS_PER_SEC << endl;
 }
 
 
-void Model::updateLensAndRegularMatrix(Image* dataImage,  Conf* constList) {
+
+
+void Model::updateLensAndRegularMatrix(Image* dataImage,  Conf* conf) {
 
 	map<pair<int, int>,int>::iterator left, right, up, down;
-	vector<double> w, w5;
+	vector<double> w;
 
 
 	// Make pair; 
-	Conf* conf = constList; 
+	
 	// vector<pair<double, double>> coordPair(conf->length); 
 	// for(int i=0; i<conf->length; ++i) 
 	// 	coordPair[i] = make_pair(srcPosXListPixel[i], srcPosYListPixel[i]); 
@@ -403,174 +385,37 @@ void Model::updateLensAndRegularMatrix(Image* dataImage,  Conf* constList) {
 	// 	return a.first < b.first; 
 	// }); 
 
-
-	
-
 	for (int i=0; i<conf->length; ++i) {
-		double largeNumber = 10000; 
-		double distRegion1 = largeNumber; 
-		double distRegion2 = largeNumber; 
-		double distRegion3 = largeNumber; 
-		double distRegion4 = largeNumber; 
 
-		int indexRegion1 = -1; 
-		int indexRegion2 = -1; 
-		int indexRegion3 = -1; 
-		int indexRegion4 = -1; 
-		for(int j=0; j<conf->length; ++j) {
-			if (j == i ) 	continue; 
-			double dx = srcPosXListPixel[j] - srcPosXListPixel[i] ; 
-			double dy = srcPosYListPixel[j] - srcPosYListPixel[i] ; 
-			double dist = dx * dx + dy * dy; 
-
-			if(srcPosXListPixel[j] > srcPosXListPixel[i] and srcPosYListPixel[j] > srcPosYListPixel[i] and dist<distRegion1 ) {   // in region1; 
-					distRegion1 = dist ; 
-					indexRegion1 = j ;  
-			}
-
-			else if(srcPosXListPixel[j] < srcPosXListPixel[i] and srcPosYListPixel[j] > srcPosYListPixel[i]  and dist<distRegion2 ) {   // in region2; 
-					distRegion2 = dist ; 
-					indexRegion2 = j ;  
-			}
-
-
-			else if(srcPosXListPixel[j] < srcPosXListPixel[i] and srcPosYListPixel[j] < srcPosYListPixel[i] and dist<distRegion3 ) {   // in region3; 
-					distRegion3 = dist ; 
-					indexRegion3 = j ;  
-			}
-
-			else if(srcPosXListPixel[j] > srcPosXListPixel[i] and srcPosYListPixel[j] < srcPosYListPixel[i]  and dist<distRegion4 ) {   // in region4; 
-					distRegion4 = dist ; 
-					indexRegion4 = j ;  
-			}
-
-		}
-
-		if (indexRegion1 > 0 and indexRegion2 > 0  and indexRegion3 > 0 and indexRegion4 > 0 )  {
-
-			Point A(srcPosXList[indexRegion3 ], srcPosYList[indexRegion3 ], s(indexRegion3 ));
-			Point B(srcPosXList[indexRegion2 ], srcPosYList[indexRegion2 ], s(indexRegion2 ));
-			Point C(srcPosXList[i            ], srcPosYList[i            ], s(i            ));
-			Point D(srcPosXList[indexRegion4 ], srcPosYList[indexRegion4 ], s(indexRegion4 ));
-			Point E(srcPosXList[indexRegion1 ], srcPosYList[indexRegion1 ], s(indexRegion1 ));
-
-			w5 = getPentWeigth(A, B, C, D, E);
-
-			// cout << i << "\t" << indexRegion1 << "\t" << indexRegion2 << "\t" << indexRegion3 << "\t" << indexRegion4 << "\t"  << endl; 
-			
-			// cout << srcPosXList[indexRegion1 ] << "\t" << srcPosYList[indexRegion1 ] << endl; 
-			// cout << srcPosXList[indexRegion2 ] << "\t" << srcPosYList[indexRegion2 ] << endl; 
-			// cout << srcPosXList[indexRegion3 ] << "\t" << srcPosYList[indexRegion3 ] << endl; 
-			// cout << srcPosXList[indexRegion4 ] << "\t" << srcPosYList[indexRegion4 ] << endl; 
-			// cout << srcPosXList[i ] << "\t" << srcPosYList[i ] << endl; 
-
-			Hs1.insert(i, indexRegion3	) 	= w5[0];
-			Hs1.insert(i, indexRegion2	) 	= w5[1];
-			Hs1.insert(i, i				) 	= w5[2];
-			Hs1.insert(i, indexRegion4	) 	= w5[3];
-			Hs1.insert(i, indexRegion1	) 	= w5[4];
-
-			Hs2.insert(i, indexRegion3	) 	= w5[5];
-			Hs2.insert(i, indexRegion2	) 	= w5[6];
-			Hs2.insert(i, i				) 	= w5[7];
-			Hs2.insert(i, indexRegion4	) 	= w5[8];
-			Hs2.insert(i, indexRegion1	) 	= w5[9]; 
-
-
-		}
-		L.insert(i,i)=1;
-
-
-
-	}
-	
-	if(0) {
-	for (int i=0; i<conf->length; ++i) {
-	//	if(dataImage->type[i]==1) {// || dataImage->type[i]==0) {
-
-			
-			//L.insert(i,i)=1;
-
-			left  = posMap.find(make_pair(dataImage->xList[i]-1, dataImage->yList[i]));
-			right = posMap.find(make_pair(dataImage->xList[i]+1, dataImage->yList[i]));
-			up    = posMap.find(make_pair(dataImage->xList[i], dataImage->yList[i]+1));
-			down  = posMap.find(make_pair(dataImage->xList[i], dataImage->yList[i]-1));
-
-
-			if(left!=posMap.end() && up!=posMap.end() && down!=posMap.end() && right!=posMap.end()) {
-				int iLeft = left->second;
-				int iUp   = up  ->second;
-				int iDown = down->second;
-				int iRight= right->second;
-				Point A(srcPosXList[iLeft ], srcPosYList[iLeft ], s(iLeft ));
-				Point B(srcPosXList[iUp   ], srcPosYList[iUp   ], s(iUp   ));
-				Point C(srcPosXList[i     ], srcPosYList[i     ], s(i     ));
-				Point D(srcPosXList[iDown ], srcPosYList[iDown ], s(iDown ));
-				Point E(srcPosXList[iRight], srcPosYList[iRight], s(iRight));
-				
-				w5 = getPentWeigth(A, B, C, D, E);
-
-				//cout << "index: " << iLeft << "\t" << iUp << "\t" <<i << "\t" << iDown << "\t" << iRight << endl; 
-		
-
-				Hs1.insert(i, iLeft	) 	= w5[0];
-				Hs1.insert(i, iUp	) 	= w5[1];
-				Hs1.insert(i, i		) 	= w5[2];
-				Hs1.insert(i, iDown	) 	= w5[3];
-				Hs1.insert(i, iRight) 	= w5[4];
-
-				Hs2.insert(i, iLeft	) 	= w5[5];
-				Hs2.insert(i, iUp	) 	= w5[6];
-				Hs2.insert(i, i		) 	= w5[7];
-				Hs2.insert(i, iDown	) 	= w5[8];
-				Hs2.insert(i, iRight) 	= w5[9]; 
-			}
 
 		if(dataImage->type[i]==1) {
 			L.insert(i,i)=1;
-
 		}
 
-		// if(dataImage->type[i]==0) {
-		// 	if(left!=posMap.end() && up!=posMap.end() && down!=posMap.end()) {
-		// 		int iLeft = left->second;
-		// 		int iUp   = up  ->second;
-		// 		int iDown = down->second;
+		if(dataImage->type[i]==0) {
+			if(left!=posMap.end() && up!=posMap.end() && down!=posMap.end()) {
+				int iLeft = left->second;
+				int iUp   = up  ->second;
+				int iDown = down->second;
 
-		// 		Point A(srcPosXList[iLeft], srcPosYList[iLeft], s(iLeft));
-		// 		Point B(srcPosXList[iUp  ], srcPosYList[iUp	 ], s(iUp  ));
-		// 		Point C(srcPosXList[iDown], srcPosYList[iDown], s(iDown));
-		// 		Point P(srcPosXList[i	 ], srcPosYList[i	 ], s(i    ));
+				Point A(srcPosXList[iLeft], srcPosYList[iLeft], s(iLeft));
+				Point B(srcPosXList[iUp  ], srcPosYList[iUp	 ], s(iUp  ));
+				Point C(srcPosXList[iDown], srcPosYList[iDown], s(iDown));
+				Point P(srcPosXList[i	 ], srcPosYList[i	 ], s(i    ));
 
-		// 		w = getTriWeight( A, B, C, P);
-		// 		L.insert(i, iLeft) 	= w[0];
-		// 		L.insert(i, iUp	 )  = w[1];
-		// 		L.insert(i, iDown) 	= w[2];
+				w = getTriWeight( A, B, C, P);
+				L.insert(i, iLeft) 	= w[0];
+				L.insert(i, iUp	 )  = w[1];
+				L.insert(i, iDown) 	= w[2];
 
-		// 		normVec n = getNormVector(A, B, C);
-		// 		normV[iLeft].push_back(n);
-		// 		normV[iUp  ].push_back(n);
-		// 		normV[iDown].push_back(n);
-		// 	}
-		// 	else L.insert(i, i) = 1;
-		// }
-
-		//time1 += (clock() - begin) ; 
-		
+				normVec n = getNormVector(A, B, C);
+				normV[iLeft].push_back(n);
+				normV[iUp  ].push_back(n);
+				normV[iDown].push_back(n);
+			}
+			else L.insert(i, i) = 1;
+		}
 	}
-
-}
-
-	HtH = Hs1.transpose()*Hs1 + Hs2.transpose()*Hs2;
-	//RtR = lambdaS*lambdaS*HtH;
-	//RtR.conservativeResize(2*constList->length, 2*constList->length);
-
-	// cout << "Time1: " << double(time1)/CLOCKS_PER_SEC << endl; 
-	// cout << "Time2: " << double(time2)/CLOCKS_PER_SEC << endl; 
-	// cout << "Time3: " << double(time3)/CLOCKS_PER_SEC << endl; 
-	// cout << "Time4: " << double(time4)/CLOCKS_PER_SEC << endl; 
-
-
 }
 
 void Model::updateGradient(Image* dataImage) {
@@ -600,15 +445,201 @@ void Model::updateGradient(Image* dataImage) {
 		Ds.coeffRef(i, 2*i+1) = vSy2(i);
 	}
 
-	// sp_mat extension = -1*Ds*Dphi;
-	// M.resize(L.rows(), L.cols()+extension.cols());
-	// M.middleCols(0,L.cols()) = L;
-	// M.middleCols(L.cols(), extension.cols()) = extension;
-
-
 }
 
 
+void Model::updateVegettiRegularization() {
+	clock_t begin; 
+	double time =0; 
+	double time1 = 0; 
+	vector<double> w5;
+
+	
+
+
+	
+	// vector<TriData> TriDataListX ; 
+
+	// for(int i=0; i<length; ++i) {
+	// 	TriDataListX.push_back(TriData(srcPosXListPixel[i], srcPosYListPixel[i], i)); 
+	// }
+	// vector<TriData> TriDataListY(TriDataListX); 
+	// sort(TriDataListX.begin(), TriDataListX.end(), [](const TriData & left, const TriData & right){
+	// 		return left.srcX < right.srcX; }); 
+	// sort(TriDataListY.begin(), TriDataListY.end(), [](const TriData & left, const TriData & right){
+	// 		return left.srcY < right.srcY; }); 
+
+	// Build cloud; 
+	begin = clock(); 
+	
+	PointCloud<double> cloud; 
+	 cloud.pts.resize(length); 
+	typedef KDTreeSingleIndexAdaptor<L2_Simple_Adaptor<double, PointCloud<double> > ,PointCloud<double>,3> my_kd_tree_t;
+	for(size_t j=0; j<length; ++j) {
+		cloud.pts[j].x = srcPosXListPixel[j]; 
+		cloud.pts[j].y = srcPosYListPixel[j]; 
+		cloud.pts[j].z = 0;
+	}
+	my_kd_tree_t  index(3, cloud, KDTreeSingleIndexAdaptorParams(20 ) );
+	index.buildIndex();	
+
+
+	int indexRegion1 = -1; 
+	int indexRegion2 = -1; 
+	int indexRegion3 = -1; 
+	int indexRegion4 = -1; 
+
+
+	double counter = 0; 
+	if(1){
+	for (int i=0; i<length; ++i) {
+		
+		double query_pt[3]; 
+		query_pt[0] = srcPosXListPixel[i]; 
+		query_pt[1] = srcPosYListPixel[i]; 
+		query_pt[2] = 0 ; 
+		const size_t num_results =10;
+		std::vector<size_t>   ret_index(num_results);
+		std::vector<double> out_dist_sqr(num_results);
+		index.knnSearch(&query_pt[0], num_results, &ret_index[0], &out_dist_sqr[0]);
+
+		indexRegion1 = -1; 
+		indexRegion2 = -1; 
+		indexRegion3 = -1; 
+		indexRegion4 = -1; 
+
+
+		for(int k=1; k<num_results; ++k) {
+
+			size_t j = ret_index[k] ; 
+			//cout << i<< "\t" << j << "\t" << srcPosXListPixel[j] << "\t" << srcPosXListPixel[i] << "\t" << srcPosYListPixel[j] << "\t" << srcPosYListPixel[i] << endl; 
+			if( indexRegion1 == -1 and srcPosXListPixel[j] > srcPosXListPixel[i] and srcPosYListPixel[j] > srcPosYListPixel[i]    ) {   // in region1; 
+					indexRegion1 = j ;  
+			}
+			else if(indexRegion2 == -1 and srcPosXListPixel[j] < srcPosXListPixel[i] and srcPosYListPixel[j] > srcPosYListPixel[i]  ) { 
+					indexRegion2 = j ;  
+			}
+			else if(indexRegion3 == -1 and srcPosXListPixel[j] < srcPosXListPixel[i] and srcPosYListPixel[j] < srcPosYListPixel[i] ) {   // in region3; 
+					indexRegion3 = j ;  
+			}
+			else if(indexRegion4 == -1 and srcPosXListPixel[j] > srcPosXListPixel[i] and srcPosYListPixel[j] < srcPosYListPixel[i]  ) {   // in region4; 
+					indexRegion4 = j ;  
+			}
+			else if(indexRegion1 != -1 and indexRegion2 != -1 and indexRegion3 != -1 and indexRegion4 != -1)
+				break; 
+			else
+				continue; 
+			
+
+		}
+
+
+		indexRegion1 = ret_index[1]; 
+		indexRegion2 = ret_index[2]; 
+		indexRegion3 = ret_index[3]; 
+		indexRegion4 = ret_index[4]; 
+		
+
+		if (indexRegion1 > 0 and indexRegion2 > 0  and indexRegion3 > 0 and indexRegion4 > 0
+			and indexRegion1 != i and indexRegion2 != i  and indexRegion3 != i and indexRegion4 != i  )  {
+			counter += 1; 
+			Point A(srcPosXList[indexRegion3 ], srcPosYList[indexRegion3 ], s(indexRegion3 ));
+			Point B(srcPosXList[indexRegion2 ], srcPosYList[indexRegion2 ], s(indexRegion2 ));
+			Point C(srcPosXList[i            ], srcPosYList[i            ], s(i            ));
+			Point D(srcPosXList[indexRegion4 ], srcPosYList[indexRegion4 ], s(indexRegion4 ));
+			Point E(srcPosXList[indexRegion1 ], srcPosYList[indexRegion1 ], s(indexRegion1 ));
+
+			w5 = getPentWeigth(A, B, C, D, E);
+			Hs1.insert(i, indexRegion3	) 	= w5[0];
+			Hs1.insert(i, indexRegion2	) 	= w5[1];
+			Hs1.insert(i, i				) 	= w5[2];
+			Hs1.insert(i, indexRegion4	) 	= w5[3];
+			Hs1.insert(i, indexRegion1	) 	= w5[4];
+
+			Hs2.insert(i, indexRegion3	) 	= w5[5];
+			Hs2.insert(i, indexRegion2	) 	= w5[6];
+			Hs2.insert(i, i				) 	= w5[7];
+			Hs2.insert(i, indexRegion4	) 	= w5[8];
+			Hs2.insert(i, indexRegion1	) 	= w5[9]; 
+		}
+	}
+	}
+	
+
+	if(0) {
+
+	for (int i=0; i<length; ++i) {
+		
+		double largeNumber = 10000; 
+		double distRegion1 = largeNumber; 
+		double distRegion2 = largeNumber; 
+		double distRegion3 = largeNumber; 
+		double distRegion4 = largeNumber; 
+
+		indexRegion1 = -1; 
+		indexRegion2 = -1; 
+		indexRegion3 = -1; 
+		indexRegion4 = -1; 
+		for(int j=0; j<length; ++j) {
+			if (j == i ) 	continue; 
+			double dx = srcPosXListPixel[j] - srcPosXListPixel[i] ; 
+			double dy = srcPosYListPixel[j] - srcPosYListPixel[i] ; 
+			double dist = dx * dx + dy * dy; 
+
+			if(srcPosXListPixel[j] > srcPosXListPixel[i] and srcPosYListPixel[j] > srcPosYListPixel[i] and dist<distRegion1 ) {   // in region1; 
+					distRegion1 = dist ; 
+					indexRegion1 = j ;  
+			}
+			else if(srcPosXListPixel[j] < srcPosXListPixel[i] and srcPosYListPixel[j] > srcPosYListPixel[i]  and dist<distRegion2 ) {   // in region2; 
+					distRegion2 = dist ; 
+					indexRegion2 = j ;  
+			}
+			else if(srcPosXListPixel[j] < srcPosXListPixel[i] and srcPosYListPixel[j] < srcPosYListPixel[i] and dist<distRegion3 ) {   // in region3; 
+					distRegion3 = dist ; 
+					indexRegion3 = j ;  
+			}
+			else if(srcPosXListPixel[j] > srcPosXListPixel[i] and srcPosYListPixel[j] < srcPosYListPixel[i]  and dist<distRegion4 ) {   // in region4; 
+					distRegion4 = dist ; 
+					indexRegion4 = j ;  
+			}
+		}
+
+
+			if (indexRegion1 > 0 and indexRegion2 > 0  and indexRegion3 > 0 and indexRegion4 > 0
+			and indexRegion1 != i and indexRegion2 != i  and indexRegion3 != i and indexRegion4 != i  )  {
+				counter+= 1; 
+			Point A(srcPosXList[indexRegion3 ], srcPosYList[indexRegion3 ], s(indexRegion3 ));
+			Point B(srcPosXList[indexRegion2 ], srcPosYList[indexRegion2 ], s(indexRegion2 ));
+			Point C(srcPosXList[i            ], srcPosYList[i            ], s(i            ));
+			Point D(srcPosXList[indexRegion4 ], srcPosYList[indexRegion4 ], s(indexRegion4 ));
+			Point E(srcPosXList[indexRegion1 ], srcPosYList[indexRegion1 ], s(indexRegion1 ));
+
+			w5 = getPentWeigth(A, B, C, D, E);
+			Hs1.insert(i, indexRegion3	) 	= w5[0];
+			Hs1.insert(i, indexRegion2	) 	= w5[1];
+			Hs1.insert(i, i				) 	= w5[2];
+			Hs1.insert(i, indexRegion4	) 	= w5[3];
+			Hs1.insert(i, indexRegion1	) 	= w5[4];
+
+			Hs2.insert(i, indexRegion3	) 	= w5[5];
+			Hs2.insert(i, indexRegion2	) 	= w5[6];
+			Hs2.insert(i, i				) 	= w5[7];
+			Hs2.insert(i, indexRegion4	) 	= w5[8];
+			Hs2.insert(i, indexRegion1	) 	= w5[9]; 
+		}
+	}
+}
+	//cout << "counter: " << counter << "/" << length << endl; 
+	//time = clock() - begin; 
+	
+
+	//cout << "Build triplet :    " << double(time1)/CLOCKS_PER_SEC  << endl;
+	//cout << "Vegetti time used: " << double(time)/CLOCKS_PER_SEC  << endl;
+
+	HtH = Hs1.transpose()*Hs1 + Hs2.transpose()*Hs2;
+
+	 
+}
 
 void Model::Logging(Image* dataImage, Conf* conList, string outFileName) {
 	ofstream f(outFileName);
@@ -634,112 +665,34 @@ void Model::Logging(Image* dataImage, Conf* conList, string outFileName) {
 
 void Model::solveSource(sp_mat* invC, vec* d , string R_type) {
 
-	// // problem:  Ax=b
-
-	clock_t begin = clock(); 
-
-
 	if (R_type == "zero") 
 		REG = H_zero.transpose()*H_zero; 
 	else if(R_type == "grad")
 		REG = H_zero.transpose() * Hessian_grad * H_zero; 
 
-	else if(R_type == "vege") 
+	else if(R_type == "vege")  {
+		updateVegettiRegularization(); 
 		REG = HtH ; 
+	}
 	else {
 		cout << "Regularization type is not supported yet!" << endl; 
 		exit(1); 
 	} 
+
+	
 	sp_mat 	A = lambdaC * lambdaC * L.transpose()*(*invC)*L + lambdaS * lambdaS  * REG; // Hessian_grad.transpose();
-	//sp_mat 	A = L.transpose()*(*invC)*L + lambdaS * lambdaS  * HtH;
 	vec 	b = lambdaC * lambdaC * L.transpose()*(*invC)*(*d);
-	// Using Eigen methods;
-
-
 	Eigen::SimplicialCholesky<Eigen::SparseMatrix<double> > chol(A);
 	s = chol.solve(b);
-	//cout << "solution end!" << endl;  
-
-	//cout << "Time_test_solve: " << double(clock()-begin)/CLOCKS_PER_SEC << endl;
-
-	//cout << A.norm() << "\t" << b.norm() << "\t" << s.norm() << endl; 
-
-	// int counterS = 0; 
-	// int counterD = 0; 
-	// for(int i=0; i<s.size(); ++i) {
-	// 	if (s[i]<0) 
-	// 		counterS ++; 
-	// 	else
-	// 		continue; 
-	// }
-
-	// for(int i=0; i<d.size(); ++i) {
-	// 	if (d[i]<0) 
-	// 		counterD ++; 
-	// 	else
-	// 		continue; 
-	// }
-
-	// cout << "residual norm: " << (d-s).norm() << endl; 
-	// cout << "negative percentage S: " << 1.0*counterS/s.size() << endl; 
-	// cout << "negative percentage D: " << 1.0*counterD/d.size() << endl; 
-
-
 }
-
-
-// void Model::solveSource1(sp_mat* invC, vec d) {
-
-// 	// // problem:  Ax=b
-// 	sp_mat A = M.transpose()*(*invC)*M + RtR;
-
-// 	vec b = M.transpose()*(*invC)*d;
-// 	// sp_mat A1 = A.submat(0, 0, length-1, length-1);
-// 	sp_mat A1 = A.block(0,0, length, length);
-// 	vec b1 = b.head(length);
-
-// 	// Using Eigen methods;
-// 	Eigen::SimplicialCholesky<Eigen::SparseMatrix<double> > chol(A1);
-// 	s = chol.solve(b1);
-
-// 	// // get Penalty Function;
-// 	// for(int i=0; i<length; ++i) {
-// 	// 	r(i) = s(i);
-// 	// 	new_r(i) = d(i);
-// 	// }
-
-// 	// for(int i=length; i<2*length; ++i) {
-// 	// 	r(i) = 0;
-// 	// 	new_r(i) = 0;
-// 	// }
-// 	// vec res = M*r-d;
-// 	// res_img = eigenV_to_cV(res);
-// 	// simple_res_img = eigenV_to_cV(M*new_r-d);
-
-// 	// mod_img = eigenV_to_cV(M*new_r);
-
-// 	// vec temp1 =  res.transpose()*(*invC)*res;
-// 	// //cout << "HtH: " << HtH << endl ;
-// 	// double temp2 = s.transpose()*HtH*s;
-// 	// //cout << "source regularization: " << temp2 << endl;
-// 	// srcR =  lambdaS*lambdaS*temp2;
-// 	// chi2 = temp1(0,0);
-// 	// penalty = chi2 + srcR;
-
-
-// }
 
 
 void Model::updateSource(Conf* conf) {
 
 	std::default_random_engine generator; 
 	std::normal_distribution<double> distribution(conf->back_mean, conf->back_std); 
-	
-
 	for(int i=0; i<conf->length; ++i) {
 		double randNum = distribution(generator); 
-
-
 		s[i]  += randNum; 
 	}
 
@@ -751,23 +704,14 @@ void Model::updateSource(Conf* conf) {
 Image* Model::getFullResidual(Image* dataImage) {
 	// Assume "mod_image" is known;  's' is the source brightness after solve the linear equaion; 
 	mod_img = eigenV_to_cV(&s); 
+
 	Image* fullResidualImage = new Image(* dataImage); 
 	//map<pair<int, int>, double> modMap; 
 	for(int i=0; i< mod_img.size(); ++i)  {
 		int pos = dataImage->yList[i] * dataImage->naxis1 + dataImage->xList[i]; 
 		fullResidualImage->data[pos] -= mod_img[i]; 
 	}
-
 	return fullResidualImage; 	
-
-	/*
-	for(int i=0; i<length; ++i) {
-		red_res_img[i] = res_img[i]/dataImage->varList[i];
-	} */
-
-
-
-
 }
 
 void Model::writeSrcImage(string outFileName, Conf* conList) {
@@ -1045,9 +989,6 @@ MultModelParam::MultModelParam(map<string,string> confMap) {
 				tempParam.coreFrom		= stof(items[15]); 
 				tempParam.coreTo		= stof(items[16]); 
 				tempParam.coreInc		= stof(items[17]); 
-
-
-				
 				assert (tempParam.centerXInc >DIFF and 
 						tempParam.centerYInc >DIFF and 
 						tempParam.critRadInc >DIFF and 
@@ -1062,8 +1003,6 @@ MultModelParam::MultModelParam(map<string,string> confMap) {
 				nLens +=1;
 			}
 		}
-
-
 
 		if(itNFW != confMap.end()) {
 			vector<string> items = splitString(itNFW->second);
@@ -1129,9 +1068,6 @@ MultModelParam::MultModelParam(map<string,string> confMap) {
 			nParam.push_back(NUM_SPEMD_PARAM);
 			nLens +=1;
 		}
-
-
-
 	}
 
 
@@ -1376,7 +1312,6 @@ vector<string> MultModelParam::printCurrentModels(int curr) {
 		modelsInCol += "\n";  
 	} 
 	modelsInCol += "\n";
-	//modelsInRow += "\n"; 
 	ret.push_back(modelsInRow); 
 	ret.push_back(modelsInCol); 
 
@@ -1385,48 +1320,6 @@ vector<string> MultModelParam::printCurrentModels(int curr) {
 
 
 void Model::resetVectors(Conf* conf) {
-
-	/*vector<double> srcPosXListPixel;	  // Source position after deflection in X direction, in pixel;
-	vector<double> srcPosYListPixel;	  // Source position after deflection in Y direction, in pixel;
-
-	vector<double> pDeltaX;  	// Deflection angle in X direction;
-	vector<double> pDeltaY; 	// Deflection angle in Y direction;
-	vector<double> invMag;
-	vector<double> dSy1; 
-	vector<double> dSy2; 
-
-	vector<double> res_img;    // Residual brightness
-	vector<double> res_full_img;  //  the full residual map; 
-	vector<double> simple_res_img;
-
-
-	vector<double> mod_img;
-	vector<double> critical;
-	*/
-
-
-	// sp_mat L;
-	// sp_mat M;
-	// vec r;
-	// vec new_r;
-	// vec s;
-	// vec phi;
-	// vec square_s;
-	// //
-	// sp_mat Ds;
-	// sp_mat Dphi;
-	// sp_mat Hs1;
-	// sp_mat Hs2;
-	// sp_mat Hphi;
-	// sp_mat HtH;
-	// sp_mat HphiH;
-	// sp_mat T;
-
-	// sp_mat RtR;
-
-	// sp_mat H0;  // zeroth-order regularization;
-	// sp_mat H1;  // gradient-order regularization;
-	// sp_mat H2;  // curvature-order regularization;
 
 	L.		setZero();
 	M.		setZero(); 
@@ -1516,9 +1409,6 @@ void Model::copyParam(int i1, int i2) {
     }
 }
 
-
-
-
 vector<vector<double> > getCritCausticFine(vector<double> xPosListArc, vector<double> yPosListArc, Conf* conf, MultModelParam * param, int level) {
 	// level = 5; 
 	vector<double> invMag;
@@ -1526,8 +1416,6 @@ vector<vector<double> > getCritCausticFine(vector<double> xPosListArc, vector<do
 	vector<double> srcPos, pDeltaX, pDeltaY; 
 	vector<double> srcPosXListArc; 
 	vector<double> srcPosYListArc; 
-
-	
 
 	double curr_res = conf->imgRes/level; 
 
@@ -1759,8 +1647,6 @@ Image* createLensImage(Conf* conf, MultModelParam * param) {
 		}
 	}
 
-
-	//cout << param->nLens << endl; 
 	for(int i=0; i< param->nLens; ++i) {
 
 		if(param->parameter[i].name =="PTMASS") {
@@ -1800,6 +1686,8 @@ void writeSrcModResImage(Model* model, Image* dataImage, Conf* conf, string file
 
 	// Part I:  output 'src', 'mod', and 'res' images: 
 	// Part II: output 'crit', 'caus' and 'lens' images; 
+	
+
 	vector<double> s = eigenV_to_cV(&model->s); 
 	Image* srcImg = new Image(model->srcPosXListPixel, model->srcPosYListPixel, &s, conf->srcSize[0], conf->srcSize[1], conf->bitpix);		
 	Image* modImg = new Image(dataImage->xList, dataImage->yList, &s, conf->imgSize[0], conf->imgSize[1], conf->bitpix);
@@ -1818,9 +1706,14 @@ void writeSrcModResImage(Model* model, Image* dataImage, Conf* conf, string file
 	// critImg -> writeToFile(dir + "img_crit_" + fileName + ".fits");
 	// causImg -> writeToFile(dir + "img_caus_" + fileName + ".fits");
 	// delete critImg, causImg, lensImg ; 
-
-
 }
+
+
+
+Model::~Model() {
+	// TODO Auto-generated destructor stub
+}
+
 
 #if 0
 #endif 

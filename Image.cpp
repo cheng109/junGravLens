@@ -312,31 +312,15 @@ Notes:
 
 void Image::updateBackSubtract(double back_mean, double back_std) {
 
-	double sigma = 0; 
 	double counter = 0; 
-
-	double factor = 0; 
-	std::default_random_engine generator; 
-	std::normal_distribution<double> distribution(back_mean, sigma); 
 	for (int i=0; i<dataList.size(); ++i ) {
-		double number = distribution(generator); 
-		dataList[i] -= number ; 
-
-		//  set dataList to be zero if it is smaller than 2 sigma. 
-		// if(dataList[i] < factor* back_std) {
-		// 	counter += 1; 
-		// 	dataList[i] = 0; 
-		// }
+		dataList[i] -= back_mean ; 
 		d[i] = dataList[i]; 
 	}
 
-	cout << "counter: " << counter << endl; 
+	//cout << "counter: " << counter << endl; 
 
 }
-
-
-
-
 
 /***************************
 Function:   	updateFilterImage
@@ -356,116 +340,107 @@ void Image::updateFilterImage(string regionFileName, int flag) {
 	// Flag = 0, no region filter.
 
 
-	// double back_mean = 69.9; 
-	// double back_std  = 6.4 ; 
-
-	// double factor = 3; 
 	
-	vector<double> xpos, ypos;
+	vector<vector<double> > xpos, ypos;
+	cout << "updateFilterImage " << endl; 
 	if(flag==1) {  // with region; 
-		string regionType = parseReagionFile(regionFileName, &xpos, &ypos);
-		if(regionType == "polygon") {  // region type = polygon; 
+		vector<string> regionType = parseRegionFile(regionFileName, &xpos, &ypos);
 
-			for(int i=0; i<naxis1*naxis2; ++i) {
-				int y=i/naxis1;
-				int x=i%naxis1;
-				if(pnpoly(xpos.size(), &xpos, &ypos,  double(x+0.5) ,  double(y+0.5)) ) {
-					dataList.push_back(data[i]);
-					xList.push_back(x);
-					yList.push_back(y);
-				}
-			}	
-		}
+		for(int t=0; t<regionType.size(); ++t) {
+			if(regionType[t] == "polygon") {  // region type = polygon; 
+
+				for(int i=0; i<naxis1*naxis2; ++i) {
+					int y=i/naxis1;
+					int x=i%naxis1;
+					if(pnpoly(xpos[t].size(), &xpos[t], &ypos[t],  double(x+0.5) ,  double(y+0.5)) ) {
+						//cout << x << "\t" << y << "\t" << data[i] << endl; 
+						dataList.push_back(data[i]);
+						xList.push_back(x);
+						yList.push_back(y);
+					}
+				}	
+			}
 		
-		else if(regionType == "point" ) {
-			for(int i=0; i< xpos.size(); ++i) {
-				xList.push_back(int(xpos[i])); 
-				yList.push_back(int(ypos[i])); 
-				int index = int(ypos[i]) * naxis1 + int(xpos[i]);  
-				dataList.push_back(data[index]); 
-				
+			else if(regionType[t] == "point" ) {
+				for(int i=0; i< xpos[t].size(); ++i) {
+					xList.push_back(int(xpos[t][i])); 
+					yList.push_back(int(ypos[t][i])); 
+					int index = int(ypos[t][i]) * naxis1 + int(xpos[t][i]);  
+					dataList.push_back(data[index]); 
+				}
+			}		
+			else if(regionType[t] == "box") {
+
+			// xpos and ypos contain the same values:  [centerx, centery, sizex, sizey, rotation] // rotation will be always '0'
+				double boxCenterX 	= xpos[t][0]; 
+				double boxCenterY 	= xpos[t][1]; 
+				double boxSizeX 	= xpos[t][2]; 
+				double boxSizeY 	= xpos[t][3]; 
+				double boxRotation 	= xpos[t][4]; 
+				for(int i=0; i<naxis1; ++i) {
+					for (int j=0; j<naxis2; ++j) {
+						int dy= j - boxCenterY;
+						int dx= i - boxCenterX;
+						if(     dx <  0.5*boxSizeX and dy <  0.5*boxSizeY 
+							and dx > -0.5*boxSizeX and dy > -0.5*boxSizeY) {
+							dataList.push_back(data[j*naxis1 + i]);
+							xList.push_back(i);
+							yList.push_back(j);
+						}
+					}
+				}	
+
 			}
-		}		
-		else if(regionType == "box") {
+			else if(regionType[t] == "circle") {
 
 			// xpos and ypos contain the same values:  [centerx, centery, sizex, sizey, rotation] // rotation will be always '0'
-			double boxCenterX 	= xpos[0]; 
-			double boxCenterY 	= xpos[1]; 
-			double boxSizeX 	= xpos[2]; 
-			double boxSizeY 	= xpos[3]; 
-			double boxRotation 	= xpos[4]; 
-			for(int i=0; i<naxis1; ++i) {
-				for (int j=0; j<naxis2; ++j) {
-					int dy= j - boxCenterY;
-					int dx= i - boxCenterX;
-					if(     dx <  0.5*boxSizeX and dy <  0.5*boxSizeY 
-						and dx > -0.5*boxSizeX and dy > -0.5*boxSizeY) {
-						dataList.push_back(data[j*naxis1 + i]);
-						xList.push_back(i);
-						yList.push_back(j);
+				double circleCenterX 	= xpos[t][0]; 
+				double circleCenterY 	= xpos[t][1]; 
+				double circleR 			= xpos[t][2]; 
+
+				for(int i=0; i<naxis1; ++i) {
+					for (int j=0; j<naxis2; ++j) {
+						int dy= j - circleCenterY;
+						int dx= i - circleCenterX;
+						double dr2 = dx*dx + dy*dy; 
+						if( dr2 < circleR*circleR ) {
+							dataList.push_back(data[j*naxis1 + i]);
+							xList.push_back(i);
+							yList.push_back(j);
+						}
 					}
-				}
-			}	
+				}	
 
-		}
-		else if(regionType == "circle") {
-
-			// xpos and ypos contain the same values:  [centerx, centery, sizex, sizey, rotation] // rotation will be always '0'
-			double circleCenterX 	= xpos[0]; 
-			double circleCenterY 	= xpos[1]; 
-			double circleR 			= xpos[2]; 
-
-			for(int i=0; i<naxis1; ++i) {
-				for (int j=0; j<naxis2; ++j) {
-					int dy= j - circleCenterY;
-					int dx= i - circleCenterX;
-					double dr2 = dx*dx + dy*dy; 
-					if( dr2 < circleR*circleR ) {
-						dataList.push_back(data[j*naxis1 + i]);
-						xList.push_back(i);
-						yList.push_back(j);
-					}
-				}
-			}	
-
-		}
-
-		else if(regionType == "ellipse") {
-
-			// xpos and ypos contain the same values:  [centerx, centery, sizex, sizey, rotation] // rotation will be always '0'
-			double ellipseCenterX 	= xpos[0]; 
-			double ellipseCenterY 	= xpos[1]; 
-			double a				= xpos[2]; 
-			double b				= xpos[3]; 
-			double A 				= xpos[4];   // rotation angle; 
-
-
-			for (int i=0; i<5; ++i) {
-
-
-				cout << xpos[i] << endl; 
 			}
 
-			for(int i=0; i<naxis1; ++i) {
-				for (int j=0; j<naxis2; ++j) {
-					int dx= i - ellipseCenterX;
-					int dy= j - ellipseCenterY;
+			else if(regionType[t] == "ellipse") {
 
-					double dr2 = ((dx*cos(A) + dy*sin(A))/a)*((dx*cos(A) + dy*sin(A))/a) 
+			// xpos and ypos contain the same values:  [centerx, centery, sizex, sizey, rotation] // rotation will be always '0'
+				double ellipseCenterX 	= xpos[t][0]; 
+				double ellipseCenterY 	= xpos[t][1]; 
+				double a				= xpos[t][2]; 
+				double b				= xpos[t][3]; 
+				double A 				= xpos[t][4];   // rotation angle; 
+
+				for(int i=0; i<naxis1; ++i) {
+					for (int j=0; j<naxis2; ++j) {
+						int dx= i - ellipseCenterX;
+						int dy= j - ellipseCenterY;
+
+						double dr2 = ((dx*cos(A) + dy*sin(A))/a)*((dx*cos(A) + dy*sin(A))/a) 
 									+ ((dx*sin(A) - dy*cos(A))/b)*((dx*sin(A) - dy*cos(A))/b); 
-					if( dr2 < 1 ) {
-						dataList.push_back(data[j*naxis1 + i]);
-						xList.push_back(i);
-						yList.push_back(j);
+						if( dr2 < 1 ) {
+							dataList.push_back(data[j*naxis1 + i]);
+							xList.push_back(i);
+							yList.push_back(j);
+						}
 					}
-				}
-			}	
+				}	
+			}
 
-		}
-
-		else {
-			cout << "Region type is not supported! " << endl; 
-			//return 1; 
+			else {
+				cout << "Region type is not supported! " << endl; 
+			}
 		}
 	}
 	else if(flag==0) {  // without region; 
@@ -475,20 +450,16 @@ void Image::updateFilterImage(string regionFileName, int flag) {
 			dataList.push_back(data[i]);
 			xList.push_back(x);
 			yList.push_back(y);
-
 		}
-
 	}
 
 	else 
 		cout << "Wrong region flag is used:  " << flag << endl; 
 	length = dataList.size() ;
+	
 	//cout << "length = " << length << endl;
-	for(int i=0; i<dataList.size(); ++i) {
+	for(int i=0; i<dataList.size(); ++i) 
 		iList.push_back(i);
-	}
-
-
 	d = cV_to_eigenV (&dataList); 
 }
 
@@ -504,7 +475,7 @@ Returns:		void;
 void Image::updateGridPointType() {
 	for(int i=0; i<length; ++i) {
 		if((xList[i]+yList[i])%2==0)
-			type.push_back(1); // should be zero; 
+			type.push_back(0); // should be zero; 
 		else
 			type.push_back(1);
 	}
@@ -519,7 +490,7 @@ sp_mat Image::getVarMatrix()  {
 	sp_mat invC(n, n);
 	invC.reserve(n);
 	for(int i=0; i<n; ++i) {
-		invC.insert(i,i)= 1.0/varList[i];
+		invC.insert(i,i)= 1.0; ///varList[i];
 		//cout << dataList[i] << endl;
 	}
 	return invC;
@@ -531,11 +502,11 @@ void Image::updateVarList(double threshold, double back_mean, double back_std) {
 	threshold = back_mean + 2*back_std; 
 	for(int i=0; i<length; ++i) {
 		if(dataList[i]<threshold) {
-			varList.push_back(back_var);
+			varList.push_back(fabs(dataList[i]));
 		}
 		else
 			//varList.push_back(back_var);
-			varList.push_back(dataList[i]);
+			varList.push_back(fabs(dataList[i]));
 	}
 }
 
