@@ -46,8 +46,6 @@ void gridSearchVegetti(Conf* conf, MultModelParam param_old, Image* dataImage, s
 				s.centerY = model->param.mixAllModels[i][j].paraList[2]; 
 				model->param.parameter.push_back(s); 
 			}
-
-
 			if(s.name=="SIE") {
 				s.critRad = model->param.mixAllModels[i][j].paraList[0]; 
 				s.centerX = model->param.mixAllModels[i][j].paraList[1]; 
@@ -57,8 +55,17 @@ void gridSearchVegetti(Conf* conf, MultModelParam param_old, Image* dataImage, s
 				s.core 	  = model->param.mixAllModels[i][j].paraList[5];  
 				model->param.parameter.push_back(s); 
 			}
+
+			if(s.name=="NFW") {
+				s.massScale = model->param.mixAllModels[i][j].paraList[0]; 
+				s.centerX   = model->param.mixAllModels[i][j].paraList[1]; 
+				s.centerY   = model->param.mixAllModels[i][j].paraList[2]; 
+				s.e         = model->param.mixAllModels[i][j].paraList[3]; 
+				s.PA 	    = model->param.mixAllModels[i][j].paraList[4];
+				s.radScale  = model->param.mixAllModels[i][j].paraList[5];  
+				model->param.parameter.push_back(s); 
+			}
 		}	
-		//vector<double> sBright = dataImage->dataList; 
 		vector<double> penalty = getPenalty(model,  dataImage, conf) ; 
 		
 		if(minPenalty > penalty[2]) {
@@ -66,13 +73,11 @@ void gridSearchVegetti(Conf* conf, MultModelParam param_old, Image* dataImage, s
 			minIndex = i; 
 		}
 
-		cout << "[" + to_string(i+1) + "/" + to_string(model->param.nComb) + "]\t" ; 
-		cout << model->param.parameter[0].critRad << "\t" <<penalty[0] << "\t" << penalty[1] << "\t" << penalty[2] << "\t" <<  endl; 
+		cout << "[" + to_string(i+1) + "/" + to_string(model->param.nComb) + "]" << endl ; 
+		//cout << model->param.parameter[0].critRad << "\t" <<penalty[0] << "\t" << penalty[1] << "\t" << penalty[2] << "\t" <<  endl; 
 
 		writeSrcModResImage(model,dataImage,conf, to_string(i), dir) ; 
-
-
-		output << model->param.printCurrentModels(i).at(0) << "\t" << penalty[0] <<"\t" <<penalty[1] << "\t" << penalty[2]  << endl; 
+		//output << model->param.printCurrentModels(i).at(0) << "\t" << penalty[0] <<"\t" <<penalty[1] << "\t" << penalty[2]  << endl; 
 
 	}
 
@@ -92,44 +97,28 @@ void gridSearchVegetti(Conf* conf, MultModelParam param_old, Image* dataImage, s
 
 
 vector<double> getPenalty(Model* model, Image* dataImage, Conf* conf) {
-	
+	vector<double> penalty(3); 
 	vec d = cV_to_eigenV (&dataImage->dataList); 
 
 	model->updatePosMapping(dataImage, conf);  // time used: 0.03s; 
-	model->update_H_zero(conf); 
-	model->updateLensAndRegularMatrix(dataImage, conf);  // get matrix 'L' and 'RTR'; most time consuming part; 
-	model->solveSource(&dataImage->invC, &dataImage->d, conf->srcRegType); 
-	//model->updateSource(conf) ; // Add noise to the source; 
-	vec &s = model->s; 
-	vec res = ( model->L * s - dataImage->d) ; 
-	vec chi2 = res.transpose() *  dataImage->invC * res * model->lambdaC* model->lambdaC  ; 
-	vec srcR = s  .transpose() *  model->REG      * s   * model->lambdaS* model->lambdaS  ; 
+	if(1) {
+		model->update_H_zero(conf); 
+		model->updateLensAndRegularMatrix(dataImage, conf);  // get matrix 'L' and 'RTR'; most time consuming part; 
+		model->solveSource(&dataImage->invC, &dataImage->d, conf->srcRegType); 
+
+		vec &s = model->s; 
+		vec res = ( model->L * s - dataImage->d) ; 
+		vec chi2 = res.transpose() *  dataImage->invC * res * model->lambdaC* model->lambdaC  ; 
+		vec srcR = s  .transpose() *  model->REG      * s   * model->lambdaS* model->lambdaS  ; 
+		penalty[0] = chi2[0]; 
+		penalty[1] = srcR[0]; 
+		penalty[2] = chi2[0] + srcR[0]; 
+	}
+	penalty[2] = model->getScatterReg() ; 
 
 
-
-	// vector<double> newListX , newListY, srcList; 
-	// for(int i=0; i<conf->length; ++i) {
-	// 	if (model->srcPosXListPixel[i] <52 and model->srcPosXListPixel[i] > 49
-	// 		and model->srcPosYListPixel[i] <60 and model->srcPosYListPixel[i] > 40 ) {
-	// 		newListX.push_back(dataImage->xList[i]); 
-	// 		newListY.push_back(dataImage->yList[i]); 
-	// 		srcList.push_back(1.0); 
-	// 		cout << dataImage->xList[i] << "\t" << dataImage->yList[i] << ";\t" ; 
-
-	// 	}
-
-	// }
-	//cout << endl; 
-	//Image* newImage = new Image(newListX,  newListY, &srcList, conf->imgSize[0], conf->imgSize[1], conf->bitpix); 
-
-	//newImage -> writeToFile ( "check.fits");
-
-	//delete newImage; 
-
-	vector<double> penalty(3); 
-	penalty[0] = chi2[0]; 
-	penalty[1] = srcR[0]; 
-	penalty[2] = chi2[0] + srcR[0]; 
+	
+	
 
 	return penalty; 
 }

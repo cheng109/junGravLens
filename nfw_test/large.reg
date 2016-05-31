@@ -1,0 +1,6 @@
+# Region file format: DS9 version 4.1
+# Filename: jun_image.fits
+global color=green dashlist=8 3 width=1 font="helvetica 10 normal roman" select=1 highlite=1 dash=0 fixed=0 edit=1 move=1 delete=1 include=1 source=1
+image
+polygon(224.0373,272.9627,319.9627,272.9627,319.9627,177.0373,224.0373,177.0373)
+polygon(40.051119,330.94888,129.94888,330.94888,129.94888,241.05112,104,192,140,131,194,102,252,81,293,97,313,133,362,186,365,238,400,179,373,68,319,7,208,6,150,23,100,55,51,100,22,183,22,242)

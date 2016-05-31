@@ -118,20 +118,14 @@ vector<double> Model::getDeflectionAngle(Conf* conf, double pfX, double pfY, dou
 			*pDeltaX +=  fX*fMult;
 			*pDeltaY +=  fY*fMult;
 		}
-
-
 		if(param->parameter[i].name.compare("SIE")==0) {
-
 			double phi,root1mq,fq,fac,fCosTheta,fSinTheta,x1,y1,deltax1,deltay1;
-
 			double fCore= param->parameter[i].core; 
 			if (fX == 0 && fY == 0)  {
 				*pDeltaX += param->parameter[i].critRad; 
 				*pDeltaY += param->parameter[i].critRad;
 
 			}
-			
-
 			//pre-calculate constants
 			fCosTheta = cos(param->parameter[i].PA*M_PI/180 + 0.5* M_PI);
 			fSinTheta = sin(param->parameter[i].PA*M_PI/180 + 0.5* M_PI);
@@ -152,20 +146,17 @@ vector<double> Model::getDeflectionAngle(Conf* conf, double pfX, double pfY, dou
 			//cout << root1mq << "\t" << y1 << "\t " << phi << "\t" << fq << "\t" << deltay1 << endl; 
 			*pDeltaX += (deltax1*fCosTheta - deltay1*fSinTheta);
 			*pDeltaY += (deltay1*fCosTheta + deltax1*fSinTheta);
-			
-
-
 		}
 		
-		/*
+		
 		if(param->parameter[i].name.compare("NFW")==0) {
 		
 			double fEllip,fCosTheta,fSinTheta,x1,y1,fPhi,fAngRadius,fTempResult,fCosPhi,fSinPhi,fScale;
-  			fCosTheta = cos(param.parameter[i].PA*M_PI/180 + 0.5*M_PI);
-			fSinTheta = sin(param.parameter[i].PA*M_PI/180 + 0.5*M_PI);
+  			fCosTheta = cos(param->parameter[i].PA*M_PI/180 + 0.5*M_PI);
+			fSinTheta = sin(param->parameter[i].PA*M_PI/180 + 0.5*M_PI);
 
-			fEllip = param.parameter[i].e; 
-			fScale = param.parameter[i].radScale;
+			fEllip = param->parameter[i].e; 
+			fScale = param->parameter[i].radScale;
 
             if (fEllip >= 1.0 || fEllip < 0 || fScale < 0) 
                 cout << "Bad parameters of 'e' or 'scale'. " << endl; 
@@ -184,7 +175,7 @@ vector<double> Model::getDeflectionAngle(Conf* conf, double pfX, double pfY, dou
 				fCosPhi = cos(fPhi);
 				fSinPhi = sin(fPhi);
 					
-				fTempResult = param.parameter[i].massScale * fScale * lm_nfw_mass(fAngRadius)/(fAngRadius);
+				fTempResult = param->parameter[i].massScale * fScale * lm_nfw_mass(fAngRadius)/(fAngRadius);
 				//cout << param.parameter[i].radScale << "\t" << fScale << "\t" << fAngRadius << "\t" << fTempResult  << endl; 
 				deflx = sqrt(1.-fEllip)*fTempResult*fCosPhi;
 				defly = sqrt(1.+fEllip)*fTempResult*fSinPhi;
@@ -197,6 +188,7 @@ vector<double> Model::getDeflectionAngle(Conf* conf, double pfX, double pfY, dou
 			} 
 		}
 		
+		/*
 
 		if(param.parameter[i].name.compare("SERSIC")==0)  {  
 			double fCosTheta,fSinTheta,x1,y1,deflx,defly;
@@ -1005,34 +997,56 @@ MultModelParam::MultModelParam(map<string,string> confMap) {
 		}
 
 		if(itNFW != confMap.end()) {
-			vector<string> items = splitString(itNFW->second);
 
-			SingleModelParam tempParam;
+			vector<string> strs;
+			std::string s = itSIE->second; 
+			string delimiter = "_&&_";
 
-			tempParam.name = "NFW";
+			size_t pos = s.find(delimiter) ; 
+			while( pos!=std::string::npos) {
+				strs.push_back(s.substr(0, pos)); 
+				s = s.substr(pos+4); 
+				pos = s.find(delimiter);
+			}; 
+			strs.push_back(s); 
+			for(int i=0; i<strs.size(); ++i) {
 
-			tempParam.centerXFrom 	= stof(items[0]);
-			tempParam.centerXTo 	= stof(items[1]);
-			tempParam.centerXInc 	= stof(items[2]);
-			tempParam.centerYFrom 	= stof(items[3]);
-			tempParam.centerYTo 	= stof(items[4]);
-			tempParam.centerYInc 	= stof(items[5]);
-			tempParam.massScaleFrom = stof(items[6]);
-			tempParam.massScaleTo   = stof(items[7]);
-			tempParam.massScaleInc  = stof(items[8]);
-			tempParam.radScaleFrom 	= stof(items[9]);
-			tempParam.radScaleTo   	= stof(items[10]);
-			tempParam.radScaleInc  	= stof(items[11]);
-			tempParam.eFrom			= stof(items[12]);
-			tempParam.eTo 			= stof(items[13]);
-			tempParam.eInc 			= stof(items[14]);
-			tempParam.PAFrom 		= stof(items[15]);
-			tempParam.PATo			= stof(items[16]);
-			tempParam.PAInc			= stof(items[17]);
-			parameter.push_back(tempParam);
-			nParam.push_back(NUM_NFW_PARAM);
+				vector<string> items = splitString(itNFW->second);
+				SingleModelParam tempParam;
 
-			nLens +=1;
+				tempParam.name = "NFW";
+
+				tempParam.centerXFrom 	= stof(items[0]);
+				tempParam.centerXTo 	= stof(items[1]);
+				tempParam.centerXInc 	= stof(items[2]);
+				tempParam.centerYFrom 	= stof(items[3]);
+				tempParam.centerYTo 	= stof(items[4]);
+				tempParam.centerYInc 	= stof(items[5]);
+				tempParam.massScaleFrom = stof(items[6]);
+				tempParam.massScaleTo   = stof(items[7]);
+				tempParam.massScaleInc  = stof(items[8]);
+				tempParam.radScaleFrom 	= stof(items[9]);
+				tempParam.radScaleTo   	= stof(items[10]);
+				tempParam.radScaleInc  	= stof(items[11]);
+				tempParam.eFrom			= stof(items[12]);
+				tempParam.eTo 			= stof(items[13]);
+				tempParam.eInc 			= stof(items[14]);
+				tempParam.PAFrom 		= stof(items[15]);
+				tempParam.PATo			= stof(items[16]);
+				tempParam.PAInc			= stof(items[17]);
+
+				assert (tempParam.centerXInc   >DIFF and 
+						tempParam.centerYInc   >DIFF and 
+						tempParam.massScaleInc >DIFF and 
+						tempParam.radScaleInc  >DIFF and 
+						tempParam.eInc         >DIFF and  
+						tempParam.PAInc		   >DIFF); 
+
+				parameter.push_back(tempParam);
+				nParam.push_back(NUM_NFW_PARAM);
+
+				nLens +=1;
+			}
 		}
 
 		if(itSPEMD != confMap.end()) {
@@ -1243,15 +1257,21 @@ void MultModelParam::mix(int opt) {
                 v1.push_back(sModel);
                 v1.push_back(sModel);
                 v1.push_back(sModel);
+                sModel.paraList[0] = 0.5 * (parameter[i].critRadTo + parameter[i].critRadFrom);
+                sModel.paraList[1] = 0.5 * (parameter[i].centerXTo + parameter[i].centerXFrom);
+                sModel.paraList[2] = 0.5 * (parameter[i].centerYTo + parameter[i].centerYFrom);
+                sModel.paraList[3] = 0.5 * (parameter[i].eTo       + parameter[i].eFrom      );
+                sModel.paraList[4] = 0.5 * (parameter[i].PATo      + parameter[i].PAFrom     );
+                sModel.paraList[5] = 0.5 * (parameter[i].coreTo    + parameter[i].coreFrom   );
+                v1.push_back(sModel);
+                v1.push_back(sModel);
+                v1.push_back(sModel);
                 sModel.paraList[0] = parameter[i].critRadFrom;
                 sModel.paraList[1] = parameter[i].centerXFrom;
                 sModel.paraList[2] = parameter[i].centerYFrom;
                 sModel.paraList[3] = parameter[i].eFrom;
                 sModel.paraList[4] = parameter[i].PAFrom;
                 sModel.paraList[5] = parameter[i].coreFrom;
-                v1.push_back(sModel);
-                v1.push_back(sModel);
-                v1.push_back(sModel);
                 v1.push_back(sModel);
                 sModel.paraList[0] = parameter[i].critRadTo;
                 sModel.paraList[1] = parameter[i].centerXTo;
@@ -1268,28 +1288,69 @@ void MultModelParam::mix(int opt) {
                 sModel.paraList[5] = 0.1 * (parameter[i].coreTo    - parameter[i].coreFrom   );
                 v1.push_back(sModel);
             }
+
 			mix.push_back(v1);
 		}
+
+	// double massScale, massScaleFrom, massScaleTo, massScaleInc;   
+	// double radScale, radScaleFrom, radScaleTo, radScaleInc; 
+		else if (parameter[i].name=="NFW") {
+			vector<mixModels> v1;
+            if (opt == 0) {
+	        	for (double massScale = parameter[i].massScaleFrom;	massScale <= parameter[i].massScaleTo; massScale += parameter[i].massScaleInc) {
+	        		for (double centerX = parameter[i].centerXFrom;	centerX <= parameter[i].centerXTo; centerX += parameter[i].centerXInc) {
+	        			for (double centerY = parameter[i].centerYFrom;	centerY <= parameter[i].centerYTo; centerY += parameter[i].centerYInc) {
+	        				for (double e = parameter[i].eFrom;	e <= parameter[i].eTo; e += parameter[i].eInc) {
+	        					for (double PA = parameter[i].PAFrom; PA <= parameter[i].PATo; PA += parameter[i].PAInc) {
+	        						for(double radScale = parameter[i].radScaleFrom; radScale <= parameter[i].radScaleTo; radScale += parameter[i].radScaleInc) {
+	        							mixModels sModel("NFW");
+	        							sModel.paraList[0] = massScale;
+	        							sModel.paraList[1] = centerX;
+	        							sModel.paraList[2] = centerY;
+	        							sModel.paraList[3] = e;
+	        							sModel.paraList[4] = PA;
+	        							sModel.paraList[5] = radScale;  //parameter[i].core;
+	        							v1.push_back(sModel);
+	        						}
+	        					}
+	        				}
+	        			}
+	        		}
+	        	}
+            } else if (opt == 1) {
+            }
+            
+			mix.push_back(v1);
+		}
+
+
 	}
 	mix.resize(3);
     size_t ms1 = (mix[1].size() > 0) ? mix[1].size():1;
     size_t ms2 = (mix[2].size() > 0) ? mix[2].size():1;
 
     /* for maximum 3 models:  j, k, m */
-    for(size_t j=0; j<mix[0].size(); ++j) {
-        for(size_t k=0; k<ms1; ++k ) {
-            for(size_t m=0; m<ms2; ++m) {
-                vector<mixModels> v2;
-                v2.push_back(mix[0][j]);
-                if (nLens>1) v2.push_back(mix[1][k]);
-                if (nLens>2) v2.push_back(mix[2][m]);
-                mixAllModels.push_back(v2);
+    if (opt == 0) {
+        for(size_t j=0; j<mix[0].size(); ++j) {
+            for(size_t k=0; k<ms1; ++k ) {
+                for(size_t m=0; m<ms2; ++m) {
+                    vector<mixModels> v2;
+                    v2.push_back(mix[0][j]);
+                    if (nLens>1) v2.push_back(mix[1][k]);
+                    if (nLens>2) v2.push_back(mix[2][m]);
+                    mixAllModels.push_back(v2);
+                }
             }
-
         }
-
+    } else if (opt == 1) {
+        for(size_t j=0; j<mix[0].size(); ++j) {
+            vector<mixModels> v2;
+            for(int i=0; i<nLens; ++i) v2.push_back(mix[i][j]);
+            mixAllModels.push_back(v2);
+        }
     }
 	nComb = mixAllModels.size();
+    cout<< nComb<<" "<<ms1<<" "<<ms2<<" "<< mix[0].size()<<endl;
 }
 
 
@@ -1398,6 +1459,17 @@ void Model::copyParam(Conf* conf, int i) {
             s.core    = param.mixAllModels[i][j].paraList[5];
             param.parameter.push_back(s);
         }
+        else if (s.name=="NFW") {
+            s.massScale = param.mixAllModels[i][j].paraList[0];
+            s.centerX   = param.mixAllModels[i][j].paraList[1];
+            s.centerY   = param.mixAllModels[i][j].paraList[2];
+            s.e         = param.mixAllModels[i][j].paraList[3];
+            s.PA        = param.mixAllModels[i][j].paraList[4];
+            s.radScale  = param.mixAllModels[i][j].paraList[5];
+            param.parameter.push_back(s);
+        }
+
+
     }
 }
 

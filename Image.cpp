@@ -483,7 +483,6 @@ void Image::updateGridPointType() {
 }
 
 sp_mat Image::getVarMatrix()  {
-
 	//this->updateFilterImage(regionFileName);
 	long n= length;
 	//n = 100;

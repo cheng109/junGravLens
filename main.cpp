@@ -38,6 +38,9 @@ int main(int argc, char* argv[]) {
 	string dir 		= argv[1]; 
 	string strConf 	= argv[2]; 
 	string output 	= argv[3]; 
+    int opt(0);
+    if (argc > 4) opt = atoi(argv[4]);          //0: grid, 1: mcmc
+
 	/***** prepare*****/
 	string confFileName = dir+ strConf; 
 	map<string, string> mapConf = parseConfigure(confFileName);
@@ -63,20 +66,11 @@ int main(int argc, char* argv[]) {
 	MultModelParam param = MultModelParam(mapConf);
 	
 	param.printModels();
-	param.mix(0); 	 // update 'AllMixModels'; 
-
-	Image* regionTestImg = new Image(dataImage->xList, dataImage->yList, &dataImage->dataList, conf->imgSize[0], conf->imgSize[1], conf->bitpix);
-	regionTestImg->writeToFile("regionTestImg.fits"); 
-
-
-
+	param.mix(opt); 	 // update 'AllMixModels'; 
 
 	// Image* maskImg = new Image(dataImage->xList, dataImage->yList, &dataImage->dataList, conf->imgSize[0], conf->imgSize[1], conf->bitpix);
 	// maskImg -> writeToFile ("galfit_work/img_mask.fits");
 	// delete maskImg; 
-
-	
-
 	// for(int i=0; i<8; ++i) {
 
 	// 	map<string, double> backMap; 
@@ -89,9 +83,8 @@ int main(int argc, char* argv[]) {
 
 	// 	string smallMassRegion = "horseshoe_test/new_reg_" + to_string(i) + "_IR.reg" ; 
 
+//<<<<<<< HEAD
 	// 	string filterName = "f160" ; 
-
-
 	// 	Image* lensImage1 = new Image("horseshoe_test/color_test/f110_clean.fits"); 
 	// 	string imgName = "galfit_work/" + filterName + "_ADU.fits"; 
 	// 	Image* dataImage1 = new Image(imgName);
@@ -99,14 +92,11 @@ int main(int argc, char* argv[]) {
 	// 	cout << luminosity << "\t "; 
 	// } 
 	// cout << endl; 
-	
-
-	//gridSearchVegetti(conf, param,  dataImage, dir, output);	
+	gridSearchVegetti(conf, param,  dataImage, dir, output);	
 
 
-	
-	delete conf; 
-	delete dataImage; 
+	delete conf;
+	delete dataImage;
 	return 0;
 }
 
