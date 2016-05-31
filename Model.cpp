@@ -188,6 +188,48 @@ vector<double> Model::getDeflectionAngle(Conf* conf, double pfX, double pfY, dou
 			} 
 		}
 		
+
+		if(param->parameter[i].name.compare("SPEMD")==0)  {  
+
+			double fTempKappa = 0.0; 
+			double fTempCoreSqu=0.0; 
+			double fTempAxratio =1.0; 
+			double fTempDefl[2]; 
+			double fTempGamma = 0.0; 
+			double fTempCenterX=0; 
+			double fTempCenterY=0;
+			double	x1, y1;
+			double 	fCosTheta, fSinTheta;
+
+            
+			fTempAxratio = 1.0 - param->parameter[i].e;
+			fTempCoreSqu = param->parameter[i].core*param->parameter[i].core;
+			fTempGamma = param->parameter[i].power;
+            if (fTempAxratio > 1.0 || fTempAxratio<=0 ) {
+                cout << "Ellipticity is out of range; " << endl; 
+            }
+			if (fX == 0 && fY == 0 && fTempGamma >= 0.5) {
+				*pDeltaX = param->parameter[i].critRad;
+				*pDeltaY = param->parameter[i].critRad;
+				//iStatus =LM_IGNORE_PROJ;
+				//break;
+			}
+			fCosTheta = cos(param->parameter[i].PA*M_PI/180 + 0.5*M_PI);
+			fSinTheta = sin(param->parameter[i].PA*M_PI/180 + 0.5*M_PI);
+
+                
+            x1 = (fX*fCosTheta + fY*fSinTheta);
+            y1 = (-fX*fSinTheta + fY*fCosTheta);
+
+            //cout << x1 << "\t" << y1 << endl; 
+			fTempKappa = 0.5 * param->parameter[i].critRad * pow((2.0-2.0*fTempGamma)/fTempAxratio,fTempGamma);
+			
+			//cout << "ftempkapp: " << fTempKappa << "\t" << param->parameter[i].critRad  << endl; 
+			fastelldefl_(&x1,&y1,&fTempKappa,&fTempGamma,&fTempAxratio,&fTempCoreSqu,fTempDefl);
+
+			*pDeltaX = fTempDefl[0]*fCosTheta - fTempDefl[1]*fSinTheta;
+			*pDeltaY = fTempDefl[1]*fCosTheta + fTempDefl[0]*fSinTheta;  
+		}
 		/*
 
 		if(param.parameter[i].name.compare("SERSIC")==0)  {  
@@ -222,40 +264,7 @@ vector<double> Model::getDeflectionAngle(Conf* conf, double pfX, double pfY, dou
 
 
 
-		if(param.parameter[i].name.compare("SPEMD")==0)  {  
-
-			double	fTempKappa = 0.0,fTempCoreSqu=0.0, fTempAxratio=1.0, fTempDefl[2], fTempGamma = 0.0, fTempCenterX=0, fTempCenterY=0;
-			double	x1, y1;
-			double 	fCosTheta, fSinTheta;
-
-            
-			fTempAxratio = 1.0 - param.parameter[i].critRad;
-			fTempCoreSqu = param.parameter[i].core*param.parameter[i].core;
-			fTempGamma = param.parameter[i].power;
-            if (fTempAxratio > 1.0 || fTempAxratio<=0 ) {
-                cout << "Ellipticity is out of range; " << endl; 
-            }
-			if (fX == 0 && fY == 0 && fTempGamma >= 0.5) {
-				*pDeltaX = *pDeltaY = param.parameter[i].critRad;
-				//iStatus =LM_IGNORE_PROJ;
-				//break;
-			}
-			fCosTheta = cos(param.parameter[i].PA*M_PI/180 + 0.5*M_PI);
-			fSinTheta = sin(param.parameter[i].PA*M_PI/180 + 0.5*M_PI);
-
-                
-            x1 = (fX*fCosTheta + fY*fSinTheta);
-            y1 = (-fX*fSinTheta + fY*fCosTheta);
-			fTempKappa = 0.5 * param.parameter[i].critRad * pow((2.0-2.0*fTempGamma)/fTempAxratio,fTempGamma);
-			//extern  void fastelldefl_(double *x1, double *x2, double *q, double *gamma, double *axisratio, double *coreradsqu, double deflection[2]);
-			
-			fastelldefl_(&x1,&y1,&fTempKappa,&fTempGamma,&fTempAxratio,&fTempCoreSqu,fTempDefl);
-
-			*pDeltaX = fTempDefl[0]*fCosTheta - fTempDefl[1]*fSinTheta;
-			*pDeltaY = fTempDefl[1]*fCosTheta + fTempDefl[0]*fSinTheta;  
-			
-
-			}
+		
 		*/
 		}
 
@@ -731,10 +740,12 @@ double Model::getScatterReg() {
 		sumX += srcPosXList[i]; 
 		sumY += srcPosYList[i]; 
 	}
-
 	double xPosMean = sumX / srcPosXList.size(); 
 	double yPosMean = sumY / srcPosYList.size();
+
+	
 	for (int i=0; i<srcPosXList.size(); ++i) {
+
 		scatter += (srcPosXList[i]-xPosMean) * (srcPosXList[i]-xPosMean) ;
 		scatter += (srcPosYList[i]-yPosMean) * (srcPosYList[i]-yPosMean) ;
 	}
@@ -908,12 +919,9 @@ MultModelParam::MultModelParam(map<string,string> confMap) {
 
 
 		if(itPTMASS != confMap.end()) {
-
 			vector<string> strs;
-
 			std::string s = itPTMASS->second; 
 			string delimiter = "_&&_";
-
 			size_t pos = s.find(delimiter) ; 
 			while( pos!=std::string::npos) {
 				strs.push_back(s.substr(0, pos)); 
@@ -922,7 +930,6 @@ MultModelParam::MultModelParam(map<string,string> confMap) {
 				break; 
 			}; 
 			strs.push_back(s); 
-
 			for(int i=0; i<strs.size(); ++i) {
 				vector<string> items = splitString(strs[i]);
 				SingleModelParam tempParam;
@@ -1050,37 +1057,48 @@ MultModelParam::MultModelParam(map<string,string> confMap) {
 		}
 
 		if(itSPEMD != confMap.end()) {
-			vector<string> items = splitString(itSPEMD->second);
 
-			SingleModelParam tempParam;
+			vector<string> strs;
+			std::string s = itSIE->second; 
+			string delimiter = "_&&_";
 
-			tempParam.name = "SPEMD";
+			size_t pos = s.find(delimiter) ; 
+			while( pos!=std::string::npos) {
+				strs.push_back(s.substr(0, pos)); 
+				s = s.substr(pos+4); 
+				pos = s.find(delimiter);
+			}; 
+			strs.push_back(s); 
+			for(int i=0; i<strs.size(); ++i) {
+				vector<string> items = splitString(itSPEMD->second);
+				SingleModelParam tempParam;
+				tempParam.name = "SPEMD";
+				tempParam.centerXFrom 	= stof(items[0]);
+				tempParam.centerXTo 	= stof(items[1]);
+				tempParam.centerXInc 	= stof(items[2]);
+				tempParam.centerYFrom 	= stof(items[3]);
+				tempParam.centerYTo 	= stof(items[4]);
+				tempParam.centerYInc 	= stof(items[5]);
+				tempParam.critRadFrom 	= stof(items[6]);
+				tempParam.critRadTo   	= stof(items[7]);
+				tempParam.critRadInc  	= stof(items[8]);
+				tempParam.eFrom			= stof(items[9]);
+				tempParam.eTo 			= stof(items[10]);
+				tempParam.eInc 			= stof(items[11]);
+				tempParam.PAFrom 		= stof(items[12]);
+				tempParam.PATo			= stof(items[13]);
+				tempParam.PAInc			= stof(items[14]);
+				tempParam.powerFrom		= stof(items[15]);
+				tempParam.powerTo 		= stof(items[16]);
+				tempParam.powerInc 		= stof(items[17]);
+				tempParam.coreFrom 		= stof(items[18]);
+				tempParam.coreTo		= stof(items[19]);
+				tempParam.coreInc		= stof(items[20]);
 
-			tempParam.centerXFrom 	= stof(items[0]);
-			tempParam.centerXTo 	= stof(items[1]);
-			tempParam.centerXInc 	= stof(items[2]);
-			tempParam.centerYFrom 	= stof(items[3]);
-			tempParam.centerYTo 	= stof(items[4]);
-			tempParam.centerYInc 	= stof(items[5]);
-			tempParam.critRadFrom 	= stof(items[6]);
-			tempParam.critRadTo   	= stof(items[7]);
-			tempParam.critRadInc  	= stof(items[8]);
-			tempParam.eFrom			= stof(items[9]);
-			tempParam.eTo 			= stof(items[10]);
-			tempParam.eInc 			= stof(items[11]);
-			tempParam.PAFrom 		= stof(items[12]);
-			tempParam.PATo			= stof(items[13]);
-			tempParam.PAInc			= stof(items[14]);
-			tempParam.powerFrom		= stof(items[15]);
-			tempParam.powerTo 		= stof(items[16]);
-			tempParam.powerInc 		= stof(items[17]);
-			tempParam.coreFrom 		= stof(items[18]);
-			tempParam.coreTo		= stof(items[19]);
-			tempParam.coreInc		= stof(items[20]);
-
-			parameter.push_back(tempParam);
-			nParam.push_back(NUM_SPEMD_PARAM);
-			nLens +=1;
+				parameter.push_back(tempParam);
+				nParam.push_back(NUM_SPEMD_PARAM);
+				nLens +=1;
+			}
 		}
 	}
 
@@ -1160,6 +1178,37 @@ void MultModelParam::printModels() {
 				<< parameter[i].radScaleInc << "\t"
 				<< parameter[i].eInc << "\t" 
 				<< parameter[i].PAInc << "\t" 
+				<< endl; 
+		}
+
+		if (parameter[i].name=="SPEMD") {
+	// 		double power, powerFrom, powerTo, powerInc; 
+	// double core, coreFrom, coreTo, coreInc;
+			cout << "[" << parameter[i].name  << "]:" 
+				<< "\n_From\t"
+				<< parameter[i].centerXFrom << "\t" 
+				<< parameter[i].centerYFrom << "\t"
+				<< parameter[i].critRadFrom << "\t"
+				<< parameter[i].powerFrom << "\t"
+				<< parameter[i].eFrom << "\t" 
+				<< parameter[i].PAFrom << "\t" 
+				<< parameter[i].coreFrom << "\t" 
+				<< "\n_To\t"
+				<< parameter[i].centerXTo << "\t" 
+				<< parameter[i].centerYTo << "\t"
+				<< parameter[i].critRadTo << "\t"
+				<< parameter[i].powerTo << "\t"
+				<< parameter[i].eTo << "\t" 
+				<< parameter[i].PATo << "\t" 
+				<< parameter[i].coreTo << "\t" 
+				<< "\n_Inc\t"
+				<< parameter[i].centerXInc << "\t" 
+				<< parameter[i].centerYInc << "\t"
+				<< parameter[i].critRadInc << "\t"
+				<< parameter[i].powerInc << "\t"
+				<< parameter[i].eInc << "\t" 
+				<< parameter[i].PAInc << "\t" 
+				<< parameter[i].coreInc << "\t" 
 				<< endl; 
 		}
 	}
@@ -1317,9 +1366,41 @@ void MultModelParam::mix(int opt) {
 	        			}
 	        		}
 	        	}
-            } else if (opt == 1) {
-            }
-            
+            } 
+
+			mix.push_back(v1);
+		}
+
+		else if (parameter[i].name=="SPEMD") {
+			vector<mixModels> v1;
+            if (opt == 0) {
+            	for (double critRad = parameter[i].critRadFrom;	critRad <= parameter[i].critRadTo; critRad += parameter[i].critRadInc) {
+	        		for (double centerX = parameter[i].centerXFrom;	centerX <= parameter[i].centerXTo; centerX += parameter[i].centerXInc) {
+	        			for (double centerY = parameter[i].centerYFrom;	centerY <= parameter[i].centerYTo; centerY += parameter[i].centerYInc) {
+	        				for (double e = parameter[i].eFrom;	e <= parameter[i].eTo; e += parameter[i].eInc) {
+	        					for (double PA = parameter[i].PAFrom; PA <= parameter[i].PATo; PA += parameter[i].PAInc) {
+	        						for(double core = parameter[i].coreFrom; core <= parameter[i].coreTo; core += parameter[i].coreInc) {
+	        							for(double power = parameter[i].powerFrom; power <= parameter[i].powerTo; power += parameter[i].powerInc) {
+
+	        								mixModels sModel("SPEMD");
+	        								sModel.paraList[0] = critRad;
+	        								sModel.paraList[1] = centerX;
+	        								sModel.paraList[2] = centerY;
+	        								sModel.paraList[3] = e;
+	        								sModel.paraList[4] = PA;
+	        								sModel.paraList[5] = core;  //parameter[i].core;
+	        								sModel.paraList[6] = power; 
+	        								v1.push_back(sModel);
+	        							}
+	        						}
+	        					}
+	        				}
+	        			}
+	        		}
+	        	}
+	        	
+            } 
+
 			mix.push_back(v1);
 		}
 
@@ -1469,6 +1550,17 @@ void Model::copyParam(Conf* conf, int i) {
             param.parameter.push_back(s);
         }
 
+
+        else if (s.name=="SPEMD") {
+            s.critRad = param.mixAllModels[i][j].paraList[0];
+            s.centerX = param.mixAllModels[i][j].paraList[1];
+            s.centerY = param.mixAllModels[i][j].paraList[2];
+            s.e       = param.mixAllModels[i][j].paraList[3];
+            s.PA      = param.mixAllModels[i][j].paraList[4];
+            s.core    = param.mixAllModels[i][j].paraList[5];
+            s.power   = param.mixAllModels[i][j].paraList[6];
+            param.parameter.push_back(s);
+        }
 
     }
 }

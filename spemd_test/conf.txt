@@ -14,13 +14,13 @@ potRes	0.1
 causticLevel  4
 
 ## Files
-imageFileName	nfw_test/jun_image.fits
-#regionFileName	nfw_test/points.reg
-regionFileName	nfw_test/large.reg
+imageFileName	spemd_test/jun_image.fits
+regionFileName	spemd_test/points.reg
+#regionFileName	spemd_test/large.reg
 varFileName	  jun_var.fits
-psfFileName		nfw_test/HorseShoe_psf.fits
-criticalName	nfw_test/critical.reg
-causticName	nfw_test/caustic.reg
+psfFileName		spemd_test/HorseShoe_psf.fits
+criticalName	spemd_test/critical.reg
+causticName	spemd_test/caustic.reg
 
 contourCritName  horseshoe_test/ds9crit.con
 contourCausName  horseshoe_test/ds9caus.con
@@ -47,5 +47,5 @@ back_std 6.4
 
 
 ## Model_SPEMD {xfrom, xto, xinc, yfrom, yto, yinc, critfrom, critto, critinc, ellfrom, ellto, ellinc, pafrom, pato, painc, powerfrom, powerto, powerinc, corefrom, coreto, coreinc}
-SPEMD 0.0 0.0 0.2 0.0 0.0 0.2, 6.8 7.4 0.05, 0.5, 0.5, 0.1, 48.0, 48.0, 5.0, 2.0, 2.0, 0.2, 0.1, 0.1, 0.1
+SPEMD 20.0 20.0 5.0 15.0 15.0 5.0, 5.1 5.1 0.1, 0.2, 0.2, 0.04, 140, 140.0, 10.0, 0.1, 0.9, 0.1, 0.0, 0.0, 0.1
 

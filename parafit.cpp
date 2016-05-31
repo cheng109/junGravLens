@@ -65,6 +65,18 @@ void gridSearchVegetti(Conf* conf, MultModelParam param_old, Image* dataImage, s
 				s.radScale  = model->param.mixAllModels[i][j].paraList[5];  
 				model->param.parameter.push_back(s); 
 			}
+
+			if(s.name=="SPEMD") {
+				s.critRad = model->param.mixAllModels[i][j].paraList[0]; 
+				s.centerX = model->param.mixAllModels[i][j].paraList[1]; 
+				s.centerY = model->param.mixAllModels[i][j].paraList[2]; 
+				s.e       = model->param.mixAllModels[i][j].paraList[3]; 
+				s.PA 	  = model->param.mixAllModels[i][j].paraList[4];
+				s.core 	  = model->param.mixAllModels[i][j].paraList[5]; 
+				s.power	  = model->param.mixAllModels[i][j].paraList[6]; 
+				model->param.parameter.push_back(s); 
+			}
+
 		}	
 		vector<double> penalty = getPenalty(model,  dataImage, conf) ; 
 		
@@ -73,11 +85,11 @@ void gridSearchVegetti(Conf* conf, MultModelParam param_old, Image* dataImage, s
 			minIndex = i; 
 		}
 
-		cout << "[" + to_string(i+1) + "/" + to_string(model->param.nComb) + "]" << endl ; 
+		cout << "[" + to_string(i+1) + "/" + to_string(model->param.nComb) + "] \n" ; 
 		//cout << model->param.parameter[0].critRad << "\t" <<penalty[0] << "\t" << penalty[1] << "\t" << penalty[2] << "\t" <<  endl; 
 
 		writeSrcModResImage(model,dataImage,conf, to_string(i), dir) ; 
-		//output << model->param.printCurrentModels(i).at(0) << "\t" << penalty[0] <<"\t" <<penalty[1] << "\t" << penalty[2]  << endl; 
+		output << model->param.printCurrentModels(i).at(0) << "\t" << penalty[0] <<"\t" <<penalty[1] << "\t" << penalty[2]  << endl; 
 
 	}
 
