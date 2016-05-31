@@ -20,7 +20,7 @@ using namespace std;
 //
 
 void gridSearchVegetti(Conf* conf, MultModelParam param_old, Image* dataImage, string dir, string outputFileName) {
-	double lambdaS = 0.0;  
+	double lambdaS = 0.1;  
 
 	Model *model = new Model(conf, param_old, lambdaS);
 		
@@ -59,7 +59,7 @@ void gridSearchVegetti(Conf* conf, MultModelParam param_old, Image* dataImage, s
 			}
 		}	
 		//vector<double> sBright = dataImage->dataList; 
-		vector<double> penalty = getPenalty(model,  dataImage, conf, "grad") ; 
+		vector<double> penalty = getPenalty(model,  dataImage, conf, "zero") ; 
 		
 		if(minPenalty > penalty[2]) {
 			minPenalty = penalty[2]; 
@@ -96,13 +96,13 @@ vector<double> getPenalty(Model* model, Image* dataImage, Conf* conf, string R_t
 	
 
 
-//	vec d = cV_to_eigenV (&dataImage->dataList); 
+	vec d = cV_to_eigenV (&dataImage->dataList); 
 
 	model->updatePosMapping(dataImage, conf);  // time used: 0.03s; 
 	model->update_H_zero(conf); 
 	model->updateLensAndRegularMatrix(dataImage, conf);  // get matrix 'L' and 'RTR'; most time consuming part; 
 	model->solveSource(&dataImage->invC, &dataImage->d, R_type); 
-	//model->updateSource(conf) ; // Add noise to the source; 
+	model->updateSource(conf) ; // Add noise to the source; 
 
 	vec &s = model->s; 
 	
