@@ -59,7 +59,7 @@ void gridSearchVegetti(Conf* conf, MultModelParam param_old, Image* dataImage, s
 			}
 		}	
 		//vector<double> sBright = dataImage->dataList; 
-		vector<double> penalty = getPenalty(model,  dataImage, conf, "zero") ; 
+		vector<double> penalty = getPenalty(model,  dataImage, conf, "vege") ; 
 		
 		if(minPenalty > penalty[2]) {
 			minPenalty = penalty[2]; 
@@ -102,7 +102,7 @@ vector<double> getPenalty(Model* model, Image* dataImage, Conf* conf, string R_t
 	model->update_H_zero(conf); 
 	model->updateLensAndRegularMatrix(dataImage, conf);  // get matrix 'L' and 'RTR'; most time consuming part; 
 	model->solveSource(&dataImage->invC, &dataImage->d, R_type); 
-	model->updateSource(conf) ; // Add noise to the source; 
+	//model->updateSource(conf) ; // Add noise to the source; 
 
 	vec &s = model->s; 
 	

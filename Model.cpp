@@ -1820,7 +1820,7 @@ void writeSrcModResImage(Model* model, Image* dataImage, Conf* conf, string file
 	//srcImg -> writeToFile (dir + "img_src_" + fileName + ".fits", conf->back_mean, conf->back_std ) ;
 	srcImg -> writeToFile (dir + "img_src_" + fileName + ".fits");
 	resImg -> writeToFile (dir + "img_res_" + fileName + ".fits");
-	modImg -> writeToFile (dir + "img_mod_" + fileName + ".fits");
+	modImg -> writeToFile (dir + "img_mod_" + fileName + ".fits", conf->back_mean, conf->back_std);
 	delete srcImg, modImg, resImg; 
 
 	// vector<Image* > curve =  getCritCaustic(conf, &model->param); 

@@ -325,7 +325,8 @@ void Image::updateBackSubtract(double back_mean, double back_std) {
 	std::normal_distribution<double> distribution(back_mean, sigma); 
 	for (int i=0; i<dataList.size(); ++i ) {
 		double number = distribution(generator); 
-		dataList[i] -= number ; 
+		dataList[i] -= number ;
+        data[yList[i]*naxis1 + xList[i]] -= number;
 
 		//  set dataList to be zero if it is smaller than 2 sigma. 
 		// if(dataList[i] < factor* back_std) {
@@ -378,7 +379,9 @@ void Image::updateFilterImage(string regionFileName, int flag) {
 					dataList.push_back(data[i]);
 					xList.push_back(x);
 					yList.push_back(y);
-				}
+				} else {
+                    data[i] = 0.;
+                }
 			}	
 		}
 		
@@ -408,7 +411,9 @@ void Image::updateFilterImage(string regionFileName, int flag) {
 						dataList.push_back(data[j*naxis1 + i]);
 						xList.push_back(i);
 						yList.push_back(j);
-					}
+					} else {
+                        data[j*naxis1 + i] = 0.;
+                    }
 				}
 			}	
 
@@ -429,7 +434,9 @@ void Image::updateFilterImage(string regionFileName, int flag) {
 						dataList.push_back(data[j*naxis1 + i]);
 						xList.push_back(i);
 						yList.push_back(j);
-					}
+					} else {
+                        data[j*naxis1 + i] = 0.;
+                    }
 				}
 			}	
 
@@ -462,7 +469,9 @@ void Image::updateFilterImage(string regionFileName, int flag) {
 						dataList.push_back(data[j*naxis1 + i]);
 						xList.push_back(i);
 						yList.push_back(j);
-					}
+					} else {
+                        data[j*naxis1 + i] = 0.;
+                    }
 				}
 			}	
 
@@ -536,7 +545,8 @@ void Image::updateVarList(double threshold, double back_mean, double back_std) {
 	threshold = back_mean + 2*back_std; 
 	for(int i=0; i<length; ++i) {
 		if(dataList[i]<threshold) {
-			varList.push_back(back_var);
+			//varList.push_back(back_var);
+			varList.push_back(threshold);
 		}
 		else
 			//varList.push_back(back_var);
