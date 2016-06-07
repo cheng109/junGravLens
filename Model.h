@@ -231,12 +231,12 @@ public:
 
 	static vector<double> getDeflectionAngle(Conf* conList, double pfX, double pfY, double *pDeltaX, double *pDeltaY,  MultModelParam * param);
 	void updatePosMapping(Image* image,  Conf* conList);
-	void updateLensAndRegularMatrix(Image* dataImage,  Conf* constList);
+	void updateLensAndRegularMatrix(Image* dataImage,  Conf* constList, string R_type);
 	void updateGradient(Image* dataImage);
 	void updateSource(Conf* conf); 
 	void Logging(Image* dataImage, Conf* conList, string outFileName);
 	void updateRegularMatrix();
-	void solveSource( sp_mat* invC, vec* d, string R_type);
+	void solveSource(sp_mat* invC, vec* d);
 
 	void writeSrcImage(string outFileName, Conf* conList);
 	//void updateCritCaustic(Image* dataImage,  Conf* constList);

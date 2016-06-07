@@ -79,8 +79,8 @@ vector<double> getPenalty2(Model* model, Image* dataImage, Conf* conf, string R_
 
     model->updatePosMapping(dataImage, conf);  // time used: 0.03s; 
     model->update_H_zero(conf); 
-    model->updateLensAndRegularMatrix(dataImage, conf);  // get matrix 'L' and 'RTR'; most time consuming part; 
-    model->solveSource(&dataImage->invC, &dataImage->d, R_type); 
+    model->updateLensAndRegularMatrix(dataImage, conf, R_type);  // get matrix 'L' and 'RTR'; most time consuming part; 
+    model->solveSource(&dataImage->invC, &dataImage->d); 
 
     vec &s = model->s; 
     

@@ -387,7 +387,7 @@ void update_H_curve(Conf* conf) {
 }
 
 
-void Model::updateLensAndRegularMatrix(Image* dataImage,  Conf* constList) {
+void Model::updateLensAndRegularMatrix(Image* dataImage,  Conf* constList, string R_type) {
 
 	map<pair<int, int>,int>::iterator left, right, up, down;
 	vector<double> w, w5;
@@ -407,81 +407,80 @@ void Model::updateLensAndRegularMatrix(Image* dataImage,  Conf* constList) {
 	
 
 	for (int i=0; i<conf->length; ++i) {
-		double largeNumber = 10000; 
-		double distRegion1 = largeNumber; 
-		double distRegion2 = largeNumber; 
-		double distRegion3 = largeNumber; 
-		double distRegion4 = largeNumber; 
+        if(R_type == "vege") {
+	        double largeNumber = 10000; 
+	        double distRegion1 = largeNumber; 
+	        double distRegion2 = largeNumber; 
+	        double distRegion3 = largeNumber; 
+	        double distRegion4 = largeNumber; 
 
-		int indexRegion1 = -1; 
-		int indexRegion2 = -1; 
-		int indexRegion3 = -1; 
-		int indexRegion4 = -1; 
-		for(int j=0; j<conf->length; ++j) {
-			if (j == i ) 	continue; 
-			double dx = srcPosXListPixel[j] - srcPosXListPixel[i] ; 
-			double dy = srcPosYListPixel[j] - srcPosYListPixel[i] ; 
-			double dist = dx * dx + dy * dy; 
+	        int indexRegion1 = -1; 
+	        int indexRegion2 = -1; 
+	        int indexRegion3 = -1; 
+	        int indexRegion4 = -1; 
+	        for(int j=0; j<conf->length; ++j) {
+	        	if (j == i ) 	continue; 
+	        	double dx = srcPosXListPixel[j] - srcPosXListPixel[i] ; 
+	        	double dy = srcPosYListPixel[j] - srcPosYListPixel[i] ; 
+	        	double dist = dx * dx + dy * dy; 
 
-			if(srcPosXListPixel[j] > srcPosXListPixel[i] and srcPosYListPixel[j] > srcPosYListPixel[i] and dist<distRegion1 ) {   // in region1; 
-					distRegion1 = dist ; 
-					indexRegion1 = j ;  
-			}
+	        	if(srcPosXListPixel[j] > srcPosXListPixel[i] and srcPosYListPixel[j] > srcPosYListPixel[i] and dist<distRegion1 ) {   // in region1; 
+	        			distRegion1 = dist ; 
+	        			indexRegion1 = j ;  
+	        	}
 
-			else if(srcPosXListPixel[j] < srcPosXListPixel[i] and srcPosYListPixel[j] > srcPosYListPixel[i]  and dist<distRegion2 ) {   // in region2; 
-					distRegion2 = dist ; 
-					indexRegion2 = j ;  
-			}
-
-
-			else if(srcPosXListPixel[j] < srcPosXListPixel[i] and srcPosYListPixel[j] < srcPosYListPixel[i] and dist<distRegion3 ) {   // in region3; 
-					distRegion3 = dist ; 
-					indexRegion3 = j ;  
-			}
-
-			else if(srcPosXListPixel[j] > srcPosXListPixel[i] and srcPosYListPixel[j] < srcPosYListPixel[i]  and dist<distRegion4 ) {   // in region4; 
-					distRegion4 = dist ; 
-					indexRegion4 = j ;  
-			}
-
-		}
-
-		if (indexRegion1 > 0 and indexRegion2 > 0  and indexRegion3 > 0 and indexRegion4 > 0 )  {
-
-			Point A(srcPosXList[indexRegion3 ], srcPosYList[indexRegion3 ], s(indexRegion3 ));
-			Point B(srcPosXList[indexRegion2 ], srcPosYList[indexRegion2 ], s(indexRegion2 ));
-			Point C(srcPosXList[i            ], srcPosYList[i            ], s(i            ));
-			Point D(srcPosXList[indexRegion4 ], srcPosYList[indexRegion4 ], s(indexRegion4 ));
-			Point E(srcPosXList[indexRegion1 ], srcPosYList[indexRegion1 ], s(indexRegion1 ));
-
-			w5 = getPentWeigth(A, B, C, D, E);
-
-			// cout << i << "\t" << indexRegion1 << "\t" << indexRegion2 << "\t" << indexRegion3 << "\t" << indexRegion4 << "\t"  << endl; 
-			
-			// cout << srcPosXList[indexRegion1 ] << "\t" << srcPosYList[indexRegion1 ] << endl; 
-			// cout << srcPosXList[indexRegion2 ] << "\t" << srcPosYList[indexRegion2 ] << endl; 
-			// cout << srcPosXList[indexRegion3 ] << "\t" << srcPosYList[indexRegion3 ] << endl; 
-			// cout << srcPosXList[indexRegion4 ] << "\t" << srcPosYList[indexRegion4 ] << endl; 
-			// cout << srcPosXList[i ] << "\t" << srcPosYList[i ] << endl; 
-
-			Hs1.insert(i, indexRegion3	) 	= w5[0];
-			Hs1.insert(i, indexRegion2	) 	= w5[1];
-			Hs1.insert(i, i				) 	= w5[2];
-			Hs1.insert(i, indexRegion4	) 	= w5[3];
-			Hs1.insert(i, indexRegion1	) 	= w5[4];
-
-			Hs2.insert(i, indexRegion3	) 	= w5[5];
-			Hs2.insert(i, indexRegion2	) 	= w5[6];
-			Hs2.insert(i, i				) 	= w5[7];
-			Hs2.insert(i, indexRegion4	) 	= w5[8];
-			Hs2.insert(i, indexRegion1	) 	= w5[9]; 
+	        	else if(srcPosXListPixel[j] < srcPosXListPixel[i] and srcPosYListPixel[j] > srcPosYListPixel[i]  and dist<distRegion2 ) {   // in region2; 
+	        			distRegion2 = dist ; 
+	        			indexRegion2 = j ;  
+	        	}
 
 
-		}
+	        	else if(srcPosXListPixel[j] < srcPosXListPixel[i] and srcPosYListPixel[j] < srcPosYListPixel[i] and dist<distRegion3 ) {   // in region3; 
+	        			distRegion3 = dist ; 
+	        			indexRegion3 = j ;  
+	        	}
+
+	        	else if(srcPosXListPixel[j] > srcPosXListPixel[i] and srcPosYListPixel[j] < srcPosYListPixel[i]  and dist<distRegion4 ) {   // in region4; 
+	        			distRegion4 = dist ; 
+	        			indexRegion4 = j ;  
+	        	}
+
+	        }
+
+	        if (indexRegion1 > 0 and indexRegion2 > 0  and indexRegion3 > 0 and indexRegion4 > 0 )  {
+
+	        	Point A(srcPosXList[indexRegion3 ], srcPosYList[indexRegion3 ], s(indexRegion3 ));
+	        	Point B(srcPosXList[indexRegion2 ], srcPosYList[indexRegion2 ], s(indexRegion2 ));
+	        	Point C(srcPosXList[i            ], srcPosYList[i            ], s(i            ));
+	        	Point D(srcPosXList[indexRegion4 ], srcPosYList[indexRegion4 ], s(indexRegion4 ));
+	        	Point E(srcPosXList[indexRegion1 ], srcPosYList[indexRegion1 ], s(indexRegion1 ));
+
+	        	w5 = getPentWeigth(A, B, C, D, E);
+
+	        	// cout << i << "\t" << indexRegion1 << "\t" << indexRegion2 << "\t" << indexRegion3 << "\t" << indexRegion4 << "\t"  << endl; 
+	        	
+	        	// cout << srcPosXList[indexRegion1 ] << "\t" << srcPosYList[indexRegion1 ] << endl; 
+	        	// cout << srcPosXList[indexRegion2 ] << "\t" << srcPosYList[indexRegion2 ] << endl; 
+	        	// cout << srcPosXList[indexRegion3 ] << "\t" << srcPosYList[indexRegion3 ] << endl; 
+	        	// cout << srcPosXList[indexRegion4 ] << "\t" << srcPosYList[indexRegion4 ] << endl; 
+	        	// cout << srcPosXList[i ] << "\t" << srcPosYList[i ] << endl; 
+
+	        	Hs1.insert(i, indexRegion3	) 	= w5[0];
+	        	Hs1.insert(i, indexRegion2	) 	= w5[1];
+	        	Hs1.insert(i, i				) 	= w5[2];
+	        	Hs1.insert(i, indexRegion4	) 	= w5[3];
+	        	Hs1.insert(i, indexRegion1	) 	= w5[4];
+
+	        	Hs2.insert(i, indexRegion3	) 	= w5[5];
+	        	Hs2.insert(i, indexRegion2	) 	= w5[6];
+	        	Hs2.insert(i, i				) 	= w5[7];
+	        	Hs2.insert(i, indexRegion4	) 	= w5[8];
+	        	Hs2.insert(i, indexRegion1	) 	= w5[9]; 
+
+
+	        }
+        }
 		L.insert(i,i)=1;
-
-
-
 	}
 	
 	if(0) {
@@ -561,7 +560,6 @@ void Model::updateLensAndRegularMatrix(Image* dataImage,  Conf* constList) {
 
 }
 
-	HtH = Hs1.transpose()*Hs1 + Hs2.transpose()*Hs2;
 	//RtR = lambdaS*lambdaS*HtH;
 	//RtR.conservativeResize(2*constList->length, 2*constList->length);
 
@@ -569,6 +567,17 @@ void Model::updateLensAndRegularMatrix(Image* dataImage,  Conf* constList) {
 	// cout << "Time2: " << double(time2)/CLOCKS_PER_SEC << endl; 
 	// cout << "Time3: " << double(time3)/CLOCKS_PER_SEC << endl; 
 	// cout << "Time4: " << double(time4)/CLOCKS_PER_SEC << endl; 
+    if (R_type == "zero") 
+        REG = H_zero.transpose()*H_zero; 
+    else if(R_type == "grad")
+        REG = H_zero.transpose() * Hessian_grad * H_zero; 
+
+    else if(R_type == "vege") 
+	    REG = Hs1.transpose()*Hs1 + Hs2.transpose()*Hs2;
+    else {
+        cout << "Regularization type is not supported yet!" << endl; 
+        exit(1); 
+    } 
 
 
 }
@@ -632,24 +641,10 @@ void Model::Logging(Image* dataImage, Conf* conList, string outFileName) {
 
 
 
-void Model::solveSource(sp_mat* invC, vec* d , string R_type) {
+void Model::solveSource(sp_mat* invC, vec* d) {
 
 	// // problem:  Ax=b
 
-	clock_t begin = clock(); 
-
-
-	if (R_type == "zero") 
-		REG = H_zero.transpose()*H_zero; 
-	else if(R_type == "grad")
-		REG = H_zero.transpose() * Hessian_grad * H_zero; 
-
-	else if(R_type == "vege") 
-		REG = HtH ; 
-	else {
-		cout << "Regularization type is not supported yet!" << endl; 
-		exit(1); 
-	} 
 	sp_mat 	A = lambdaC * lambdaC * L.transpose()*(*invC)*L + lambdaS * lambdaS  * REG; // Hessian_grad.transpose();
 	//sp_mat 	A = L.transpose()*(*invC)*L + lambdaS * lambdaS  * HtH;
 	vec 	b = lambdaC * lambdaC * L.transpose()*(*invC)*(*d);
