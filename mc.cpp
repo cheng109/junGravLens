@@ -47,7 +47,7 @@ double MC::stepPar(MultModelParam &param, double cfac, size_t &iter) {
     double minSig = 1e-6;
     double eps=0.02;
     cfac *= (1+eps);
-    if (cfac > 1e10) {
+    if (cfac > 1e20) {
         cfac = 1.0;
         for(int j=0; j<param.nLens; ++j) {
             for (size_t k=0; k<param.mixAllModels[0][j].paraList.size(); ++k) {
@@ -91,13 +91,56 @@ double MC::stepPar(MultModelParam &param, double cfac, size_t &iter) {
                 double r = cgauss();
                 param.mixAllModels[3][j].paraList[k] = par0 + r*stepSig;
                 //std::cout << r << " " << stepSig << " " << std::endl;
-                if (k==1 && j==1) std::cout << r << " " << stepSig << " " << " "<< param.mixAllModels[3][j].paraList[k] <<" " << par0<< std::endl;
                 if (param.mixAllModels[3][j].paraList[k] < param.mixAllModels[6][j].paraList[k])
                     param.mixAllModels[3][j].paraList[k] = param.mixAllModels[6][j].paraList[k];
                 if (param.mixAllModels[3][j].paraList[k] > param.mixAllModels[7][j].paraList[k])
                     param.mixAllModels[3][j].paraList[k] = param.mixAllModels[7][j].paraList[k];
             }
         }
+    }
+    return cfac;
+}
+
+double MC::stepPar(vector<vec> &src, double cfac, size_t &iter) {
+    double minSig = 1e-6;
+    double eps=0.02;
+    cfac *= (1+eps);
+    if (cfac > 1e20) {
+        cfac = 1.0;
+        for (int k=0; k<src[0].size(); ++k) {
+            src[0](k) = 0.;
+            src[1](k) = 0.;
+            src[2](k) = 0.;
+        }
+    }
+
+    for (int k=0; k<src[0].size(); ++k) {
+        double stepSig = src[8](k);
+        double par0 = src[4](k);
+
+        src[0](k) += cfac*par0*par0;
+        src[1](k) += cfac;
+        src[2](k) += cfac*par0;
+        if (iter > 3) {
+            double sig = sqrt((1+1e-7)*src[0](k)/src[1](k)
+                    - pow(src[2](k)/src[1](k),2));
+            stepSig = 3.*2.38*sig/sqrt(src[0].size());
+            if (std::isnan(stepSig)) {
+                iter=0;
+                src[0](k) = 0.;
+                src[1](k) = 0.;
+                src[2](k) = 0.;
+                stepSig = src[8](k);
+            }
+        }
+        if (stepSig < minSig) stepSig = minSig;
+        double r = cgauss();
+        src[3][k] = par0 + r*stepSig;
+        if (src[3](k) < src[6](k))
+            src[3](k) = src[6](k);
+        if (src[3](k) > src[7](k))
+            src[3](k) = src[7](k);
+
     }
     return cfac;
 }

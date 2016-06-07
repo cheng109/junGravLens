@@ -22,6 +22,7 @@ public:
     double cgauss();
     double random();
     double stepPar(MultModelParam &param, double cfac, size_t &iter);
+    double stepPar(vector<vec> &src, double cfac, size_t &iter);
 
 private:
     std::vector<double> cgArr;
