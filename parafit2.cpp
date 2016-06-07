@@ -37,7 +37,7 @@ void mcFit(Conf* conf, MultModelParam param_old, Image* dataImage, string dir, s
         L0 = L;
         cfac = mc.stepPar(model->param, cfac, iter);
         model->copyParam(conf, 3);
-        vector<double> penalty = getPenalty(model, dataImage, conf, "zero");
+        vector<double> penalty = getPenalty2(model, dataImage, conf, "zero");
         L = -penalty[0] / 2.0;
 
         cout<< loop<< " " << iter << ": " << L << " " << L0 << " " << LMax << " cfac "<<cfac<<endl;
@@ -71,4 +71,32 @@ void mcFit(Conf* conf, MultModelParam param_old, Image* dataImage, string dir, s
 }
 
 
+vector<double> getPenalty2(Model* model, Image* dataImage, Conf* conf, string R_type) {
+    
+
+
+    vec d = cV_to_eigenV (&dataImage->dataList); 
+
+    model->updatePosMapping(dataImage, conf);  // time used: 0.03s; 
+    model->update_H_zero(conf); 
+    model->updateLensAndRegularMatrix(dataImage, conf);  // get matrix 'L' and 'RTR'; most time consuming part; 
+    model->solveSource(&dataImage->invC, &dataImage->d, R_type); 
+
+    vec &s = model->s; 
+    
+    vec res = ( model->L * s - dataImage->d) ; 
+    vec chi2 = res.transpose() *  dataImage->invC * res * model->lambdaC* model->lambdaC  ; 
+    vec srcR = s  .transpose() *  model->REG      * s   * model->lambdaS* model->lambdaS  ; 
+
+
+
+    vector<double> penalty(3); 
+    penalty[0] = chi2[0]; 
+    penalty[1] = srcR[0]; 
+    penalty[2] = chi2[0] + srcR[0]; 
+
+    return penalty; 
+
+
+}
 
