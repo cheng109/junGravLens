@@ -103,7 +103,7 @@ double MC::stepPar(MultModelParam &param, double cfac, size_t &iter) {
 
 double MC::stepPar(vector<vec> &src, double cfac, size_t &iter) {
     double minSig = 1e-6;
-    double eps=0.02;
+    double eps=0.0;
     cfac *= (1+eps);
     if (cfac > 1e20) {
         cfac = 1.0;
@@ -122,7 +122,7 @@ double MC::stepPar(vector<vec> &src, double cfac, size_t &iter) {
         src[1](k) += cfac;
         src[2](k) += cfac*par0;
         if (iter > 3) {
-            double sig = sqrt((1+1e-7)*src[0](k)/src[1](k)
+            double sig = sqrt(src[0](k)/src[1](k)
                     - pow(src[2](k)/src[1](k),2));
             stepSig = 3.*2.38*sig/sqrt(src[0].size());
             if (std::isnan(stepSig)) {
