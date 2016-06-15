@@ -417,52 +417,86 @@ void Model::updateLensAndRegularMatrix(Image* dataImage,  Conf* constList, strin
     //    cout << i << " " << srcPosXListPixel[i] << " " << srcPosYListPixel[i] << endl;
     //}
 
-    //vector<size_t> orderX = sort_indexes(indexX);
-    //vector<size_t> indexY = sort_indexes(srcPosYListPixel);
-    //vector<size_t> orderY = sort_indexes(indexY);
-
     if (R_type == "vege") {
         size_t n = conf->length;
-        vector<size_t> indexX = sort_indexes(srcPosXListPixel);
+        vector<size_t> indexX, orderX, indexY, orderY;
+        if (type == 0) {
+            indexX = sort_indexes(srcPosXListPixel);
+            orderX = sort_indexes(indexX);
+            indexY = sort_indexes(srcPosYListPixel);
+            orderY = sort_indexes(indexY);
+        }
         for (size_t i=0; i<n; ++i) {
-	        double distRegion1(1e10), distRegion2(1e10), distRegion3(1e10), distRegion4(1e10), maxDist(1e10);
             int indexRegion1(-1), indexRegion2(-1), indexRegion3(-1), indexRegion4(-1);
-            size_t k(i);
 
             if (type == 0) {
-                k = indexX[i];
-                for (int j=i-1; j>=0; --j) {
-                    double dx = srcPosXListPixel[indexX[i]] - srcPosXListPixel[indexX[j]];
-                    if (dx == 0) continue;
-                    double dy = srcPosYListPixel[indexX[i]] - srcPosYListPixel[indexX[j]];
-                    double dx2(dx*dx), dist(dx2+dy*dy);
-                    if (dy > 0 && dist < distRegion3) {
-                        distRegion3 = dist;
-                        indexRegion3 = indexX[j];
-                    } else if (dy < 0 && dist < distRegion2) {
-                        distRegion2 = dist;
-                        indexRegion2 = indexX[j];
+                size_t xpos(orderX[i]), ypos(orderY[i]), x;
+                if (xpos == 0 || ypos == 0 || xpos == n-1 || ypos == n-1) continue;
+                int x1(xpos-1), x2(xpos+1), y1(ypos-1), y2(ypos+1), ii, jj;
+                while (srcPosXListPixel[i] == srcPosXListPixel[indexX[x2]] && x2 < n) x2++;
+                while (srcPosYListPixel[i] == srcPosYListPixel[indexY[y2]] && y2 < n) y2++;
+                while (srcPosXListPixel[i] == srcPosXListPixel[indexX[x1]] && x1 >= 0) x1--;
+                while (srcPosYListPixel[i] == srcPosYListPixel[indexY[y1]] && y1 >= 0) y1--;
+                if (x1 < 0 || y1 < 0 || x2 >= n || y2 >= n) continue;
+                vector<bool> table1(n,false), table2(n,false), table3(n,false), table4(n,false);
+                ii = x2;
+                jj = y2;
+                for (size_t k=1; k>0; k++) {
+                    x = (k & 1) ? indexX[ii]: indexY[jj];
+                    if (table1[x]) {
+                        indexRegion1 = x;
+                        break;
+                    } else {
+                        table1[x] = true;
+                        if (k & 1) ii++;
+                        else jj++;
+                        if (ii == n || jj == n) break;
                     }
-                    maxDist = (distRegion3 > distRegion2) ? distRegion3:distRegion2;
-                    if (dx2 > maxDist) break;
                 }
-                maxDist=1e10;
-                for (int j=i+1; j<n; ++j) {
-                    double dx = srcPosXListPixel[indexX[i]] - srcPosXListPixel[indexX[j]];
-                    if (dx == 0) continue;
-                    double dy = srcPosYListPixel[indexX[i]] - srcPosYListPixel[indexX[j]];
-                    double dx2(dx*dx), dist(dx2+dy*dy);
-                    if (dy > 0 && dist < distRegion4) {
-                        distRegion4 = dist;
-                        indexRegion4 = indexX[j];
-                    } else if (dy < 0 && dist < distRegion1) {
-                        distRegion1 = dist;
-                        indexRegion1 = indexX[j];
+                ii = x1;
+                jj = y2;
+                for (size_t k=1; k>0; k++) {
+                    x = (k & 1) ? indexX[ii]: indexY[jj];
+                    if (table2[x]) {
+                        indexRegion2 = x;
+                        break;
+                    } else {
+                        table2[x] = true;
+                        if (k & 1) ii--;
+                        else jj++;
+                        if (ii == -1 || jj == n) break;
                     }
-                    maxDist = (distRegion4 > distRegion1) ? distRegion4:distRegion1;
-                    if (dx2 > maxDist) break;
+                }
+                ii = x1;
+                jj = y1;
+                for (size_t k=1; k>0; k++) {
+                    x = (k & 1) ? indexX[ii]: indexY[jj];
+                    if (table3[x]) {
+                        indexRegion3 = x;
+                        break;
+                    } else {
+                        table3[x] = true;
+                        if (k & 1) ii--;
+                        else jj--;
+                        if (ii == -1 || jj == -1) break;
+                    }
+                }
+                ii = x2;
+                jj = y1;
+                for (size_t k=1; k>0; k++) {
+                    x = (k & 1) ? indexX[ii]: indexY[jj];
+                    if (table4[x]) {
+                        indexRegion4 = x;
+                        break;
+                    } else {
+                        table4[x] = true;
+                        if (k & 1) ii++;
+                        else jj--;
+                        if (ii == n || jj == -1) break;
+                    }
                 }
             } else {
+	            double distRegion1(1e10), distRegion2(1e10), distRegion3(1e10), distRegion4(1e10);
 	            for(int j=0; j<conf->length; ++j) {
 	            	if (j == i ) 	continue; 
 	            	double dx = srcPosXListPixel[j] - srcPosXListPixel[i] ; 
@@ -492,29 +526,29 @@ void Model::updateLensAndRegularMatrix(Image* dataImage,  Conf* constList, strin
 
 	            }
             }
-            if (k==5 || k==10) cout << k << "\t" << indexRegion1 << "\t" << indexRegion2 << "\t" << indexRegion3 << "\t" << indexRegion4 << "\t"  << endl;
+            if (i==5 || i==10) cout << i << "\t" << indexRegion1 << "\t" << indexRegion2 << "\t" << indexRegion3 << "\t" << indexRegion4 << "\t"  << endl;
 	        if (indexRegion1 > 0 and indexRegion2 > 0  and indexRegion3 > 0 and indexRegion4 > 0 )  {
                 // cout << i << "\t" << indexRegion1 << "\t" << indexRegion2 << "\t" << indexRegion3 << "\t" << indexRegion4 << "\t"  << endl;
 
 	        	Point A(srcPosXList[indexRegion3 ], srcPosYList[indexRegion3 ], s(indexRegion3 ));
 	        	Point B(srcPosXList[indexRegion2 ], srcPosYList[indexRegion2 ], s(indexRegion2 ));
-	        	Point C(srcPosXList[k            ], srcPosYList[k            ], s(k            ));
+	        	Point C(srcPosXList[i            ], srcPosYList[i            ], s(i            ));
 	        	Point D(srcPosXList[indexRegion4 ], srcPosYList[indexRegion4 ], s(indexRegion4 ));
 	        	Point E(srcPosXList[indexRegion1 ], srcPosYList[indexRegion1 ], s(indexRegion1 ));
 
 	        	w5 = getPentWeigth(A, B, C, D, E);
 
-	        	Hs1.insert(k, indexRegion3	) 	= w5[0];
-	        	Hs1.insert(k, indexRegion2	) 	= w5[1];
-	            Hs1.insert(k, k				) 	= w5[2];
-	        	Hs1.insert(k, indexRegion4	) 	= w5[3];
-	        	Hs1.insert(k, indexRegion1	) 	= w5[4];
+	        	Hs1.insert(i, indexRegion3	) 	= w5[0];
+	        	Hs1.insert(i, indexRegion2	) 	= w5[1];
+	            Hs1.insert(i, i				) 	= w5[2];
+	        	Hs1.insert(i, indexRegion4	) 	= w5[3];
+	        	Hs1.insert(i, indexRegion1	) 	= w5[4];
 
-	        	Hs2.insert(k, indexRegion3	) 	= w5[5];
-	        	Hs2.insert(k, indexRegion2	) 	= w5[6];
-	        	Hs2.insert(k, k				) 	= w5[7];
-	        	Hs2.insert(k, indexRegion4	) 	= w5[8];
-	        	Hs2.insert(k, indexRegion1	) 	= w5[9]; 
+	        	Hs2.insert(i, indexRegion3	) 	= w5[5];
+	        	Hs2.insert(i, indexRegion2	) 	= w5[6];
+	        	Hs2.insert(i, i				) 	= w5[7];
+	        	Hs2.insert(i, indexRegion4	) 	= w5[8];
+	        	Hs2.insert(i, indexRegion1	) 	= w5[9]; 
 	        }
         }
     }
