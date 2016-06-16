@@ -747,24 +747,22 @@ double getMassLuminosity(Image* lensImage, Image* dataImage,  string regionFileN
 
 	double mean = 0; 
 	double std = 0; 
-
-	for(int i=0; i<lensImage->dataList.size(); ++i) {
+	for(int i=0; i<dataImage->dataList.size(); ++i) {
+		//cout << dataImage->dataList[i] << endl; 
 		mean += dataImage->dataList[i] ; 
+
 
 	}
 	mean = mean / dataImage->dataList.size() ; 
 	//cout <<  "Mean: " << mean << endl; 
 
-	for(int i=0; i<lensImage->dataList.size(); ++i) {
+	for(int i=0; i<dataImage->dataList.size(); ++i) {
 		std += (dataImage->dataList[i] - mean) * (dataImage->dataList[i] - mean) ; 
-
 	}
 	std = sqrt(std/dataImage->dataList.size()); 
 
 	//cout <<  "STD: " << std  << endl; 
-
-
-	 
+	
 	for(int i=0; i<lensImage->dataList.size(); ++i) {
 		regionMass += lensImage->dataList[i]; 
 	}
@@ -775,19 +773,62 @@ double getMassLuminosity(Image* lensImage, Image* dataImage,  string regionFileN
 		luminosity += dataImage->dataList[i] - background; 
 	}
 
-/*	cout << "magnitude   : " <<  
-	cout << "size:       : " << 	dataImage->dataList.size() << endl; 
-	cout << "RegionFile  : " << regionFileName << endl; 
-	cout << "Total Mass  : " << totalMass <<  endl; 
-	cout << "Region Mass : " << regionMass << endl ;
-	cout << "Luminosity  : " << luminosity << endl; 
-	cout << "Ratio:        " << regionMass/totalMass << endl; 
-	cout << "==========" << endl; 
-*/
+
 	return luminosity; 
 }
 
 
+/***************************
+Function:   	magDiffMap
+Description:    Get a magnitude difference map of two images (pixel by pixel)
+Arguments:		(1) File name of image1; 
+				(2) File name of image2; 
+				(3) Background level of image1; 
+				(4) Background level of image2; 
+				(5) Combine nxn pixel together to blur the image; 
+Returns:   		image pointer ( to a magnitude difference map! )
+****************************/
+Image * magDiffMap(string img1FileName, string img2FileName, 
+					double back1, double back2, double std1, double std2, 
+					string regionFile, int pixelCombine) {
+
+	Image* img1 = new Image(img1FileName); 
+	Image* img2 = new Image(img2FileName); 
+
+
+
+
+
+	
+
+	// Blur the image; 
+
+	img1->getBlur(pixelCombine) ; 
+	img2->getBlur(pixelCombine) ; 
+
+	img1->updateFilterImage(regionFile, 0); 
+	img2->updateFilterImage(regionFile, 0); 
+
+
+	assert(img1->dataList.size() == img2->dataList.size()); 
+
+	vector<double> magDiff; 
+	double f = 1.5; 
+	for(int i=0; i<img1->dataList.size(); ++i) {
+
+		if (img1->dataList[i] > (back1 + f* std1) and img1->dataList[i] > (back2 + f* std2)) {
+			double ratio = (img1->dataList[i]-back1)/(img2->dataList[i]-back2); 
+
+			img1->dataList[i] =  (ratio>0) ? -2.5*log10(ratio):0;  
+		}
+
+	}
+
+	delete img2; 
+	return img1 ; 
+
+
+}
 
 
 

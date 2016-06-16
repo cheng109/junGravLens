@@ -43,15 +43,17 @@ int main(int argc, char* argv[]) {
 
 	/***** prepare*****/
 	string confFileName = dir+ strConf; 
+	cout << confFileName << endl; 
 	map<string, string> mapConf = parseConfigure(confFileName);
 
+	
+	cout << mapConf["imageFileName"] << endl; 
 
 	Image* dataImage = new Image(mapConf["imageFileName"]);
 	dataImage->updateFilterImage(mapConf["regionFileName"], stoi(mapConf["usingRegion"]));
 
 
 	
-
 	Conf *conf = new Conf(dataImage, mapConf);
 	dataImage->updateVarList(90, conf->back_mean, conf->back_std); // (threshold, var);
 	dataImage->updateBackSubtract(conf->back_mean, conf->back_std); 
@@ -68,31 +70,107 @@ int main(int argc, char* argv[]) {
 	param.printModels();
 	param.mix(opt); 	 // update 'AllMixModels'; 
 
-	// Image* maskImg = new Image(dataImage->xList, dataImage->yList, &dataImage->dataList, conf->imgSize[0], conf->imgSize[1], conf->bitpix);
-	// maskImg -> writeToFile ("galfit_work/img_mask.fits");
-	// delete maskImg; 
-	// for(int i=0; i<8; ++i) {
+	// cout << "=====================" << endl; 
+	// for(int i=0; i<11; ++i) {
+	// 	string filterName = "f110" ; 
+	// 	string endfix = "_set06"; 
+	// 	double factor =0 ; 
 
-	// 	map<string, double> backMap; 
-	// 	backMap["f475"] = 69.6  ; 
-	// 	backMap["f606"] = 67.6  ;  
-	// 	backMap["f814"] = 83.09 ; 
-	// 	backMap["f110"] = 722.56; 
-	// 	backMap["f160"] = 685.76; 
+	// 	map<string, double> backMap, backStdMap; 
+	// 	backStdMap["f475"] = 6.4  ;
+	// 	backStdMap["f606"] = 5.93 ; 
+	// 	backStdMap["f814"] = 6.53 ; 
+	// 	backStdMap["f110"] = 14.5 ; 
+	// 	backStdMap["f160"] = 14.8 ; 
+
+	// 	backMap["f475"] = 69.6  + factor * backStdMap["f475"] ;  // 6.4
+	// 	backMap["f606"] = 68.2  + factor * backStdMap["f475"];  // 5.93
+	// 	backMap["f814"] = 84.2  + factor * backStdMap["f814"];  // 6.53
+	// 	backMap["f110"] = 665.5 + factor * backStdMap["f110"];  // 14.5
+	// 	backMap["f160"] = 644.5 + factor * backStdMap["f160"];  // 14.8
+
+		
+
+		
+
+	// 	string prefix = "regFiles/reg_"; 
+		
+	// 	map<string, string> regFileName; 
+	// 	regFileName["f475"] = prefix + to_string(i) + endfix + ".reg"; 
+	// 	regFileName["f606"] = prefix + to_string(i) + endfix + ".reg"; 
+	// 	regFileName["f814"] = prefix + to_string(i) + endfix + ".reg"; 
+	// 	regFileName["f110"] = prefix + to_string(i) + endfix + "_image_IR.reg"; 
+	// 	regFileName["f160"] = prefix + to_string(i) + endfix + "_image_IR.reg"; 
 
 
-	// 	string smallMassRegion = "horseshoe_test/new_reg_" + to_string(i) + "_IR.reg" ; 
-
-//<<<<<<< HEAD
-	// 	string filterName = "f160" ; 
+		
 	// 	Image* lensImage1 = new Image("horseshoe_test/color_test/f110_clean.fits"); 
 	// 	string imgName = "galfit_work/" + filterName + "_ADU.fits"; 
 	// 	Image* dataImage1 = new Image(imgName);
-	// 	double luminosity =  getMassLuminosity(lensImage1, dataImage1, smallMassRegion,  backMap[filterName]) ; 
-	// 	cout << luminosity << "\t "; 
+	// 	double luminosity =  getMassLuminosity(lensImage1, dataImage1, regFileName[filterName], backMap[filterName]) ; 
+	// 	cout << luminosity << "\n"; 
 	// } 
 	// cout << endl; 
-	gridSearchVegetti(conf, param,  dataImage, dir, output);	
+		if(1) {
+		map<string, double> backMap, backStdMap; 
+		backStdMap["f475"] = 6.4  ;
+		backStdMap["f606"] = 5.93 ; 
+		backStdMap["f814"] = 6.53 ; 
+		backStdMap["f110"] = 14.5 ; 
+		backStdMap["f160"] = 14.8 ; 
+
+		double factor =0 ; 
+		backMap["f475"] = 69.6  + factor * backStdMap["f475"] ;  // 6.4
+		backMap["f606"] = 68.2  + factor * backStdMap["f475"];  // 5.93
+		backMap["f814"] = 84.2  + factor * backStdMap["f814"];  // 6.53
+		backMap["f110"] = 665.5 + factor * backStdMap["f110"];  // 14.5
+		backMap["f160"] = 644.5 + factor * backStdMap["f160"];  // 14.8
+
+		string img1Name = "galfit_work/clean_img/f475_clean.fits";
+		string img2Name = "galfit_work/clean_img/f606_clean.fits";
+		string img3Name = "galfit_work/clean_img/f814_clean.fits";
+		string img4Name = "galfit_work/clean_img/f110_clean.fits";
+		string img5Name = "galfit_work/clean_img/f160_clean.fits";
+
+		vector<Image*> mapList1; 
+		vector<Image*> mapList2; 
+		int numRegion = 13; 
+		// for(int i=0; i<numRegion; ++i) {
+
+		// 	string regionFile = "new_region/part" + to_string(i) +".reg"; 
+		// 	mapList1.push_back(magDiffMap(img1Name, img2Name, backMap["f475"], backMap["f606"],backStdMap["f475"], backStdMap["f606"], regionFile)); 
+		// 	mapList2.push_back(magDiffMap(img2Name, img3Name, backMap["f606"], backMap["f814"],backStdMap["f606"], backStdMap["f814"], regionFile)); 
+		// }
+		
+		// for(int i=0; i<mapList1.size(); ++i) {
+		// 	ofstream myfile; 
+		// 	myfile.open("map_" + to_string(i) + ".txt"); 
+		// 	for(int j = 0; j<mapList1[i]->dataList.size(); ++j){
+		// 		myfile << mapList1[i]->dataList[j] << "\t" << mapList2[i]->dataList[j] << endl;
+		// 	}
+		// 	myfile.close(); 
+		// }
+		
+
+		int pixelCombine = 6;    // combine 3x3 pixels together; 
+
+		Image* img1 =  magDiffMap(img1Name, img2Name, backMap["f475"], backMap["f606"],backStdMap["f475"], backStdMap["f606"], "whatever", pixelCombine); 
+		Image* img2 =  magDiffMap(img2Name, img3Name, backMap["f606"], backMap["f814"],backStdMap["f606"], backStdMap["f814"], "whatever", pixelCombine); 
+		Image* img3 =  magDiffMap(img4Name, img5Name, backMap["f110"], backMap["f160"],backStdMap["f110"], backStdMap["f160"], "whatever", pixelCombine); 
+		Image* img4 =  magDiffMap(img1Name, img3Name, backMap["f475"], backMap["f814"],backStdMap["f475"], backStdMap["f814"], "whatever", pixelCombine); 
+
+		
+		img1->writeFilterImage("img1_color.fits"); 
+		img2->writeFilterImage("img2_color.fits"); 
+		img3->writeFilterImage("img3_color.fits"); 
+		img4->writeFilterImage("img4_color.fits"); 
+
+
+
+		delete img1, img2, img3, img4; 
+	}
+
+	//gridSearchVegetti(conf, param,  dataImage, dir, output);	
 
 
 	delete conf;

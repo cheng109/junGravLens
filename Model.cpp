@@ -454,11 +454,6 @@ void Model::updateVegettiRegularization() {
 	double time =0; 
 	double time1 = 0; 
 	vector<double> w5;
-
-	
-
-
-	
 	// vector<TriData> TriDataListX ; 
 
 	// for(int i=0; i<length; ++i) {
@@ -492,7 +487,7 @@ void Model::updateVegettiRegularization() {
 
 
 	double counter = 0; 
-	if(1){
+	if(0){
 	for (int i=0; i<length; ++i) {
 		
 		double query_pt[3]; 
@@ -533,8 +528,6 @@ void Model::updateVegettiRegularization() {
 			
 
 		}
-
-
 		indexRegion1 = ret_index[1]; 
 		indexRegion2 = ret_index[2]; 
 		indexRegion3 = ret_index[3]; 
@@ -567,7 +560,7 @@ void Model::updateVegettiRegularization() {
 	}
 	
 
-	if(0) {
+	if(1) {
 
 	for (int i=0; i<length; ++i) {
 		
@@ -1871,6 +1864,10 @@ void writeSrcModResImage(Model* model, Image* dataImage, Conf* conf, string file
 	// causImg -> writeToFile(dir + "img_caus_" + fileName + ".fits");
 	// delete critImg, causImg, lensImg ; 
 }
+
+
+
+
 
 
 

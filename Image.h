@@ -77,6 +77,8 @@ public:
 	sp_mat getPSFMatrix(string psfFileName, long dim);
 	void erasePixel(int index);
 	int sign(double x) ;
+
+	void getBlur(int n) ; 
 	virtual ~Image();
 };
 

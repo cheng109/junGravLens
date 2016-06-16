@@ -30,6 +30,7 @@ Image::Image(vector<double> xpos, vector<double> ypos, vector<double> *briList, 
 	npixels = naxis1*naxis2;
 
 	long iList=0, x, y;
+	vector<int> count(naxis1*naxis2, 0);
 	for(int i=0; i< briList->size(); ++i) {
 		x = nearbyint(xpos[i]);
 		y = nearbyint(ypos[i]);
@@ -37,8 +38,12 @@ Image::Image(vector<double> xpos, vector<double> ypos, vector<double> *briList, 
 		if(x>0 && x< naxis1 && y>0 && y<naxis2) {
 			iList = naxis1*y+x;
 			data[iList] += briList->at(i);
+			count[iList] += 1; 
 		}
 	}
+	for (size_t i=0; i<naxis1*naxis2; ++i) {
+        if (count[i] > 0) data[i] /= count[i];
+    }
 }
 
 
@@ -77,6 +82,7 @@ Notes: 			This constructor is used to read the given lensed image,
 				variance image, or PSF fits image;
 ****************************/
 Image::Image(string imgFileName) {
+
 
 	fitsfile *fptr;       /* pointer to the FITS file, defined in fitsio.h */
 	int status,  nfound, anynull;
@@ -312,9 +318,14 @@ Notes:
 
 void Image::updateBackSubtract(double back_mean, double back_std) {
 
-	double counter = 0; 
+  	default_random_engine generator;
+  	normal_distribution<double> distribution(0, back_std);
+
+
+	//double counter = 0; 
 	for (int i=0; i<dataList.size(); ++i ) {
-		dataList[i] -= back_mean ; 
+		double number = distribution(generator);																					
+		dataList[i] -= (back_mean + number) ; 
 		d[i] = dataList[i]; 
 	}
 
@@ -337,12 +348,8 @@ Notes: 			Flag = 0: 'WITHOUT' filter;
 void Image::updateFilterImage(string regionFileName, int flag) {
 	
 	// Flag = 1, use region file to filter the image;
-	// Flag = 0, no region filter.
-
-
-	
+	// Flag = 0, no region filter.	
 	vector<vector<double> > xpos, ypos;
-	cout << "updateFilterImage " << endl; 
 	if(flag==1) {  // with region; 
 		vector<string> regionType = parseRegionFile(regionFileName, &xpos, &ypos);
 
@@ -526,6 +533,60 @@ void Image::normalizeData() {
 		data[i] = data[i]/sum;
 }
 
+
+
+/***************************
+Function:   	getBlur
+Description:    change the resolution of the image without change the size of fits image; 
+Arguments:		(1): 'pixelCombine' 
+Notes: 			pixelCombine:  the number of pixels you want to averge together; 
+				For example,  pixelCombine = 3 means merging 3x3 pixels together; 
+				!!!!!! use with causion because it will modify the orginal data; 
+Returns:		void;
+****************************/
+
+void Image::getBlur(int pixelCombine) {
+
+	// create 2D vector to store the average value; 
+	int m = naxis2/pixelCombine;   // m rows; 
+	int n = naxis1/pixelCombine; 	// n cols; 
+
+	vector<vector<int>> v(m, vector<int> (n, 0) ); 
+
+	//int naxis1 = img1->naxis1; 
+	//int naxis2 = img1->naxis2; 
+
+	for(int i=0; i<naxis1 * naxis2 ; ++i) {
+		int row = i/naxis1; 
+		int col = i%naxis1; 
+
+		int colIndex = col/pixelCombine; 
+		int rowIndex = row/pixelCombine; 
+		if(colIndex < n && rowIndex	< m) {
+			v[rowIndex][colIndex] += data[i]; 
+		}
+
+	}
+
+	int factor = pixelCombine * pixelCombine ; 
+
+	for(int i=0; i<naxis1 * naxis2 ; ++i) {
+		int row = i/naxis1; 
+		int col = i%naxis1; 
+
+		int colIndex = col/pixelCombine; 
+		int rowIndex = row/pixelCombine; 
+		if(colIndex < n && rowIndex	< m) {
+			data[i] = (v[rowIndex][colIndex]/factor) ; 
+		}
+
+	}
+
+
+
+
+
+}
 
 
 

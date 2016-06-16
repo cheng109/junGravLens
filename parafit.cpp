@@ -17,7 +17,6 @@
 #include "parafit.h"
 
 using namespace std;
-//
 
 void gridSearchVegetti(Conf* conf, MultModelParam param_old, Image* dataImage, string dir, string outputFileName) {
 	double lambdaS = conf->srcRegLevel;  
@@ -85,12 +84,12 @@ void gridSearchVegetti(Conf* conf, MultModelParam param_old, Image* dataImage, s
 			minIndex = i; 
 		}
 
-		cout << "[" + to_string(i+1) + "/" + to_string(model->param.nComb) + "] \n" ; 
-		//cout << model->param.parameter[0].critRad << "\t" <<penalty[0] << "\t" << penalty[1] << "\t" << penalty[2] << "\t" <<  endl; 
-
-		writeSrcModResImage(model,dataImage,conf, to_string(i), dir) ; 
+		cout << "[" + to_string(i+1) + "/" + to_string(model->param.nComb) + "] " ; 
+		//cout <<"\t" << model->param.parameter[0].critRad << "\t" <<penalty[0] << "\t" << penalty[1] << "\t" << penalty[2] << "\t"; 
+		
+		//writeSrcModResImage(model,dataImage,conf, to_string(i), dir) ; 
 		output << model->param.printCurrentModels(i).at(0) << "\t" << penalty[0] <<"\t" <<penalty[1] << "\t" << penalty[2]  << endl; 
-
+		cout << endl; 
 	}
 
 	cout << "************************\nThe best models : " << minPenalty << endl;
@@ -126,7 +125,7 @@ vector<double> getPenalty(Model* model, Image* dataImage, Conf* conf) {
 		penalty[1] = srcR[0]; 
 		penalty[2] = chi2[0] + srcR[0]; 
 	}
-	penalty[2] = model->getScatterReg() ; 
+	//penalty[2] = model->getScatterReg() ; 
 
 
 	

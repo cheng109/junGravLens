@@ -164,6 +164,9 @@ double	lm_nfw_mass(double x);
 
 double getMassLuminosity(Image* lensImage, Image* dataImage,  string regionFileName, double background); 
 
+
+Image * magDiffMap(string img1FileName, string img2FileName, double back1, double back2,
+					double std1, double std2,  string regionFile , int pixelCombine); 
 //vector<double> getCritCaustic(Conf* conf, Model* model); 
 
 
