@@ -96,7 +96,7 @@ vector<double> getPenalty(Model* model, Image* dataImage, Conf* conf, string R_t
 	
 
 
-	vec d = cV_to_eigenV (&dataImage->dataList); 
+	//vec d = cV_to_eigenV (&dataImage->dataList); 
 
 	model->updatePosMapping(dataImage, conf);  // time used: 0.03s; 
 	model->update_H_zero(conf); 
