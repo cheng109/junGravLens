@@ -22,12 +22,12 @@ using namespace std;
 
 void mcFit(Conf* conf, MultModelParam param_old, Image* dataImage, string dir, string outputFileName) {
     MC mc(123);
-    size_t nLoops(1000), iter(0), ns(dataImage->dataList.size());
-    double cfac(1.), cfac2(1.), weight(1.), L0;
+    size_t nLoops(1000), iter1(0), iter2(0), ns(dataImage->dataList.size());
+    double cfac(1.), cfac2(1.), weight(0.5), L0;
     double sstep(0.01*dataImage->d.maxCoeff()), smax(2.*dataImage->d.maxCoeff()), smin(1.*dataImage->d.minCoeff());
     double L(-std::numeric_limits<double>::max());
     double LMax(L);
-    double lambdaS = 1e-4;
+    double lambdaS = 1e-5;
     vector<vec> src(9, vec(ns));
 
     for (size_t i=0; i<9; ++i) src[i].setZero();
@@ -47,19 +47,27 @@ void mcFit(Conf* conf, MultModelParam param_old, Image* dataImage, string dir, s
 	output.open(outputFileName);
 
     for (size_t loop=0; loop<nLoops; ++loop) {
-        iter+=1;
         L0 = L;
-        if (loop%2 == 1) cfac = mc.stepPar(model->param, cfac, iter);
-        else cfac2 = mc.stepPar(src, cfac2, iter);
+        if (loop & 1) {
+            cfac = mc.stepPar(model->param, cfac, iter1);
+            iter1++;
+        } else {
+            cfac2 = mc.stepPar(src, cfac2, iter2);
+            iter2++;
+        }
         model->copyParam(conf, 3);
-        vector<double> penalty = getPenalty2(model, src[3], dataImage, conf, "grad");
-        L = -penalty[2] / 2.0;
+        vector<double> penalty = getPenalty2(model, src[3], dataImage, conf, "vege");
+        L = -penalty[2];
 
-        cout<< loop<< " " << penalty[1] << ": " << L << " " << L0 << " " << LMax << " cfac "<<cfac<<endl;
+        if (loop & 1) cout<< loop << ": " << L << " " << L0 << " " << LMax << "  "
+                          << penalty[0] << " " << penalty[1] << " "
+                          << model->param.mixAllModels[3][0].paraList[0] << " "
+                          << model->param.mixAllModels[4][0].paraList[0] << " "
+                          << model->param.mixAllModels[8][0].paraList[0] << endl;
         if (std::isnan(L) || (L<=L0 && mc.random() > exp((L-L0)*weight))) {
             L = L0;
         } else {
-            if (loop%2 == 1) {
+            if (loop & 1) {
                 model->copyParam(3, 4);
                 if (L> LMax) {
                     model->copyParam(3, 5);

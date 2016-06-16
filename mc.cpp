@@ -90,11 +90,12 @@ double MC::stepPar(MultModelParam &param, double cfac, size_t &iter) {
                 if (stepSig < minSig) stepSig = minSig;
                 double r = cgauss();
                 param.mixAllModels[3][j].paraList[k] = par0 + r*stepSig;
+                param.mixAllModels[8][j].paraList[k] = stepSig;
                 //std::cout << r << " " << stepSig << " " << std::endl;
-                if (param.mixAllModels[3][j].paraList[k] < param.mixAllModels[6][j].paraList[k])
-                    param.mixAllModels[3][j].paraList[k] = param.mixAllModels[6][j].paraList[k];
-                if (param.mixAllModels[3][j].paraList[k] > param.mixAllModels[7][j].paraList[k])
-                    param.mixAllModels[3][j].paraList[k] = param.mixAllModels[7][j].paraList[k];
+                if (param.mixAllModels[3][j].paraList[k] < param.mixAllModels[6][j].paraList[k]
+                        || param.mixAllModels[3][j].paraList[k] > param.mixAllModels[7][j].paraList[k])
+                    param.mixAllModels[3][j].paraList[k] = param.mixAllModels[6][j].paraList[k] +
+                        random()*(param.mixAllModels[7][j].paraList[k]-param.mixAllModels[6][j].paraList[k]);
             }
         }
     }
@@ -140,7 +141,6 @@ double MC::stepPar(vector<vec> &src, double cfac, size_t &iter) {
             src[3](k) = src[6](k);
         if (src[3](k) > src[7](k))
             src[3](k) = src[7](k);
-
     }
     return cfac;
 }

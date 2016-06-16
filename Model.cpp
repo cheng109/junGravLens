@@ -24,6 +24,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <random>
+
 using namespace std;
 //using namespace arma;
 using namespace Eigen;
@@ -389,7 +390,7 @@ void update_H_curve(Conf* conf) {
 
 void Model::updateLensAndRegularMatrix(Image* dataImage,  Conf* constList, string R_type) {
 
-	clock_t begin = clock();
+    //clock_t begin = clock();
 	map<pair<int, int>,int>::iterator left, right, up, down;
 	vector<double> w, w5;
 
@@ -416,84 +417,45 @@ void Model::updateLensAndRegularMatrix(Image* dataImage,  Conf* constList, strin
     //for (auto i:ii) {
     //    cout << i << " " << srcPosXListPixel[i] << " " << srcPosYListPixel[i] << endl;
     //}
+    PointCloud<double> cloud;
+    KDTreeAdaptor index(2, cloud, KDTreeSingleIndexAdaptorParams(20 ));
 
     if (R_type == "vege") {
         size_t n = conf->length;
-        vector<size_t> indexX, orderX, indexY, orderY;
         if (type == 0) {
-            indexX = sort_indexes(srcPosXListPixel);
-            orderX = sort_indexes(indexX);
-            indexY = sort_indexes(srcPosYListPixel);
-            orderY = sort_indexes(indexY);
+            cloud.pts.resize(n);
+            for(size_t j=0; j<n; ++j) {
+                cloud.pts[j].x = srcPosXListPixel[j];
+                cloud.pts[j].y = srcPosYListPixel[j];
+            }
+            index.buildIndex();
         }
         for (size_t i=0; i<n; ++i) {
             int indexRegion1(-1), indexRegion2(-1), indexRegion3(-1), indexRegion4(-1);
 
             if (type == 0) {
-                size_t xpos(orderX[i]), ypos(orderY[i]), x;
-                if (xpos == 0 || ypos == 0 || xpos == n-1 || ypos == n-1) continue;
-                int x1(xpos-1), x2(xpos+1), y1(ypos-1), y2(ypos+1), ii, jj;
-                while (srcPosXListPixel[i] == srcPosXListPixel[indexX[x2]] && x2 < n) x2++;
-                while (srcPosYListPixel[i] == srcPosYListPixel[indexY[y2]] && y2 < n) y2++;
-                while (srcPosXListPixel[i] == srcPosXListPixel[indexX[x1]] && x1 >= 0) x1--;
-                while (srcPosYListPixel[i] == srcPosYListPixel[indexY[y1]] && y1 >= 0) y1--;
-                if (x1 < 0 || y1 < 0 || x2 >= n || y2 >= n) continue;
-                vector<bool> table1(n,false), table2(n,false), table3(n,false), table4(n,false);
-                ii = x2;
-                jj = y2;
-                for (size_t k=1; k>0; k++) {
-                    x = (k & 1) ? indexX[ii]: indexY[jj];
-                    if (table1[x]) {
-                        indexRegion1 = x;
-                        break;
-                    } else {
-                        table1[x] = true;
-                        if (k & 1) ii++;
-                        else jj++;
-                        if (ii == n || jj == n) break;
+                double query_pt[2] = {srcPosXListPixel[i], srcPosYListPixel[i]};
+                const size_t num_results = 10;
+                std::vector<size_t>   ret_index(num_results);
+                std::vector<double> out_dist_sqr(num_results);
+                index.knnSearch(&query_pt[0], num_results, &ret_index[0], &out_dist_sqr[0]);
+
+                for (size_t k=1; k<num_results; ++k) {
+                    size_t j = ret_index[k] ;
+                    if( indexRegion1 == -1 and srcPosXListPixel[j] > srcPosXListPixel[i] and srcPosYListPixel[j] > srcPosYListPixel[i]    ) {   // in region1;
+                            indexRegion1 = j ;
                     }
-                }
-                ii = x1;
-                jj = y2;
-                for (size_t k=1; k>0; k++) {
-                    x = (k & 1) ? indexX[ii]: indexY[jj];
-                    if (table2[x]) {
-                        indexRegion2 = x;
-                        break;
-                    } else {
-                        table2[x] = true;
-                        if (k & 1) ii--;
-                        else jj++;
-                        if (ii == -1 || jj == n) break;
+                    else if(indexRegion2 == -1 and srcPosXListPixel[j] < srcPosXListPixel[i] and srcPosYListPixel[j] > srcPosYListPixel[i]  ) {
+                            indexRegion2 = j ;
                     }
-                }
-                ii = x1;
-                jj = y1;
-                for (size_t k=1; k>0; k++) {
-                    x = (k & 1) ? indexX[ii]: indexY[jj];
-                    if (table3[x]) {
-                        indexRegion3 = x;
-                        break;
-                    } else {
-                        table3[x] = true;
-                        if (k & 1) ii--;
-                        else jj--;
-                        if (ii == -1 || jj == -1) break;
+                    else if(indexRegion3 == -1 and srcPosXListPixel[j] < srcPosXListPixel[i] and srcPosYListPixel[j] < srcPosYListPixel[i] ) {   // in region3
+                            indexRegion3 = j ;
                     }
-                }
-                ii = x2;
-                jj = y1;
-                for (size_t k=1; k>0; k++) {
-                    x = (k & 1) ? indexX[ii]: indexY[jj];
-                    if (table4[x]) {
-                        indexRegion4 = x;
-                        break;
-                    } else {
-                        table4[x] = true;
-                        if (k & 1) ii++;
-                        else jj--;
-                        if (ii == n || jj == -1) break;
+                    else if(indexRegion4 == -1 and srcPosXListPixel[j] > srcPosXListPixel[i] and srcPosYListPixel[j] < srcPosYListPixel[i]  ) {   // in region
+                            indexRegion4 = j ;
                     }
+                    else if(indexRegion1 != -1 and indexRegion2 != -1 and indexRegion3 != -1 and indexRegion4 != -1)
+                        break;
                 }
             } else {
 	            double distRegion1(1e10), distRegion2(1e10), distRegion3(1e10), distRegion4(1e10);
@@ -526,7 +488,6 @@ void Model::updateLensAndRegularMatrix(Image* dataImage,  Conf* constList, strin
 
 	            }
             }
-            if (i==5 || i==10) cout << i << "\t" << indexRegion1 << "\t" << indexRegion2 << "\t" << indexRegion3 << "\t" << indexRegion4 << "\t"  << endl;
 	        if (indexRegion1 > 0 and indexRegion2 > 0  and indexRegion3 > 0 and indexRegion4 > 0 )  {
                 // cout << i << "\t" << indexRegion1 << "\t" << indexRegion2 << "\t" << indexRegion3 << "\t" << indexRegion4 << "\t"  << endl;
 
@@ -648,13 +609,13 @@ void Model::updateLensAndRegularMatrix(Image* dataImage,  Conf* constList, strin
 
     else if(R_type == "vege") { 
 	    REG = Hs1.transpose()*Hs1 + Hs2.transpose()*Hs2;
-        cout << "hs1 " << Hs1.norm() << endl;
-        cout << "hs2 " << Hs2.norm() << endl;
+        //cout << "hs1 " << Hs1.norm() << endl;
+        //cout << "hs2 " << Hs2.norm() << endl;
     } else {
         cout << "Regularization type is not supported yet!" << endl; 
         exit(1); 
     } 
-	cout << "Calc REG Time: " << double(clock()-begin)/CLOCKS_PER_SEC << endl;
+	//cout << "Calc REG Time: " << double(clock()-begin)/CLOCKS_PER_SEC << endl;
 
 
 }
