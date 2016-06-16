@@ -45,7 +45,7 @@ double MC::cgauss() {
 
 double MC::stepPar(MultModelParam &param, double cfac, size_t &iter) {
     double minSig = 1e-6;
-    double eps=0.02;
+    double eps=0.03;
     cfac *= (1+eps);
     if (cfac > 1e20) {
         cfac = 1.0;

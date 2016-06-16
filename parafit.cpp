@@ -103,12 +103,14 @@ vector<double> getPenalty(Model* model, Image* dataImage, Conf* conf, string R_t
 	vec &s = model->s;
 	vec res = ( model->L * s - dataImage->d);
     //vec chi2 = res.transpose() *  dataImage->invC * res * model->lambdaC* model->lambdaC  ;
-    //vec srcR = s  .transpose() *  model->REG      * s   * model->lambdaS* model->lambdaS  ;
+    vec srcR = s  .transpose() *  model->REG      * s   * model->lambdaS* model->lambdaS  ;
 
 	vector<double> penalty(3);
 
     penalty[0] = (res.cwiseProduct(dataImage->invSigma)).squaredNorm()*model->lambdaC* model->lambdaC;
-    penalty[1] = (model->Hs1 * s).squaredNorm()*model->lambdaS*model->lambdaS;
+    //penalty[1] = (model->Hs1 * s).squaredNorm()*model->lambdaS*model->lambdaS;
+    //penalty[1] += (model->Hs2 * s).squaredNorm()*model->lambdaS*model->lambdaS;
+    penalty[1] = srcR[0];
 	penalty[2] = penalty[0] + penalty[1];
 
 	return penalty;

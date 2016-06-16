@@ -413,15 +413,13 @@ void Model::updateLensAndRegularMatrix(Image* dataImage,  Conf* constList, strin
     */
 
     int type(0);
-    //vector<int> ii = {4940,5179,5178};
-    //for (auto i:ii) {
-    //    cout << i << " " << srcPosXListPixel[i] << " " << srcPosYListPixel[i] << endl;
-    //}
     PointCloud<double> cloud;
     KDTreeAdaptor index(2, cloud, KDTreeSingleIndexAdaptorParams(20 ));
+    vector<double> radius;
 
     if (R_type == "vege") {
         size_t n = conf->length;
+        radius.resize(n,0.);
         if (type == 0) {
             cloud.pts.resize(n);
             for(size_t j=0; j<n; ++j) {
@@ -439,25 +437,26 @@ void Model::updateLensAndRegularMatrix(Image* dataImage,  Conf* constList, strin
                 std::vector<size_t>   ret_index(num_results);
                 std::vector<double> out_dist_sqr(num_results);
                 index.knnSearch(&query_pt[0], num_results, &ret_index[0], &out_dist_sqr[0]);
+                double delta(1e-6);
 
                 for (size_t k=1; k<num_results; ++k) {
                     size_t j = ret_index[k];
-                    if (out_dist_sqr[k] < 1e-6) continue;
-                    if( indexRegion1 == -1 and srcPosXListPixel[j] > srcPosXListPixel[i] and srcPosYListPixel[j] > srcPosYListPixel[i]    ) {   // in region1;
+                    if( indexRegion1 == -1 and srcPosXListPixel[j] > srcPosXListPixel[i] + delta and srcPosYListPixel[j] > srcPosYListPixel[i] + delta    ) {   // in region1;
                             indexRegion1 = j ;
                     }
-                    else if(indexRegion2 == -1 and srcPosXListPixel[j] < srcPosXListPixel[i] and srcPosYListPixel[j] > srcPosYListPixel[i]  ) {
+                    else if(indexRegion2 == -1 and srcPosXListPixel[j] < srcPosXListPixel[i] - delta and srcPosYListPixel[j] > srcPosYListPixel[i] + delta ) {
                             indexRegion2 = j ;
                     }
-                    else if(indexRegion3 == -1 and srcPosXListPixel[j] < srcPosXListPixel[i] and srcPosYListPixel[j] < srcPosYListPixel[i] ) {   // in region3
+                    else if(indexRegion3 == -1 and srcPosXListPixel[j] < srcPosXListPixel[i] - delta and srcPosYListPixel[j] < srcPosYListPixel[i] - delta ) {   // in region3
                             indexRegion3 = j ;
                     }
-                    else if(indexRegion4 == -1 and srcPosXListPixel[j] > srcPosXListPixel[i] and srcPosYListPixel[j] < srcPosYListPixel[i]  ) {   // in region
+                    else if(indexRegion4 == -1 and srcPosXListPixel[j] > srcPosXListPixel[i] + delta and srcPosYListPixel[j] < srcPosYListPixel[i] - delta ) {   // in region
                             indexRegion4 = j ;
                     }
                     else if(indexRegion1 != -1 and indexRegion2 != -1 and indexRegion3 != -1 and indexRegion4 != -1)
                         break;
                 }
+                radius[i] = out_dist_sqr[num_results-1];
             } else {
 	            double distRegion1(1e10), distRegion2(1e10), distRegion3(1e10), distRegion4(1e10);
 	            for(int j=0; j<conf->length; ++j) {
@@ -500,17 +499,17 @@ void Model::updateLensAndRegularMatrix(Image* dataImage,  Conf* constList, strin
 
 	        	w5 = getPentWeigth(A, B, C, D, E);
 
-	        	Hs1.insert(i, indexRegion3	) 	= w5[0] + w5[5];
-	        	Hs1.insert(i, indexRegion2	) 	= w5[1] + w5[6];
-	            Hs1.insert(i, i				) 	= w5[2] + w5[7];
-	        	Hs1.insert(i, indexRegion4	) 	= w5[3] + w5[8];
-	        	Hs1.insert(i, indexRegion1	) 	= w5[4] + w5[9];
+	        	Hs1.insert(i, indexRegion3	) 	= w5[0];
+	        	Hs1.insert(i, indexRegion2	) 	= w5[1];
+	            Hs1.insert(i, i				) 	= w5[2];
+	        	Hs1.insert(i, indexRegion4	) 	= w5[3];
+	        	Hs1.insert(i, indexRegion1	) 	= w5[4];
 
-	            //Hs2.insert(i, indexRegion3	) 	= w5[5];
-	            //Hs2.insert(i, indexRegion2	) 	= w5[6];
-	            //Hs2.insert(i, i				) 	= w5[7];
-	            //Hs2.insert(i, indexRegion4	) 	= w5[8];
-	            //Hs2.insert(i, indexRegion1	) 	= w5[9]; 
+	            Hs2.insert(i, indexRegion3	) 	= w5[5];
+	            Hs2.insert(i, indexRegion2	) 	= w5[6];
+	            Hs2.insert(i, i				) 	= w5[7];
+	            Hs2.insert(i, indexRegion4	) 	= w5[8];
+	            Hs2.insert(i, indexRegion1	) 	= w5[9];
 	        }
         }
     }
@@ -609,10 +608,11 @@ void Model::updateLensAndRegularMatrix(Image* dataImage,  Conf* constList, strin
         REG = H_zero.transpose() * Hessian_grad * H_zero; 
 
     else if(R_type == "vege") { 
-	    //REG = Hs1.transpose()*Hs1 + Hs2.transpose()*Hs2;
-	    REG = Hs1.transpose()*Hs1;
+	    REG = Hs1.transpose()*Hs1 + Hs2.transpose()*Hs2;
+	    //REG = Hs1.transpose()*Hs1;
         //cout << "hs1 " << Hs1.norm() << endl;
         //cout << "hs2 " << Hs2.norm() << endl;
+        for (size_t i=0; i< conf->length; ++i)  REG.coeffRef(i,i) += radius[i]/lambdaS;
     } else {
         cout << "Regularization type is not supported yet!" << endl; 
         exit(1); 

@@ -22,7 +22,7 @@ using namespace std;
 
 void mcFit(Conf* conf, MultModelParam param_old, Image* dataImage, string dir, string outputFileName) {
     MC mc(123);
-    size_t nLoops(100), iter(0), ns(dataImage->dataList.size());
+    size_t nLoops(1000), iter(0), ns(dataImage->dataList.size());
     double cfac(1.), weight(0.5), L0;
     //double sstep(0.01*dataImage->d.maxCoeff()), smax(2.*dataImage->d.maxCoeff()), smin(1.*dataImage->d.minCoeff());
     double L(-std::numeric_limits<double>::max());
