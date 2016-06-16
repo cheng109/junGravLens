@@ -333,7 +333,7 @@ void Model::update_H_zero(Conf* conf) {
 	// T size:  [srcSize[0]*srcSize[1],  2*length]
 	int x, y, iList;
 
-	clock_t begin = clock();
+	//clock_t begin = clock();
 	for(int i=0; i<length; ++i) {
 		x = nearbyint(srcPosXListPixel[i]);
 		y = nearbyint(srcPosYListPixel[i]);
@@ -441,7 +441,8 @@ void Model::updateLensAndRegularMatrix(Image* dataImage,  Conf* constList, strin
                 index.knnSearch(&query_pt[0], num_results, &ret_index[0], &out_dist_sqr[0]);
 
                 for (size_t k=1; k<num_results; ++k) {
-                    size_t j = ret_index[k] ;
+                    size_t j = ret_index[k];
+                    if (out_dist_sqr[k] < 1e-6) continue;
                     if( indexRegion1 == -1 and srcPosXListPixel[j] > srcPosXListPixel[i] and srcPosYListPixel[j] > srcPosYListPixel[i]    ) {   // in region1;
                             indexRegion1 = j ;
                     }
@@ -499,17 +500,17 @@ void Model::updateLensAndRegularMatrix(Image* dataImage,  Conf* constList, strin
 
 	        	w5 = getPentWeigth(A, B, C, D, E);
 
-	        	Hs1.insert(i, indexRegion3	) 	= w5[0];
-	        	Hs1.insert(i, indexRegion2	) 	= w5[1];
-	            Hs1.insert(i, i				) 	= w5[2];
-	        	Hs1.insert(i, indexRegion4	) 	= w5[3];
-	        	Hs1.insert(i, indexRegion1	) 	= w5[4];
+	        	Hs1.insert(i, indexRegion3	) 	= w5[0] + w5[5];
+	        	Hs1.insert(i, indexRegion2	) 	= w5[1] + w5[6];
+	            Hs1.insert(i, i				) 	= w5[2] + w5[7];
+	        	Hs1.insert(i, indexRegion4	) 	= w5[3] + w5[8];
+	        	Hs1.insert(i, indexRegion1	) 	= w5[4] + w5[9];
 
-	        	Hs2.insert(i, indexRegion3	) 	= w5[5];
-	        	Hs2.insert(i, indexRegion2	) 	= w5[6];
-	        	Hs2.insert(i, i				) 	= w5[7];
-	        	Hs2.insert(i, indexRegion4	) 	= w5[8];
-	        	Hs2.insert(i, indexRegion1	) 	= w5[9]; 
+	            //Hs2.insert(i, indexRegion3	) 	= w5[5];
+	            //Hs2.insert(i, indexRegion2	) 	= w5[6];
+	            //Hs2.insert(i, i				) 	= w5[7];
+	            //Hs2.insert(i, indexRegion4	) 	= w5[8];
+	            //Hs2.insert(i, indexRegion1	) 	= w5[9]; 
 	        }
         }
     }
@@ -608,7 +609,8 @@ void Model::updateLensAndRegularMatrix(Image* dataImage,  Conf* constList, strin
         REG = H_zero.transpose() * Hessian_grad * H_zero; 
 
     else if(R_type == "vege") { 
-	    REG = Hs1.transpose()*Hs1 + Hs2.transpose()*Hs2;
+	    //REG = Hs1.transpose()*Hs1 + Hs2.transpose()*Hs2;
+	    REG = Hs1.transpose()*Hs1;
         //cout << "hs1 " << Hs1.norm() << endl;
         //cout << "hs2 " << Hs2.norm() << endl;
     } else {

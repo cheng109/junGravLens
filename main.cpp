@@ -52,7 +52,7 @@ int main(int argc, char* argv[]) {
 	Conf *conf = new Conf(dataImage, mapConf);
 	dataImage->updateGridPointType();
 	dataImage->updateVarList(90, conf->back_mean, conf->back_std); // (threshold, var);
-	dataImage->invC = dataImage->getVarMatrix();
+	dataImage->getVarMatrix();
 	dataImage->updateBackSubtract(conf->back_mean, conf->back_std); 
 	
  

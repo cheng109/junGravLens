@@ -525,18 +525,17 @@ void Image::updateGridPointType() {
 
 }
 
-sp_mat Image::getVarMatrix()  {
+void Image::getVarMatrix()  {
 
 	//this->updateFilterImage(regionFileName);
 	long n= length;
-	//n = 100;
-	sp_mat invC(n, n);
-	invC.reserve(n);
+    invC.resize(n,n);
+	//invC.reserve(n);
+    invSigma.resize(n);
 	for(int i=0; i<n; ++i) {
 		invC.insert(i,i)= 1.0/varList[i];
-		//cout << dataList[i] << endl;
+        invSigma(i) = 1.0/sqrt(varList[i]);
 	}
-	return invC;
 }
 
 void Image::updateVarList(double threshold, double back_mean, double back_std) {

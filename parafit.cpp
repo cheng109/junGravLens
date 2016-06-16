@@ -93,31 +93,25 @@ void gridSearchVegetti(Conf* conf, MultModelParam param_old, Image* dataImage, s
 
 
 vector<double> getPenalty(Model* model, Image* dataImage, Conf* conf, string R_type) {
-	
 
+	model->updatePosMapping(dataImage, conf);  // time used: 0.03s;
+	model->update_H_zero(conf);
+	model->updateLensAndRegularMatrix(dataImage, conf, R_type);  // get matrix 'L' and 'RTR'; most time consuming part;
+	model->solveSource(&dataImage->invC, &dataImage->d);
+	//model->updateSource(conf) ; // Add noise to the source;
 
-	//vec d = cV_to_eigenV (&dataImage->dataList); 
+	vec &s = model->s;
+	vec res = ( model->L * s - dataImage->d);
+    //vec chi2 = res.transpose() *  dataImage->invC * res * model->lambdaC* model->lambdaC  ;
+    //vec srcR = s  .transpose() *  model->REG      * s   * model->lambdaS* model->lambdaS  ;
 
-	model->updatePosMapping(dataImage, conf);  // time used: 0.03s; 
-	model->update_H_zero(conf); 
-	model->updateLensAndRegularMatrix(dataImage, conf, R_type);  // get matrix 'L' and 'RTR'; most time consuming part; 
-	model->solveSource(&dataImage->invC, &dataImage->d); 
-	//model->updateSource(conf) ; // Add noise to the source; 
+	vector<double> penalty(3);
 
-	vec &s = model->s; 
-	
-	vec res = ( model->L * s - dataImage->d) ; 
-	vec chi2 = res.transpose() *  dataImage->invC * res * model->lambdaC* model->lambdaC  ; 
-	vec srcR = s  .transpose() *  model->REG      * s   * model->lambdaS* model->lambdaS  ; 
+    penalty[0] = (res.cwiseProduct(dataImage->invSigma)).squaredNorm()*model->lambdaC* model->lambdaC;
+    penalty[1] = (model->Hs1 * s).squaredNorm()*model->lambdaS*model->lambdaS;
+	penalty[2] = penalty[0] + penalty[1];
 
-
-
-	vector<double> penalty(3); 
-	penalty[0] = chi2[0]; 
-	penalty[1] = srcR[0]; 
-	penalty[2] = chi2[0] + srcR[0]; 
-
-	return penalty; 
+	return penalty;
 
 
 }
