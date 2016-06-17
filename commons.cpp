@@ -69,6 +69,9 @@ Conf::Conf(Image* dataImage, map<string, string> confMap) {
 		back_mean = stod(confMap["back_mean"]); 
 		back_std = stod(confMap["back_std"]);
 
+        srcRegLevel = stod(confMap["srcRegLevel"]); 
+        srcRegType = confMap["srcRegType"];
+        nLoops = stoi(confMap["nLoops"]);
 
 		verbose		  = stoi(confMap["verbose"]); 
 		usingRegion   = stoi(confMap["usingRegion"]); 

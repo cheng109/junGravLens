@@ -117,6 +117,10 @@ public:
 	double back_mean; 
 	double back_std; 
 
+    double srcRegLevel; 
+    string srcRegType;
+    int nLoops;
+
 	long potN;
 	int bitpix;
 

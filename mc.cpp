@@ -11,7 +11,8 @@
 MC::MC(unsigned seed) {
     rng_engine.seed(seed);
     rng = std::bind(std::uniform_real_distribution<double>(0.,1.), std::ref(rng_engine));
-    makeCgauss();
+    normal = std::bind(std::normal_distribution<double>(0.,1.), std::ref(rng_engine));
+    //makeCgauss();
 }
 
 double MC::random() {
@@ -32,31 +33,24 @@ void MC::makeCgauss() {
 }
 
 double MC::cgauss() {
-    double xv = 0.;
-    double r = rng();
-    for (size_t i=0; i<100; ++i) {
-        if (cgArr[i]>r) {
-            xv = (-5. + i*0.1) - 0.1*rng();
-            break;
-        }
-    }
-    return xv;
+    //double xv = 0.;
+    //double r = rng();
+    //for (size_t i=0; i<100; ++i) {
+    //    if (cgArr[i]>r) {
+    //        xv = (-5. + i*0.1) - 0.1*rng();
+    //        break;
+    //    }
+    //}
+    //return xv;
+    return normal();
 }
 
-double MC::stepPar(MultModelParam &param, double cfac, size_t &iter) {
+double MC::stepPar(MultModelParam &param, vector<vector<size_t>> &freePar, double &cfac, vector<vector<size_t>> &iter, int &j, int &k) {
     double minSig = 1e-6;
-    double eps=0.03;
+    double eps=0.00;
     cfac *= (1+eps);
-    if (cfac > 1e20) {
-        cfac = 1.0;
-        for(int j=0; j<param.nLens; ++j) {
-            for (size_t k=0; k<param.mixAllModels[0][j].paraList.size(); ++k) {
-                param.mixAllModels[0][j].paraList[k] = 0.;
-                param.mixAllModels[1][j].paraList[k] = 0.;
-                param.mixAllModels[2][j].paraList[k] = 0.;
-            }
-        }
-    }
+    if (cfac > 1e20) cfac = 1.0;
+
     // mixAllModels[0]: weight * par^2
     // mixAllModels[1]: weight
     // mixAllModels[2]: weight * par
@@ -66,40 +60,40 @@ double MC::stepPar(MultModelParam &param, double cfac, size_t &iter) {
     // mixAllModels[6]: lower bound
     // mixAllModels[7]: upper bound
     // mixAllModels[8]: step
-    for(int j=0; j<param.nLens; ++j) {
-        for (size_t k=0; k<param.mixAllModels[0][j].paraList.size(); ++k) {
-            if (param.mixAllModels[6][j].paraList[k] < param.mixAllModels[7][j].paraList[k]) {
-                double stepSig = param.mixAllModels[8][j].paraList[k];
-                double par0 = param.mixAllModels[4][j].paraList[k];
+    j = random() * param.nLens;
+    k = freePar[j][(int) (random() * freePar[j].size())];
+    //cout << "parameter " << j << " " << k << endl;
 
-                param.mixAllModels[0][j].paraList[k] += cfac*par0*par0;
-                param.mixAllModels[1][j].paraList[k] += cfac;
-                param.mixAllModels[2][j].paraList[k] += cfac*par0;
-                if (iter > 3) {
-                    double sig = sqrt((1+1e-7)*param.mixAllModels[0][j].paraList[k]/param.mixAllModels[1][j].paraList[k]
-                            - pow(param.mixAllModels[2][j].paraList[k]/param.mixAllModels[1][j].paraList[k],2));
-                    stepSig = 3.*2.38*sig/sqrt(param.mixAllModels[0][j].paraList.size());
-                    if (std::isnan(stepSig)) {
-                        iter=0;
-                        param.mixAllModels[0][j].paraList[k] = 0.;
-                        param.mixAllModels[1][j].paraList[k] = 0.;
-                        param.mixAllModels[2][j].paraList[k] = 0.;
-                        stepSig = param.mixAllModels[8][j].paraList[k];
-                    }
-                }
-                if (stepSig < minSig) stepSig = minSig;
-                double r = cgauss();
-                param.mixAllModels[3][j].paraList[k] = par0 + r*stepSig;
-                param.mixAllModels[8][j].paraList[k] = stepSig;
-                //std::cout << r << " " << stepSig << " " << std::endl;
-                if (param.mixAllModels[3][j].paraList[k] < param.mixAllModels[6][j].paraList[k]
-                        || param.mixAllModels[3][j].paraList[k] > param.mixAllModels[7][j].paraList[k])
-                    param.mixAllModels[3][j].paraList[k] = param.mixAllModels[6][j].paraList[k] +
-                        random()*(param.mixAllModels[7][j].paraList[k]-param.mixAllModels[6][j].paraList[k]);
-            }
+    double stepSig = param.mixAllModels[8][j].paraList[k];
+    double par0 = param.mixAllModels[4][j].paraList[k];
+
+    param.mixAllModels[0][j].paraList[k] += cfac*par0*par0;
+    param.mixAllModels[1][j].paraList[k] += cfac;
+    param.mixAllModels[2][j].paraList[k] += cfac*par0;
+    if (iter[j][k] > 3) {
+        double sig = sqrt((1+1e-7)*param.mixAllModels[0][j].paraList[k]/param.mixAllModels[1][j].paraList[k]
+                - pow(param.mixAllModels[2][j].paraList[k]/param.mixAllModels[1][j].paraList[k],2));
+        //stepSig = 3.*2.38*sig/sqrt(freePar[j].size());
+        stepSig = sig;
+        if (std::isnan(stepSig)) {
+            iter[j][k] = 0;
+            param.mixAllModels[0][j].paraList[k] = 0.;
+            param.mixAllModels[1][j].paraList[k] = 0.;
+            param.mixAllModels[2][j].paraList[k] = 0.;
+            stepSig = param.mixAllModels[8][j].paraList[k];
         }
     }
-    return cfac;
+    if (stepSig < minSig) stepSig = minSig;
+    double r = cgauss();
+    param.mixAllModels[3][j].paraList[k] = par0 + r*stepSig;
+    //std::cout << r << " " << stepSig << " " << std::endl;
+    if (param.mixAllModels[3][j].paraList[k] < param.mixAllModels[6][j].paraList[k]
+            || param.mixAllModels[3][j].paraList[k] > param.mixAllModels[7][j].paraList[k])
+        param.mixAllModels[3][j].paraList[k] = param.mixAllModels[6][j].paraList[k] +
+            random()*(param.mixAllModels[7][j].paraList[k]-param.mixAllModels[6][j].paraList[k]);
+
+    iter[j][k]++;
+    return stepSig;
 }
 
 double MC::stepPar(vector<vec> &src, double cfac, size_t &iter) {

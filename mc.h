@@ -21,7 +21,7 @@ public:
     void makeCgauss();
     double cgauss();
     double random();
-    double stepPar(MultModelParam &param, double cfac, size_t &iter);
+    double stepPar(MultModelParam &param, vector<vector<size_t>> &freePar, double &cfac, vector<vector<size_t>> &iter, int &j, int &k);
     double stepPar(vector<vec> &src, double cfac, size_t &iter);
 
 private:
@@ -29,6 +29,7 @@ private:
     std::mt19937 rng_engine;
     //std::default_random_engine rng_engine;
     std::function<double()> rng;
+    std::function<double()> normal;
 };
 
 #endif /* MC_H_ */

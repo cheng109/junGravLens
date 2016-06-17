@@ -1365,12 +1365,12 @@ void MultModelParam::mix(int opt) {
                 sModel.paraList[4] = parameter[i].PATo;
                 sModel.paraList[5] = parameter[i].coreTo;
                 v1.push_back(sModel);
-                sModel.paraList[0] = 0.1 * (parameter[i].critRadTo - parameter[i].critRadFrom);
-                sModel.paraList[1] = 0.1 * (parameter[i].centerXTo - parameter[i].centerXFrom);
-                sModel.paraList[2] = 0.1 * (parameter[i].centerYTo - parameter[i].centerYFrom);
-                sModel.paraList[3] = 0.1 * (parameter[i].eTo       - parameter[i].eFrom      );
-                sModel.paraList[4] = 0.1 * (parameter[i].PATo      - parameter[i].PAFrom     );
-                sModel.paraList[5] = 0.1 * (parameter[i].coreTo    - parameter[i].coreFrom   );
+                sModel.paraList[0] = parameter[i].critRadInc;
+                sModel.paraList[1] = parameter[i].centerXInc;
+                sModel.paraList[2] = parameter[i].centerYInc;
+                sModel.paraList[3] = parameter[i].eInc;
+                sModel.paraList[4] = parameter[i].PAInc;
+                sModel.paraList[5] = parameter[i].coreInc;
                 v1.push_back(sModel);
             }
 			mix.push_back(v1);

@@ -20,7 +20,7 @@ using namespace std;
 //
 
 void gridSearchVegetti(Conf* conf, MultModelParam param_old, Image* dataImage, string dir, string outputFileName) {
-	double lambdaS = 1e-5;  
+	double lambdaS = conf->srcRegLevel;  
 
 	Model *model = new Model(conf, param_old, lambdaS);
 		
@@ -59,7 +59,7 @@ void gridSearchVegetti(Conf* conf, MultModelParam param_old, Image* dataImage, s
 			}
 		}	
 		//vector<double> sBright = dataImage->dataList; 
-		vector<double> penalty = getPenalty(model,  dataImage, conf, "vege") ; 
+		vector<double> penalty = getPenalty(model,  dataImage, conf, conf->srcRegType) ; 
 		
 		if(minPenalty > penalty[2]) {
 			minPenalty = penalty[2]; 
