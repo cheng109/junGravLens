@@ -120,6 +120,7 @@ public:
     double srcRegLevel; 
     string srcRegType;
     int nLoops;
+    int seed;
 
 	long potN;
 	int bitpix;
