@@ -22,7 +22,7 @@ using namespace std;
 
 void mcFit(Conf* conf, MultModelParam param_old, Image* dataImage, string dir, string outputFileName) {
     MC mc(conf->seed);
-    size_t nLoops(conf->nLoops), ns(dataImage->dataList.size());
+    size_t nLoops(conf->nLoops), ns(dataImage->dataList.size()), nAccept(0), lag(10), writeChkpt(30);
     double cfac(1.), weight(0.5), L0;
     //double sstep(0.01*dataImage->d.maxCoeff()), smax(2.*dataImage->d.maxCoeff()), smin(1.*dataImage->d.minCoeff());
     double L(-std::numeric_limits<double>::max());
@@ -30,7 +30,7 @@ void mcFit(Conf* conf, MultModelParam param_old, Image* dataImage, string dir, s
     double lambdaS = conf->srcRegLevel;
     vector<vector<size_t>> freePar, iter;
     int jj(0), kk(0), iters;
-    bool moveAll(true);
+    bool moveAll(false);
 
    // vector<vec> src(9, vec(ns));
    // for (size_t i=0; i<9; ++i) src[i].setZero();
@@ -57,8 +57,15 @@ void mcFit(Conf* conf, MultModelParam param_old, Image* dataImage, string dir, s
         }
     }
 	ofstream output;
-	output.open(outputFileName);
-
+    string out = "mc_chkpt_"+to_string(conf->seed)+".txt";
+    if (conf->resume) {
+        if (moveAll) L = mc.load(out, model->param, freePar, cfac, iters);
+        else L = mc.load(out,model->param, freePar, cfac, iter);
+	    output.open(outputFileName, std::ofstream::out | std::ofstream::app);
+        LMax = L;
+    } else {
+	    output.open(outputFileName);
+    }
 
     for (size_t loop=0; loop<nLoops; ++loop) {
         double step(0.);
@@ -81,6 +88,7 @@ void mcFit(Conf* conf, MultModelParam param_old, Image* dataImage, string dir, s
         if (std::isnan(L) || (L<=L0 && mc.random() > exp((L-L0)*weight))) {
             L = L0;
         } else {
+            nAccept++;
             if (moveAll) model->copyParam(3,4);
             else model->param.mixAllModels[4][jj].paraList[kk] = model->param.mixAllModels[3][jj].paraList[kk];
             if (L> LMax) {
@@ -88,9 +96,15 @@ void mcFit(Conf* conf, MultModelParam param_old, Image* dataImage, string dir, s
                 else model->param.mixAllModels[5][jj].paraList[kk] = model->param.mixAllModels[3][jj].paraList[kk];
                 LMax = L;
             }
-            output << model->param.printCurrentModels(4).at(0)
-                   << std::scientific << std::setprecision(3) << L
-                   << std::setw(10) << std::fixed << loop << endl;
+            if (nAccept % lag == 1) {
+                output << model->param.printCurrentModels(4).at(0)
+                       << std::scientific << std::setprecision(3) << L
+                       << std::setw(10) << std::fixed << loop << endl;
+            }
+            if (nAccept % writeChkpt == 1) {
+                if (moveAll) mc.checkPoint(out, model->param, freePar, cfac, iters, L);
+                else mc.checkPoint(out, model->param, freePar, cfac, iter, L);
+            }
             //for (size_t i=0; i<ns; ++i) src[4](i) = src[3](i);
             //if (L> LMax) {
             //    for (size_t i=0; i<ns; ++i) src[5](i) = src[3](i);
@@ -98,6 +112,13 @@ void mcFit(Conf* conf, MultModelParam param_old, Image* dataImage, string dir, s
             //}
         }
     }
+    if (moveAll) mc.checkPoint(out, model->param, freePar, cfac, iters, L);
+    else mc.checkPoint(out, model->param, freePar, cfac, iter, L);
+    output << model->param.printCurrentModels(5).at(0)
+           << std::scientific << std::setprecision(3) << LMax
+           << std::setw(10) << std::fixed << nLoops << endl;
+	output.close();
+
     model->copyParam(conf, 5);
     vector<double> bestChi = getPenalty(model, dataImage, conf, conf->srcRegType);
     //vector<double> bestChi = getPenalty2(model, src[5], dataImage, conf, conf->srcRegType);
@@ -120,7 +141,6 @@ void mcFit(Conf* conf, MultModelParam param_old, Image* dataImage, string dir, s
     //for (size_t i=0; i<ns; ++i) model->s[i] = sqrt(src[0](i)/src[1](i)-pow(src[2](i)/src[1](i),2));
     //model->writeSrcImage(dir + "img_src_mc_std.fits", conf);
 
-	output.close();
 
 	// Print out the best model :
 	cout << "************************\nThe best models : "<< endl;
@@ -132,7 +152,6 @@ void mcFit(Conf* conf, MultModelParam param_old, Image* dataImage, string dir, s
 	delete model;
 
 }
-
 
 vector<double> getPenalty2(Model* model, vec &s, Image* dataImage, Conf* conf, string R_type) {
 

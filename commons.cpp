@@ -73,6 +73,7 @@ Conf::Conf(Image* dataImage, map<string, string> confMap) {
         srcRegType = confMap["srcRegType"];
         nLoops = stoi(confMap["nLoops"]);
         seed = stoi(confMap["seed"]);
+        resume = stoi(confMap["resume"]);
 
 		verbose		  = stoi(confMap["verbose"]); 
 		usingRegion   = stoi(confMap["usingRegion"]); 

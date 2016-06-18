@@ -121,6 +121,7 @@ public:
     string srcRegType;
     int nLoops;
     int seed;
+    int resume;
 
 	long potN;
 	int bitpix;

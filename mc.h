@@ -24,6 +24,10 @@ public:
     double stepPar(MultModelParam &param, vector<vector<size_t>> &freePar, double &cfac, vector<vector<size_t>> &iter, int &j, int &k);
     void stepPar(MultModelParam &param, vector<vector<size_t>> &freePar, double &cfac, int &iter);
     double stepPar(vector<vec> &src, double cfac, size_t &iter);
+    void checkPoint(string outputFileName, MultModelParam &param, vector<vector<size_t>> &freePar, double cfac, vector<vector<size_t>> &iter, double L);
+    void checkPoint(string outputFileName, MultModelParam &param, vector<vector<size_t>> &freePar, double cfac, int iter, double L);
+    double load(string fileName, MultModelParam &param, vector<vector<size_t>> &freePar, double &cfac, vector<vector<size_t>> &iter);
+    double load(string fileName, MultModelParam &param, vector<vector<size_t>> &freePar, double &cfac, int &iter);
 
 private:
     std::vector<double> cgArr;

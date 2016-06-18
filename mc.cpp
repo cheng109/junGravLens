@@ -7,6 +7,7 @@
 
 #include "mc.h"
 #include <iostream>
+#include <iomanip>
 
 MC::MC(unsigned seed) {
     rng_engine.seed(seed);
@@ -48,7 +49,7 @@ double MC::cgauss() {
 
 double MC::stepPar(MultModelParam &param, vector<vector<size_t>> &freePar, double &cfac, vector<vector<size_t>> &iter, int &j, int &k) {
     double minSig = 1e-6;
-    double eps=0.03;
+    double eps=0.01;
     cfac *= (1+eps);
     if (cfac > 1e20) cfac = 1.0;
 
@@ -99,7 +100,7 @@ double MC::stepPar(MultModelParam &param, vector<vector<size_t>> &freePar, doubl
 
 void MC::stepPar(MultModelParam &param, vector<vector<size_t>> &freePar, double &cfac, int &iter) {
     double minSig = 1e-6;
-    double eps=0.03;
+    double eps=0.01;
     cfac *= (1+eps);
     if (cfac > 1e20) cfac = 1.0;
 
@@ -176,4 +177,104 @@ double MC::stepPar(vector<vec> &src, double cfac, size_t &iter) {
             src[3](k) = src[7](k);
     }
     return cfac;
+}
+
+void MC::checkPoint(string outputFileName, MultModelParam &param, vector<vector<size_t>> &freePar, double cfac, int iter, double L) {
+    ofstream chkpt;
+    chkpt.open(outputFileName);
+    for (int j=0; j<param.nLens; ++j) {
+        for (auto k: freePar[j]) {
+            for (size_t l=0; l<6; ++l) chkpt << std::scientific << std::setprecision(7) << param.mixAllModels[l][j].paraList[k] << " ";
+            chkpt << endl;
+        }
+    }
+    chkpt << cfac << endl;
+    chkpt << iter << endl;
+    chkpt << L << endl;
+    chkpt.close();
+}
+
+void MC::checkPoint(string outputFileName, MultModelParam &param, vector<vector<size_t>> &freePar, double cfac, vector<vector<size_t>> &iter, double L) {
+    ofstream chkpt;
+    chkpt.open(outputFileName);
+    for (int j=0; j<param.nLens; ++j) {
+        for (auto k: freePar[j]) {
+            for (size_t l=0; l<6; ++l) chkpt << std::scientific << std::setprecision(7) << param.mixAllModels[l][j].paraList[k] << " ";
+            double par0 = param.mixAllModels[4][j].paraList[k];
+            double s0 = param.mixAllModels[0][j].paraList[k] + cfac*par0*par0;
+            double s1 = param.mixAllModels[1][j].paraList[k] + cfac;
+            double s2 = param.mixAllModels[2][j].paraList[k] + cfac*par0;
+            double sig = sqrt((1+1e-7)*s0/s1
+                        - pow(s2/s1,2));
+            chkpt << sig << " ";
+            chkpt << endl;
+        }
+    }
+    chkpt << cfac << endl;
+    for (int j=0; j<param.nLens; ++j) {
+        for (auto k: freePar[j]) {
+            chkpt << iter[j][k] << " ";
+        }
+        chkpt << endl;
+    }
+    chkpt << L << endl;
+    chkpt.close();
+}
+
+double MC::load(string fileName, MultModelParam &param, vector<vector<size_t>> &freePar, double &cfac, int &iter) {
+    ifstream input(fileName.c_str());
+    string line, token;
+    double L(-std::numeric_limits<double>::max());
+    if (input) {
+        for (int j=0; j<param.nLens; ++j) {
+            for (auto k: freePar[j]) {
+                getline(input, line);
+                istringstream ss(line);
+                for (size_t l=0; l<6; ++l) {
+                    getline(ss, token, ' ');
+                    param.mixAllModels[l][j].paraList[k] = stod(token);
+                }
+            }
+        }
+        getline(input, line);
+        cfac = stod(line);
+        iter = stod(line);
+        getline(input, line);
+        L = stod(line);
+    }
+    return L;
+}
+
+double MC::load(string fileName, MultModelParam &param, vector<vector<size_t>> &freePar, double &cfac, vector<vector<size_t>> &iter) {
+    ifstream input(fileName.c_str());
+    string line, token;
+    double L(-std::numeric_limits<double>::max());
+    if (input) {
+        for (int j=0; j<param.nLens; ++j) {
+            for (auto k: freePar[j]) {
+                getline(input, line);
+                istringstream ss(line);
+                for (size_t l=0; l<6; ++l) {
+                    getline(ss, token, ' ');
+                    param.mixAllModels[l][j].paraList[k] = stod(token);
+                }
+            }
+        }
+        getline(input, line);
+        cfac = stod(line);
+        for (int j=0; j<param.nLens; ++j) {
+            if (freePar[j].size() > 0) {
+                getline(input, line);
+                istringstream ss(line);
+                for (auto k: freePar[j]) {
+                    getline(ss, token, ' ');
+                    iter[j][k] = stod(token);
+                }
+            }
+        }
+        getline(input, line);
+        L = stod(line);
+        checkPoint("copy_"+fileName, param, freePar, cfac, iter, L);
+    }
+    return L;
 }
