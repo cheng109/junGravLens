@@ -9,11 +9,23 @@
 #include <iostream>
 #include <iomanip>
 
-MC::MC(unsigned seed) {
+MC::MC(MultModelParam &param, unsigned seed) {
     rng_engine.seed(seed);
     rng = std::bind(std::uniform_real_distribution<double>(0.,1.), std::ref(rng_engine));
     normal = std::bind(std::normal_distribution<double>(0.,1.), std::ref(rng_engine));
     //makeCgauss();
+    cfac=1.0;
+    iters=0;
+    freePar.resize(param.nLens);
+    iter.resize(param.nLens);
+    for(int j=0; j<param.nLens; ++j) {
+        iter[j].resize(param.mixAllModels[0][j].paraList.size(),0);
+        for (size_t k=0; k<param.mixAllModels[0][j].paraList.size(); ++k) {
+            if (param.mixAllModels[6][j].paraList[k] < param.mixAllModels[7][j].paraList[k]) {
+                freePar[j].push_back(k);
+            }
+        }
+    }
 }
 
 double MC::random() {
@@ -47,7 +59,7 @@ double MC::cgauss() {
 }
 
 
-double MC::stepPar(MultModelParam &param, vector<vector<size_t>> &freePar, double &cfac, vector<vector<size_t>> &iter, int &j, int &k) {
+double MC::stepPar(MultModelParam &param, int &j, int &k) {
     double minSig = 1e-6;
     double eps=0.01;
     cfac *= (1+eps);
@@ -98,7 +110,7 @@ double MC::stepPar(MultModelParam &param, vector<vector<size_t>> &freePar, doubl
     return stepSig;
 }
 
-void MC::stepPar(MultModelParam &param, vector<vector<size_t>> &freePar, double &cfac, int &iter) {
+void MC::stepPar(MultModelParam &param) {
     double minSig = 1e-6;
     double eps=0.01;
     cfac *= (1+eps);
@@ -111,12 +123,12 @@ void MC::stepPar(MultModelParam &param, vector<vector<size_t>> &freePar, double 
             param.mixAllModels[0][j].paraList[k] += cfac*par0*par0;
             param.mixAllModels[1][j].paraList[k] += cfac;
             param.mixAllModels[2][j].paraList[k] += cfac*par0;
-            if (iter > 3) {
+            if (iters > 3) {
                 double sig = sqrt((1+1e-7)*param.mixAllModels[0][j].paraList[k]/param.mixAllModels[1][j].paraList[k]
                         - pow(param.mixAllModels[2][j].paraList[k]/param.mixAllModels[1][j].paraList[k],2));
                 stepSig = sig/sqrt(freePar[j].size());
                 if (std::isnan(stepSig)) {
-                    iter = 0;
+                    iters = 0;
                     param.mixAllModels[0][j].paraList[k] = 0.;
                     param.mixAllModels[1][j].paraList[k] = 0.;
                     param.mixAllModels[2][j].paraList[k] = 0.;
@@ -133,7 +145,7 @@ void MC::stepPar(MultModelParam &param, vector<vector<size_t>> &freePar, double 
                     random()*(param.mixAllModels[7][j].paraList[k]-param.mixAllModels[6][j].paraList[k]);
         }
     }
-    iter++;
+    iters++;
 }
 
 double MC::stepPar(vector<vec> &src, double cfac, size_t &iter) {
@@ -179,22 +191,7 @@ double MC::stepPar(vector<vec> &src, double cfac, size_t &iter) {
     return cfac;
 }
 
-void MC::checkPoint(string outputFileName, MultModelParam &param, vector<vector<size_t>> &freePar, double cfac, int iter, double L) {
-    ofstream chkpt;
-    chkpt.open(outputFileName);
-    for (int j=0; j<param.nLens; ++j) {
-        for (auto k: freePar[j]) {
-            for (size_t l=0; l<6; ++l) chkpt << std::scientific << std::setprecision(7) << param.mixAllModels[l][j].paraList[k] << " ";
-            chkpt << endl;
-        }
-    }
-    chkpt << cfac << endl;
-    chkpt << iter << endl;
-    chkpt << L << endl;
-    chkpt.close();
-}
-
-void MC::checkPoint(string outputFileName, MultModelParam &param, vector<vector<size_t>> &freePar, double cfac, vector<vector<size_t>> &iter, double L) {
+void MC::checkPoint(string outputFileName, MultModelParam &param, bool moveAll, double L, double LMax) {
     ofstream chkpt;
     chkpt.open(outputFileName);
     for (int j=0; j<param.nLens; ++j) {
@@ -211,20 +208,24 @@ void MC::checkPoint(string outputFileName, MultModelParam &param, vector<vector<
         }
     }
     chkpt << cfac << endl;
-    for (int j=0; j<param.nLens; ++j) {
-        for (auto k: freePar[j]) {
-            chkpt << iter[j][k] << " ";
+    if (moveAll) {
+        chkpt << iters << endl;
+    } else {
+        for (int j=0; j<param.nLens; ++j) {
+            for (auto k: freePar[j]) {
+                chkpt << iter[j][k] << " ";
+            }
+            chkpt << endl;
         }
-        chkpt << endl;
     }
     chkpt << L << endl;
+    chkpt << LMax << endl;
     chkpt.close();
 }
 
-double MC::load(string fileName, MultModelParam &param, vector<vector<size_t>> &freePar, double &cfac, int &iter) {
+void MC::load(string fileName, MultModelParam &param, bool moveAll, double &L, double &LMax) {
     ifstream input(fileName.c_str());
     string line, token;
-    double L(-std::numeric_limits<double>::max());
     if (input) {
         for (int j=0; j<param.nLens; ++j) {
             for (auto k: freePar[j]) {
@@ -238,43 +239,39 @@ double MC::load(string fileName, MultModelParam &param, vector<vector<size_t>> &
         }
         getline(input, line);
         cfac = stod(line);
-        iter = stod(line);
+        if (moveAll) {
+            getline(input, line);
+            iters = stod(line);
+        } else {
+            for (int j=0; j<param.nLens; ++j) {
+                if (freePar[j].size() > 0) {
+                    getline(input, line);
+                    istringstream ss(line);
+                    for (auto k: freePar[j]) {
+                        getline(ss, token, ' ');
+                        iter[j][k] = stod(token);
+                    }
+                }
+            }
+        }
         getline(input, line);
         L = stod(line);
+        LMax = stod(line);
+        checkPoint("copy_"+fileName, param, moveAll, L, LMax);
     }
-    return L;
 }
 
-double MC::load(string fileName, MultModelParam &param, vector<vector<size_t>> &freePar, double &cfac, vector<vector<size_t>> &iter) {
-    ifstream input(fileName.c_str());
-    string line, token;
-    double L(-std::numeric_limits<double>::max());
-    if (input) {
-        for (int j=0; j<param.nLens; ++j) {
-            for (auto k: freePar[j]) {
-                getline(input, line);
-                istringstream ss(line);
-                for (size_t l=0; l<6; ++l) {
-                    getline(ss, token, ' ');
-                    param.mixAllModels[l][j].paraList[k] = stod(token);
-                }
-            }
-        }
-        getline(input, line);
-        cfac = stod(line);
-        for (int j=0; j<param.nLens; ++j) {
-            if (freePar[j].size() > 0) {
-                getline(input, line);
-                istringstream ss(line);
-                for (auto k: freePar[j]) {
-                    getline(ss, token, ' ');
-                    iter[j][k] = stod(token);
-                }
-            }
-        }
-        getline(input, line);
-        L = stod(line);
-        checkPoint("copy_"+fileName, param, freePar, cfac, iter, L);
+void MC::printIterNum(bool moveAll) {
+    cout << "Iteration #: " << endl;
+    if (moveAll) {
+        cout << iters << endl;
+    } else {
+       for(size_t j=0; j<freePar.size(); ++j) {
+           cout << "Lens " << j << endl;
+           for (auto k: freePar[j]) {
+               cout << iter[j][k] << " ";
+           }
+           cout << endl;
+       }
     }
-    return L;
 }

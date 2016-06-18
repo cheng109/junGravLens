@@ -21,15 +21,13 @@ using namespace std;
 
 
 void mcFit(Conf* conf, MultModelParam param_old, Image* dataImage, string dir, string outputFileName) {
-    MC mc(conf->seed);
     size_t nLoops(conf->nLoops), ns(dataImage->dataList.size()), nAccept(0), lag(10), writeChkpt(30);
-    double cfac(1.), weight(0.5), L0;
+    double weight(0.5), L0;
     //double sstep(0.01*dataImage->d.maxCoeff()), smax(2.*dataImage->d.maxCoeff()), smin(1.*dataImage->d.minCoeff());
     double L(-std::numeric_limits<double>::max());
     double LMax(L);
     double lambdaS = conf->srcRegLevel;
-    vector<vector<size_t>> freePar, iter;
-    int jj(0), kk(0), iters;
+    int jj(0), kk(0);
     bool moveAll(false);
 
    // vector<vec> src(9, vec(ns));
@@ -46,23 +44,13 @@ void mcFit(Conf* conf, MultModelParam param_old, Image* dataImage, string dir, s
    //     src[8](i) = sstep;
    // }
     Model *model = new Model(conf, param_old, lambdaS);
-    freePar.resize(model->param.nLens);
-    iter.resize(model->param.nLens);
-    for(int j=0; j<model->param.nLens; ++j) {
-        iter[j].resize(model->param.mixAllModels[0][j].paraList.size(),0);
-        for (size_t k=0; k<model->param.mixAllModels[0][j].paraList.size(); ++k) {
-            if (model->param.mixAllModels[6][j].paraList[k] < model->param.mixAllModels[7][j].paraList[k]) {
-                freePar[j].push_back(k);
-            }
-        }
-    }
+    MC mc(model->param, conf->seed);
+
 	ofstream output;
     string out = "mc_chkpt_"+to_string(conf->seed)+".txt";
     if (conf->resume) {
-        if (moveAll) L = mc.load(out, model->param, freePar, cfac, iters);
-        else L = mc.load(out,model->param, freePar, cfac, iter);
+        mc.load(out, model->param, moveAll, L, LMax);
 	    output.open(outputFileName, std::ofstream::out | std::ofstream::app);
-        LMax = L;
     } else {
 	    output.open(outputFileName);
     }
@@ -70,8 +58,8 @@ void mcFit(Conf* conf, MultModelParam param_old, Image* dataImage, string dir, s
     for (size_t loop=0; loop<nLoops; ++loop) {
         double step(0.);
         L0 = L;
-        if (moveAll) mc.stepPar(model->param, freePar, cfac, iters);
-        else step = mc.stepPar(model->param, freePar, cfac, iter, jj, kk);
+        if (moveAll) mc.stepPar(model->param);
+        else step = mc.stepPar(model->param, jj, kk);
         //cfac2 = mc.stepPar(src, cfac2, iter2);
         model->copyParam(conf, 3);
         //vector<double> penalty = getPenalty2(model, src[3], dataImage, conf, conf->srcRegType);
@@ -102,8 +90,7 @@ void mcFit(Conf* conf, MultModelParam param_old, Image* dataImage, string dir, s
                        << std::setw(10) << std::fixed << loop << endl;
             }
             if (nAccept % writeChkpt == 1) {
-                if (moveAll) mc.checkPoint(out, model->param, freePar, cfac, iters, L);
-                else mc.checkPoint(out, model->param, freePar, cfac, iter, L);
+                mc.checkPoint(out, model->param, moveAll, L, LMax);
             }
             //for (size_t i=0; i<ns; ++i) src[4](i) = src[3](i);
             //if (L> LMax) {
@@ -112,8 +99,9 @@ void mcFit(Conf* conf, MultModelParam param_old, Image* dataImage, string dir, s
             //}
         }
     }
-    if (moveAll) mc.checkPoint(out, model->param, freePar, cfac, iters, L);
-    else mc.checkPoint(out, model->param, freePar, cfac, iter, L);
+    mc.checkPoint(out, model->param, moveAll, L, LMax);
+    mc.printIterNum(moveAll);
+
     output << model->param.printCurrentModels(5).at(0)
            << std::scientific << std::setprecision(3) << LMax
            << std::setw(10) << std::fixed << nLoops << endl;
@@ -123,18 +111,7 @@ void mcFit(Conf* conf, MultModelParam param_old, Image* dataImage, string dir, s
     vector<double> bestChi = getPenalty(model, dataImage, conf, conf->srcRegType);
     //vector<double> bestChi = getPenalty2(model, src[5], dataImage, conf, conf->srcRegType);
     //for (size_t i=0; i<ns; ++i) model->s[i] = src[5](i);
-    cout << "best chi: " << bestChi[0] << " dof: " << ns << " reg: "<< bestChi[1] << endl;
-
-    if (!moveAll) {
-       cout << "iterations: " << endl;
-       for(int j=0; j<model->param.nLens; ++j) {
-           cout << j << endl;
-           for (auto k: freePar[j]) {
-               cout << iter[j][k] << " ";
-           }
-           cout << endl;
-       }
-    }
+    cout << "best chi: " << bestChi[0] << " dof: " << ns << " reg: "<< bestChi[1] << " total:" << bestChi[2] << endl;
 
     writeSrcModResImage(model, dataImage, conf, "mc", dir) ;
 

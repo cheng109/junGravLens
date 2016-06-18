@@ -16,18 +16,17 @@
 
 class MC {
 public:
-    MC(unsigned seed);
+    MC(MultModelParam &param, unsigned seed);
     double gauss(double sigma, double mu, double x);
     void makeCgauss();
     double cgauss();
     double random();
-    double stepPar(MultModelParam &param, vector<vector<size_t>> &freePar, double &cfac, vector<vector<size_t>> &iter, int &j, int &k);
-    void stepPar(MultModelParam &param, vector<vector<size_t>> &freePar, double &cfac, int &iter);
+    double stepPar(MultModelParam &param, int &j, int &k);
+    void stepPar(MultModelParam &param);
     double stepPar(vector<vec> &src, double cfac, size_t &iter);
-    void checkPoint(string outputFileName, MultModelParam &param, vector<vector<size_t>> &freePar, double cfac, vector<vector<size_t>> &iter, double L);
-    void checkPoint(string outputFileName, MultModelParam &param, vector<vector<size_t>> &freePar, double cfac, int iter, double L);
-    double load(string fileName, MultModelParam &param, vector<vector<size_t>> &freePar, double &cfac, vector<vector<size_t>> &iter);
-    double load(string fileName, MultModelParam &param, vector<vector<size_t>> &freePar, double &cfac, int &iter);
+    void checkPoint(string outputFileName, MultModelParam &param, bool moveAll, double L, double LMax);
+    void load(string fileName, MultModelParam &param, bool moveAll, double &L, double &LMax);
+    void printIterNum(bool moveAll);
 
 private:
     std::vector<double> cgArr;
@@ -35,6 +34,9 @@ private:
     //std::default_random_engine rng_engine;
     std::function<double()> rng;
     std::function<double()> normal;
+    double cfac;
+    vector<vector<size_t>> freePar, iter;
+    size_t iters;
 };
 
 #endif /* MC_H_ */
