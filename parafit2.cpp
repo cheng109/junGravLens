@@ -28,7 +28,7 @@ void mcFit(Conf* conf, MultModelParam param_old, Image* dataImage, string dir, s
     double LMax(L);
     double lambdaS = conf->srcRegLevel;
     int jj(0), kk(0);
-    bool moveAll(false);
+    bool moveAll(true);
 
    // vector<vec> src(9, vec(ns));
    // for (size_t i=0; i<9; ++i) src[i].setZero();

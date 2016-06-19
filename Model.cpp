@@ -145,14 +145,17 @@ vector<double> Model::getDeflectionAngle(Conf* conf, double pfX, double pfY, dou
 			root1mq = sqrt(1.0-fq*fq);
 			phi = sqrt(fq*fq*(fCore*fCore + x1*x1) + y1*y1);
 			fac = param->parameter[i].critRad*sqrt(fq)/root1mq;
-			deltax1 = fac*atan(root1mq*x1/(phi + fCore));
-			deltay1 = fac*lm_arctanh(root1mq*y1/(phi+ fCore*fq*fq));
+            if (phi==0. && fCore==0.) {
+                deltax1 = 0.;
+                deltay1=0.;
+            } else {
+	            deltax1 = fac*atan(root1mq*x1/(phi + fCore));
+	            deltay1 = fac*lm_arctanh(root1mq*y1/(phi+ fCore*fq*fq));
+            }
 
 			//cout << root1mq << "\t" << y1 << "\t " << phi << "\t" << fq << "\t" << deltay1 << endl; 
 			*pDeltaX += (deltax1*fCosTheta - deltay1*fSinTheta);
 			*pDeltaY += (deltay1*fCosTheta + deltax1*fSinTheta);
-			
-
 
 		}
 		
@@ -457,6 +460,15 @@ void Model::updateLensAndRegularMatrix(Image* dataImage,  Conf* constList, strin
                         break;
                 }
                 radius[i] = out_dist_sqr[num_results-1];
+                //if (std::isnan(radius[i]) || radius[i] > 1e5) {
+                //    cout << i << endl;
+                //    for (size_t k=0; k<num_results; ++k) cout << out_dist_sqr[k] << " ";
+                //    cout << endl;
+                //    for (size_t k=0; k<num_results; ++k) cout << ret_index[k] << " ";
+                //    cout << endl;
+                //    cout << i << "\t" << indexRegion1 << "\t" << indexRegion2 << "\t" << indexRegion3 << "\t" << indexRegion4 << "\t"  << endl;
+                //    cout << srcPosXListPixel[i] << " " << srcPosYListPixel[i] << endl;
+                //}
             } else {
 	            double distRegion1(1e10), distRegion2(1e10), distRegion3(1e10), distRegion4(1e10);
 	            for(int j=0; j<conf->length; ++j) {
