@@ -22,6 +22,8 @@ MC::MC(MultModelParam &param, unsigned seed) {
         iter[j].resize(param.mixAllModels[0][j].paraList.size(),0);
         for (size_t k=0; k<param.mixAllModels[0][j].paraList.size(); ++k) {
             if (param.mixAllModels[6][j].paraList[k] < param.mixAllModels[7][j].paraList[k]) {
+                param.mixAllModels[4][j].paraList[k] = param.mixAllModels[6][j].paraList[k] +
+                                random()*(param.mixAllModels[7][j].paraList[k]-param.mixAllModels[6][j].paraList[k]);
                 freePar[j].push_back(k);
             }
         }
