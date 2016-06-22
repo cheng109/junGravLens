@@ -1291,7 +1291,7 @@ void MultModelParam::mix(int opt) {
 	        			}
 	        		}
 	        	}
-            } else if (opt == 1) {
+            } else if (opt >= 1) {
                 mixModels sModel("PTMASS");
                 sModel.paraList[0] = 0.;
                 sModel.paraList[1] = 0.;
@@ -1343,7 +1343,7 @@ void MultModelParam::mix(int opt) {
 	        			}
 	        		}
 	        	}
-            } else if (opt == 1) {
+            } else if (opt >= 1) {
                 mixModels sModel("SIE");
                 sModel.paraList[0] = 0.;
                 sModel.paraList[1] = 0.;
@@ -1405,7 +1405,7 @@ void MultModelParam::mix(int opt) {
                 }
             }
         }
-    } else if (opt == 1) {
+    } else if (opt >= 1) {
         for(size_t j=0; j<mix[0].size(); ++j) {
             vector<mixModels> v2;
             for(int i=0; i<nLens; ++i) v2.push_back(mix[i][j]);

@@ -96,6 +96,8 @@ int main(int argc, char* argv[]) {
         gridSearchVegetti(conf, param, dataImage, dir, output);
     else if (opt == 1)
         mcFit(conf, param, dataImage, dir, output);
+    else if (opt == 2)
+        mcFitGW(conf, param, dataImage, dir, output);
 
 
 	delete conf;

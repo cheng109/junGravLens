@@ -30,6 +30,7 @@ void gridSearchVegetti(Conf* conf, MultModelParam param, Image* dataImage, strin
 vector<double> getPenalty(Model* model, Image* dataImage, Conf* conf , string R_type) ; 
 vector<double> getPenalty2(Model* model, vec &s, Image* dataImage, Conf* conf , string R_type) ; 
 void mcFit(Conf* conf, MultModelParam param, Image* dataImage, string dir, string outputFileName);
+void mcFitGW(Conf* conf, MultModelParam param, Image* dataImage, string dir, string outputFileName);
 
 
 
