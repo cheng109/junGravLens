@@ -330,8 +330,8 @@ double MC::strechMove(MultModelParam &param, size_t kk) {
     for(int j=0; j<param.nLens; ++j) {
         for (auto k: freePar[j]) {
             param.mixAllModels[3][j].paraList[k] = par[jj][c] + zz*(par[kk][c]-par[jj][c]);
-            if (param.mixAllModels[3][j].paraList[k]<bound[0][c]) param.mixAllModels[3][j].paraList[k] = bound[0][c];
-            if (param.mixAllModels[3][j].paraList[k]>bound[1][c]) param.mixAllModels[3][j].paraList[k] = bound[1][c];
+            if (param.mixAllModels[3][j].paraList[k]<bound[0][c] || param.mixAllModels[3][j].paraList[k]>bound[1][c])
+                return -1;
             c++;
         }
     }

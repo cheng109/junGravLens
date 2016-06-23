@@ -154,6 +154,7 @@ void mcFitGW(Conf* conf, MultModelParam param_old, Image* dataImage, string dir,
     for (size_t loop=iter; loop<nLoops; ++loop) {
         for (size_t m=0; m<nWalker; ++m) {
             double zn = mc.strechMove(model->param,m);
+            if (zn <= 0) continue;
             model->copyParam(conf, 3);
             vector<double> R = getPenalty(model, dataImage, conf, conf->srcRegType);
             if (conf->verbose && m % thin == 0) {
