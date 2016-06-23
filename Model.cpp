@@ -58,7 +58,8 @@ Model::Model(Conf* conf, MultModelParam param, double lambdaS):
 		T(conf->srcSize[0]*conf->srcSize[1], length),
 		RtR(2*length, 2*length),
 		H0(conf->srcSize[0]*conf->srcSize[1], conf->srcSize[0]*conf->srcSize[1]),
-		lambdaS(lambdaS)
+		lambdaS(lambdaS),
+        lambdaS2(conf->srcRegLevel2)
 		{
 	// initial s;
 	nLens = param.parameter.size();
@@ -624,7 +625,7 @@ void Model::updateLensAndRegularMatrix(Image* dataImage,  Conf* constList, strin
 	    //REG = Hs1.transpose()*Hs1;
         //cout << "hs1 " << Hs1.norm() << endl;
         //cout << "hs2 " << Hs2.norm() << endl;
-        for (size_t i=0; i< conf->length; ++i)  REG.coeffRef(i,i) += radius[i]/lambdaS;
+        for (size_t i=0; i< conf->length; ++i)  REG.coeffRef(i,i) += lambdaS2*radius[i];
     } else {
         cout << "Regularization type is not supported yet!" << endl; 
         exit(1); 

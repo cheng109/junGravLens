@@ -118,6 +118,7 @@ public:
 	double back_std; 
 
     double srcRegLevel; 
+    double srcRegLevel2; 
     string srcRegType;
     int nLoops;
     int seed;

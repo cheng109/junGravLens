@@ -74,6 +74,8 @@ Conf::Conf(Image* dataImage, map<string, string> confMap) {
         nLoops = stoi(confMap["nLoops"]);
         seed = stoi(confMap["seed"]);
         resume = stoi(confMap["resume"]);
+        if (confMap.find("srcRegLevel2")!= confMap.end()) srcRegLevel2 = stod(confMap["srcRegLevel2"]);
+        else srcRegLevel2 = 1./srcRegLevel;
 
 		verbose		  = stoi(confMap["verbose"]); 
 		usingRegion   = stoi(confMap["usingRegion"]); 

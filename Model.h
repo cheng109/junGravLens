@@ -197,6 +197,7 @@ public:
 	sp_mat H1;  // gradient-order regularization;
 	sp_mat H2;  // curvature-order regularization;
 	double lambdaS;
+	double lambdaS2; // source compactness
 	double lambdaC; 
 	double lambdaPhi;
 
