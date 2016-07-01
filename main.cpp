@@ -91,8 +91,7 @@ int main(int argc, char* argv[]) {
 
 		
 
-		
-
+	
 	// 	string prefix = "regFiles/reg_"; 
 		
 	// 	map<string, string> regFileName; 
@@ -126,6 +125,9 @@ int main(int argc, char* argv[]) {
 		backMap["f110"] = 665.5 + factor * backStdMap["f110"];  // 14.5
 		backMap["f160"] = 644.5 + factor * backStdMap["f160"];  // 14.8
 
+		backStdMap["src"] = 0; 
+		backMap["src"] = 0; 
+
 		string img1Name = "galfit_work/clean_img/f475_clean.fits";
 		string img2Name = "galfit_work/clean_img/f606_clean.fits";
 		string img3Name = "galfit_work/clean_img/f814_clean.fits";
@@ -150,9 +152,12 @@ int main(int argc, char* argv[]) {
 		// 	}
 		// 	myfile.close(); 
 		// }
+
 		
 
-		int pixelCombine = 6;    // combine 3x3 pixels together; 
+		int pixelCombine = 4;    // combine 3x3 pixels together; 
+
+		Image* img0 =  magDiffMap("f475_source.fits", "f606_source.fits", backMap["src"], backMap["src"],backStdMap["src"], backStdMap["src"], "whatever", pixelCombine); 
 
 		Image* img1 =  magDiffMap(img1Name, img2Name, backMap["f475"], backMap["f606"],backStdMap["f475"], backStdMap["f606"], "whatever", pixelCombine); 
 		Image* img2 =  magDiffMap(img2Name, img3Name, backMap["f606"], backMap["f814"],backStdMap["f606"], backStdMap["f814"], "whatever", pixelCombine); 
@@ -160,14 +165,55 @@ int main(int argc, char* argv[]) {
 		Image* img4 =  magDiffMap(img1Name, img3Name, backMap["f475"], backMap["f814"],backStdMap["f475"], backStdMap["f814"], "whatever", pixelCombine); 
 
 		
+		img0->writeFilterImage("img0_color.fits"); 
+
 		img1->writeFilterImage("img1_color.fits"); 
 		img2->writeFilterImage("img2_color.fits"); 
 		img3->writeFilterImage("img3_color.fits"); 
 		img4->writeFilterImage("img4_color.fits"); 
 
+		// create  Mask image1;  
+
+		Image* imgLeft = new Image(*img1); 
+		Image* imgRight = new Image(*img1); 
+
+		for(int i=0; i< img1->dataList.size(); ++i) {
+			double val = img1->dataList[i]; 
+			if(val  < -0.5 and val > -1.0 ) {
+			 	imgLeft->dataList[i] = 0.0; 
+			 	imgRight->dataList[i] = 1.0; 
+			}
+
+			else if (val  < 0.0 and val > -0.5 ) {
+				imgLeft->dataList[i] = 1.0; 
+				imgRight->dataList[i] = 0.0; 
+			}
+			else {
+				imgLeft->dataList[i] = 0.0; 
+				imgRight->dataList[i] = 0.0; 
+			}
 
 
-		delete img1, img2, img3, img4; 
+		}
+
+		imgLeft->writeFilterImage("left.fits"); 
+
+		// now we have two 'mask' images ; 
+
+		Image* newDataImage = new Image(mapConf["imageFileName"]); 
+		newDataImage->updateFilterImage(mapConf["regionFileName"], 0); // no filter at all; 
+
+		Image* maskedLeft = new Image(*newDataImage); 
+		Image* maskedRight = new Image(*newDataImage);
+		maskedLeft->multiple(imgLeft); 
+		maskedLeft->writeFilterImage("maskedLeft.fits"); 
+		maskedRight->multiple(imgRight); 
+		maskedRight->writeFilterImage("maskedRight.fits"); 
+
+
+
+		delete maskedLeft, maskedRight, imgLeft, imgRight; 
+		delete img0, img1, img2, img3, img4; 
 	}
 
 	//gridSearchVegetti(conf, param,  dataImage, dir, output);	

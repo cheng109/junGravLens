@@ -205,7 +205,7 @@ vector<double> Model::getDeflectionAngle(Conf* conf, double pfX, double pfY, dou
 			fTempAxratio = 1.0 - param->parameter[i].e;
 			fTempCoreSqu = param->parameter[i].core*param->parameter[i].core;
 			fTempGamma = param->parameter[i].power;
-            if (fTempAxratio > 1.0 || fTempAxratio<=0 ) {
+            if (fTempAxratio > 1.0 || fTempAxratio<0 ) {
                 cout << "Ellipticity is out of range; " << endl; 
             }
 			if (fX == 0 && fY == 0 && fTempGamma >= 0.5) {
@@ -230,7 +230,43 @@ vector<double> Model::getDeflectionAngle(Conf* conf, double pfX, double pfY, dou
 			*pDeltaX = fTempDefl[0]*fCosTheta - fTempDefl[1]*fSinTheta;
 			*pDeltaY = fTempDefl[1]*fCosTheta + fTempDefl[0]*fSinTheta;  
 		}
+
+		/* parameters: kappa,axis ratio (0-1),angle,scale len, M parameter */
+		if(param->parameter[i].name.compare("SERSIC")==0)  {
+		
+				// double fCosTheta,fSinTheta,x1,y1,deflx,defly;
+				// double fEllip = param->parameter[i].e;
+    //             if (fEllip > 1.0 || fEllip < 0) {
+    //                 cout << "Ellipticity is out of range; " << endl; 
+    //                 break;
+    //             }
+				// /* rotate so that major axis of mass in x direction */
+				// fCosTheta = cos(param->parameter[i].PA*M_PI/180 + 0.5*M_PI);
+				// fSinTheta = sin(param->parameter[i].PA*M_PI/180 + 0.5*M_PI);
+				
+
+				// x1 = fX*fCosTheta + fY*fSinTheta;
+				// y1 = -fX*fSinTheta + fY*fCosTheta;
+
+				// iStatus = lm_deflCacheLookup(LM_SERSIC,&deVaucCache,x1,y1,pLensComp->fParameter[1],pLensComp->fParameter[3],pLensComp->fParameter[4], &deflx, &defly);
+				// if (iStatus == LM_CACHE_MISS) {
+				// 	iStatus = lm_CalcSersicDefl(x1,y1,pLensComp->fParameter[1],pLensComp->fParameter[3],pLensComp->fParameter[4], &deflx, &defly);
+				// 	if (iStatus != 0) {
+				// 		goto EXIT;
+				// 	}
+				// }
+
+				// /* rotate back again */
+				// *pDeltaX = (deflx*fCosTheta - defly*fSinTheta)*pLensComp->fParameter[0];
+				// *pDeltaY = (defly*fCosTheta + deflx*fSinTheta)*pLensComp->fParameter[0];
+
+		}
+
+
 		/*
+
+		
+
 
 		if(param.parameter[i].name.compare("SERSIC")==0)  {  
 			double fCosTheta,fSinTheta,x1,y1,deflx,defly;
@@ -873,43 +909,61 @@ MultModelParam::MultModelParam(map<string,string> confMap) {
 		map<string, string>::iterator itSERSIC 	= confMap.find("SERSIC");
 
 		if(itSERSIC != confMap.end()) {
-			vector<string> items = splitString(itSERSIC->second);
+			vector<string> strs;
+			std::string s = itSIE->second; 
+			string delimiter = "_&&_";
 
-			SingleModelParam tempParam;
+			size_t pos = s.find(delimiter) ; 
+			while( pos!=std::string::npos) {
+				strs.push_back(s.substr(0, pos)); 
+				s = s.substr(pos+4); 
+				pos = s.find(delimiter);
+			}; 
+			strs.push_back(s); 
+			for(int i=0; i<strs.size(); ++i) {
 
-			tempParam.name = "SERSIC";
+				
 
-			tempParam.centerXFrom 		= stof(items[0]);
-			tempParam.centerXTo 		= stof(items[1]);
-			tempParam.centerXInc 		= stof(items[2]);
-			tempParam.centerYFrom 		= stof(items[3]);
-			tempParam.centerYTo 		= stof(items[4]);
-			tempParam.centerYInc 		= stof(items[5]);
-			tempParam.kapFrom 			= stof(items[6]);
-			tempParam.kapTo   			= stof(items[7]);
-			tempParam.kapInc  			= stof(items[8]);
-			tempParam.eFrom 			= stof(items[9]);
-			tempParam.eTo   			= stof(items[10]);
-			tempParam.eInc  			= stof(items[11]);
-			tempParam.PAFrom			= stof(items[12]);
-			tempParam.PATo 				= stof(items[13]);
-			tempParam.PAInc 			= stof(items[14]);
-			tempParam.sersicScaleFrom 	= stof(items[15]);
-			tempParam.sersicScaleTo		= stof(items[16]);
-			tempParam.sersicScaleInc	= stof(items[17]);
-			tempParam.mFrom 			= stof(items[18]);
-			tempParam.mTo   			= stof(items[19]);
-			tempParam.mInc  			= stof(items[20]);
+				vector<string> items = splitString(itSERSIC->second);
+				SingleModelParam tempParam;
+				tempParam.name = "SERSIC";
+				tempParam.centerXFrom 		= stof(items[0]);
+				tempParam.centerXTo 		= stof(items[1]);
+				tempParam.centerXInc 		= stof(items[2]);
+				tempParam.centerYFrom 		= stof(items[3]);
+				tempParam.centerYTo 		= stof(items[4]);
+				tempParam.centerYInc 		= stof(items[5]);
+				tempParam.kapFrom 			= stof(items[6]);
+				tempParam.kapTo   			= stof(items[7]);
+				tempParam.kapInc  			= stof(items[8]);
+				tempParam.eFrom 			= stof(items[9]);
+				tempParam.eTo   			= stof(items[10]);
+				tempParam.eInc  			= stof(items[11]);
+				tempParam.PAFrom			= stof(items[12]);
+				tempParam.PATo 				= stof(items[13]);
+				tempParam.PAInc 			= stof(items[14]);
+				tempParam.sersicScaleFrom 	= stof(items[15]);
+				tempParam.sersicScaleTo		= stof(items[16]);
+				tempParam.sersicScaleInc	= stof(items[17]);
+				tempParam.mFrom 			= stof(items[18]);
+				tempParam.mTo   			= stof(items[19]);
+				tempParam.mInc  			= stof(items[20]);
 			
+				assert (tempParam.centerXInc 	 >DIFF and 
+						tempParam.centerYInc 	 >DIFF and 
+						tempParam.kapInc 		 >DIFF and 
+						tempParam.eInc       	 >DIFF and  
+						tempParam.PAInc		 	 >DIFF and 
+						tempParam.sersicScaleInc >DIFF and 
+						tempParam.mInc 		 	 >DIFF); 
 
+				parameter.push_back(tempParam);
+				nParam.push_back(NUM_SERSIC_PARAM);
 
-			parameter.push_back(tempParam);
-			nParam.push_back(NUM_SERSIC_PARAM);
-
-			nLens +=1;
+				nLens +=1;
+			}
+			
 		}
-
-
 
 		if(itPTMASS != confMap.end()) {
 			vector<string> strs;
@@ -1143,6 +1197,39 @@ void MultModelParam::printModels() {
 				<< parameter[i].eInc << "\t" 
 				<< parameter[i].PAInc << "\t"
 				<< parameter[i].coreInc << "\t"
+				<< endl; 
+				
+		}
+
+	
+
+		if (parameter[i].name=="SERSIC") {
+
+			cout << "[" << parameter[i].name  << "]:" 
+				<< "\n_From\t"
+				<< parameter[i].centerXFrom << "\t" 
+				<< parameter[i].centerYFrom << "\t"
+				<< parameter[i].kapFrom << "\t"
+				<< parameter[i].eFrom << "\t" 
+				<< parameter[i].PAFrom << "\t"
+				<< parameter[i].sersicScaleFrom << "\t"
+				<< parameter[i].mFrom << "\t"
+				<< "\n_To\t"
+				<< parameter[i].centerXTo << "\t" 
+				<< parameter[i].centerYTo << "\t"
+				<< parameter[i].kapTo << "\t"
+				<< parameter[i].eTo << "\t" 
+				<< parameter[i].PATo << "\t"
+				<< parameter[i].sersicScaleTo << "\t"
+				<< parameter[i].mTo << "\t"
+				<< "\n_Inc\t"
+				<< parameter[i].centerXInc << "\t" 
+				<< parameter[i].centerYInc << "\t"
+				<< parameter[i].kapInc << "\t"
+				<< parameter[i].eInc << "\t" 
+				<< parameter[i].PAInc << "\t"
+				<< parameter[i].sersicScaleInc << "\t"
+				<< parameter[i].mInc << "\t"
 				<< endl; 
 				
 		}
@@ -1398,6 +1485,62 @@ void MultModelParam::mix(int opt) {
 		}
 
 
+		//     	tempParam.centerXFrom 		= stof(items[0]);
+				// tempParam.centerXTo 		= stof(items[1]);
+				// tempParam.centerXInc 		= stof(items[2]);
+				// tempParam.centerYFrom 		= stof(items[3]);
+				// tempParam.centerYTo 		= stof(items[4]);
+				// tempParam.centerYInc 		= stof(items[5]);
+				// tempParam.kapFrom 			= stof(items[6]);
+				// tempParam.kapTo   			= stof(items[7]);
+				// tempParam.kapInc  			= stof(items[8]);
+				// tempParam.eFrom 			= stof(items[9]);
+				// tempParam.eTo   			= stof(items[10]);
+				// tempParam.eInc  			= stof(items[11]);
+				// tempParam.PAFrom			= stof(items[12]);
+				// tempParam.PATo 				= stof(items[13]);
+				// tempParam.PAInc 			= stof(items[14]);
+				// tempParam.sersicScaleFrom 	= stof(items[15]);
+				// tempParam.sersicScaleTo		= stof(items[16]);
+				// tempParam.sersicScaleInc	= stof(items[17]);
+				// tempParam.mFrom 			= stof(items[18]);
+				// tempParam.mTo   			= stof(items[19]);
+				// tempParam.mInc  			= stof(items[20]);
+
+		else if (parameter[i].name=="SERSIC") {
+			vector<mixModels> v1;
+            if (opt == 0) {
+            	for (double kap = parameter[i].kapFrom;	kap <= parameter[i].kapTo; kap += parameter[i].kapInc) {
+	        		for (double centerX = parameter[i].centerXFrom;	centerX <= parameter[i].centerXTo; centerX += parameter[i].centerXInc) {
+	        			for (double centerY = parameter[i].centerYFrom;	centerY <= parameter[i].centerYTo; centerY += parameter[i].centerYInc) {
+	        				for (double e = parameter[i].eFrom;	e <= parameter[i].eTo; e += parameter[i].eInc) {
+	        					for (double PA = parameter[i].PAFrom; PA <= parameter[i].PATo; PA += parameter[i].PAInc) {
+	        						for(double sersicScale = parameter[i].sersicScaleFrom; sersicScale <= parameter[i].sersicScaleTo; sersicScale += parameter[i].sersicScaleInc) {
+	        							for(double  m= parameter[i].mFrom; m <= parameter[i].mTo; m += parameter[i].mInc) {
+
+	        								mixModels sModel("SERSIC");
+	        								sModel.paraList[0] = kap;
+	        								sModel.paraList[1] = centerX;
+	        								sModel.paraList[2] = centerY;
+	        								sModel.paraList[3] = e;
+	        								sModel.paraList[4] = PA;
+	        								sModel.paraList[5] = sersicScale;  
+	        								sModel.paraList[6] = m; 
+	        								v1.push_back(sModel);
+	        							}
+	        						}
+	        					}
+	        				}
+	        			}
+	        		}
+	        	}
+	        	
+            } 
+
+			mix.push_back(v1);
+		}
+
+
 	}
 	mix.resize(3);
     size_t ms1 = (mix[1].size() > 0) ? mix[1].size():1;
@@ -1540,6 +1683,19 @@ void Model::copyParam(Conf* conf, int i) {
             s.e         = param.mixAllModels[i][j].paraList[3];
             s.PA        = param.mixAllModels[i][j].paraList[4];
             s.radScale  = param.mixAllModels[i][j].paraList[5];
+            param.parameter.push_back(s);
+        }
+
+
+        else if (s.name=="SERSIC") {
+        	
+            s.kap 	  		= param.mixAllModels[i][j].paraList[0];
+            s.centerX 		= param.mixAllModels[i][j].paraList[1];
+            s.centerY 		= param.mixAllModels[i][j].paraList[2];
+            s.e       		= param.mixAllModels[i][j].paraList[3];
+            s.PA      		= param.mixAllModels[i][j].paraList[4];
+            s.sersicScale   = param.mixAllModels[i][j].paraList[5];
+            s.m   			= param.mixAllModels[i][j].paraList[6];
             param.parameter.push_back(s);
         }
 
@@ -1804,6 +1960,11 @@ Image* createLensImage(Conf* conf, MultModelParam * param) {
 		}
 	}
 
+
+
+
+
+
 	for(int i=0; i< param->nLens; ++i) {
 
 		if(param->parameter[i].name =="PTMASS") {
@@ -1828,8 +1989,75 @@ Image* createLensImage(Conf* conf, MultModelParam * param) {
 		}
 		if(param->parameter[i].name =="NFW") {
 		}
+
+		if(param->parameter[i].name =="SERSIC") {
+		}
+		
+
+
+
+
 	}
-	//cout << "val: " << xList[0] << "\t" << val[0] << endl; 
+
+
+	if(0) {
+				// model1 ; 
+				double PA = 115.0/180.0*M_PI + 0.5*M_PI; 
+				double q = 1 - 0.1; 
+				double kappa = 1.0; 
+				double Re = 108*0.04; 
+				double m = 2.74; 
+
+				double bn = 1.9992*m - 0.3271; 
+
+				for(int j=0; j<xList.size(); ++j) {
+					double x = (xList[j] - (0 + conf->imgXCenter))*conf->imgRes  ; 
+					double y = (yList[j] - (0 + conf->imgYCenter))*conf->imgRes  ; 
+					double new_x = x*cos(PA) + y*sin(PA); 
+					double new_y = x*sin(PA) - y*cos(PA); 
+					double new_r = sqrt(new_x*new_x*q + new_y*new_y/q) ; 
+					val[j] += 7.8* exp(-bn*(pow(new_r/Re, 1.0/m)-1)) / 163116.0; 
+				}
+
+				double sum = 0; 
+				for(int j=0; j<xList.size(); ++j) {
+					sum += val[j]; 
+
+				}	
+				cout << "sum of model 1: " << sum  << endl; 
+
+
+				PA = 175.0/180.0*M_PI + 0.5*M_PI; 
+				q = 1 - 0.4; 
+				kappa = 1.0; 
+				Re = 6.74*0.04; 
+				m = 0.85; 
+
+				bn = 1.9992*m - 0.3271; 
+
+				for(int j=0; j<xList.size(); ++j) {
+					double x = (xList[j] - (0 + conf->imgXCenter))*conf->imgRes  ; 
+					double y = (yList[j] - (0 + conf->imgYCenter))*conf->imgRes  ; 
+					double new_x = x*cos(PA) + y*sin(PA); 
+					double new_y = x*sin(PA) - y*cos(PA); 
+					double new_r = sqrt(new_x*new_x*q + new_y*new_y/q) ; 
+					val[j] += 1.0* exp(-bn*(pow(new_r/Re, 1.0/m)-1)) / 507.0; 
+				}
+
+				sum = 0; 
+				for(int j=0; j<xList.size(); ++j) {
+					sum += val[j]; 
+
+				}	
+				cout << "sum of model 1 & 2: " << sum << endl ; 
+
+			
+		}
+
+
+	
+
+	
 	Image* lensImg = new Image(xList, yList, &val, conf->imgSize[0]*level, conf->imgSize[1]*level, conf->bitpix);
 
 	return lensImg; 
@@ -1855,14 +2083,14 @@ void writeSrcModResImage(Model* model, Image* dataImage, Conf* conf, string file
 	modImg -> writeToFile (dir + "img_mod_" + fileName + ".fits");
 	delete srcImg, modImg, resImg; 
 
-	// vector<Image* > curve =  getCritCaustic(conf, &model->param); 
-	// Image* critImg = curve[0]; 
-	// Image* causImg = curve[1]; 
-	// Image* lensImg = createLensImage(conf, &model->param); 
-	// lensImg -> writeToFile(dir + "img_lens_" + fileName + ".fits");
-	// critImg -> writeToFile(dir + "img_crit_" + fileName + ".fits");
-	// causImg -> writeToFile(dir + "img_caus_" + fileName + ".fits");
-	// delete critImg, causImg, lensImg ; 
+	vector<Image* > curve =  getCritCaustic(conf, &model->param); 
+	Image* critImg = curve[0]; 
+	Image* causImg = curve[1]; 
+	Image* lensImg = createLensImage(conf, &model->param); 
+	lensImg -> writeToFile(dir + "img_lens_" + fileName + ".fits");
+	critImg -> writeToFile(dir + "img_crit_" + fileName + ".fits");
+	causImg -> writeToFile(dir + "img_caus_" + fileName + ".fits");
+	delete critImg, causImg, lensImg ; 
 }
 
 

@@ -73,6 +73,7 @@ public:
 	void updateVarList(double threshold,double back_mean, double back_std);
 	void updateVarList(string varFileName, string regionFileName);
 	void normalizeData();
+	void multiple(Image* maskImg) ; 
 	sp_mat getVarMatrix();
 	sp_mat getPSFMatrix(string psfFileName, long dim);
 	void erasePixel(int index);

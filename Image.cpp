@@ -581,14 +581,18 @@ void Image::getBlur(int pixelCombine) {
 		}
 
 	}
+}
 
+void Image::multiple(Image* maskImg) {
+	// mask using an image; 
+	for(int i=0; i<naxis1*naxis2 ; ++i) {
+		dataList[i] *= maskImg->dataList[i]; 
 
+	}
 
 
 
 }
-
-
 
 
 Image::~Image() {

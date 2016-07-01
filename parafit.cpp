@@ -87,8 +87,8 @@ void gridSearchVegetti(Conf* conf, MultModelParam param_old, Image* dataImage, s
 		cout << "[" + to_string(i+1) + "/" + to_string(model->param.nComb) + "] " ; 
 		//cout <<"\t" << model->param.parameter[0].critRad << "\t" <<penalty[0] << "\t" << penalty[1] << "\t" << penalty[2] << "\t"; 
 		
-		//writeSrcModResImage(model,dataImage,conf, to_string(i), dir) ; 
-		output << model->param.printCurrentModels(i).at(0) << "\t" << penalty[0] <<"\t" <<penalty[1] << "\t" << penalty[2]  << endl; 
+		writeSrcModResImage(model,dataImage,conf, to_string(i), dir) ; 
+		//output << model->param.printCurrentModels(i).at(0) << "\t" << penalty[0] <<"\t" <<penalty[1] << "\t" << penalty[2]  << endl; 
 		cout << endl; 
 	}
 
@@ -117,19 +117,32 @@ vector<double> getPenalty(Model* model, Image* dataImage, Conf* conf) {
 		model->updateLensAndRegularMatrix(dataImage, conf);  // get matrix 'L' and 'RTR'; most time consuming part; 
 		model->solveSource(&dataImage->invC, &dataImage->d, conf->srcRegType); 
 
+		// modify source ; srcPosXListPixel ; 
+		double x0 = 54; 
+		double y0 = 57; 
+		double  a = 1.5; 
+		double  b = y0-x0*a; 
+		for(int i=0; i<model->srcPosXListPixel.size(); ++i) {
+			int x = model->srcPosXListPixel[i]; 
+			int y = model->srcPosYListPixel[i]; 
+			if( y - (a*x + b) <= 0 ) {
+				//model->s[i] = 0; 
+			}
+		}
+
+
 		vec &s = model->s; 
 		vec res = ( model->L * s - dataImage->d) ; 
 		vec chi2 = res.transpose() *  dataImage->invC * res * model->lambdaC* model->lambdaC  ; 
 		vec srcR = s  .transpose() *  model->REG      * s   * model->lambdaS* model->lambdaS  ; 
+
+
+
 		penalty[0] = chi2[0]; 
 		penalty[1] = srcR[0]; 
 		penalty[2] = chi2[0] + srcR[0]; 
 	}
 	//penalty[2] = model->getScatterReg() ; 
-
-
-	
-	
 
 	return penalty; 
 }
