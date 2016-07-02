@@ -26,14 +26,15 @@ public:
     void stepPar(MultModelParam &param);
     double stepPar(vector<vec> &src, double cfac, size_t &iter);
     void checkPoint(string outputFileName, MultModelParam &param, bool moveAll, double L, double LMax);
-    void checkPoint(string outputFileName, MultModelParam &param, vector<double> &R0, double RMin, size_t loop);
+    void checkPoint(string outputFileName, size_t loop);
     void load(string fileName, MultModelParam &param, bool moveAll, double &L, double &LMax);
-    void load(string fileName, MultModelParam &param, vector<double> &R0, double &RMin, size_t &loop);
+    void load(string fileName, size_t &loop);
     void printIterNum(bool moveAll);
     double strechMove(MultModelParam &param, size_t kk);
-    void updateMove(MultModelParam &param, size_t kk);
-    void writeOutput(ofstream &output, MultModelParam &param, double RMin, size_t loop, double rate);
-    void writeOutput(ofstream &output, vector<double> &R0, size_t loop, int thin, double rate);
+    void updateMove(MultModelParam &param, size_t kk, double zn, double R);
+    void writeOutput(ofstream &output, size_t loop);
+    void writeOutput(ofstream &output, size_t loop, int thin);
+    void copyParam(MultModelParam &param);
 
 private:
     std::vector<double> cgArr;
@@ -43,7 +44,7 @@ private:
     std::function<double()> normal;
     double cfac;
     vector<vector<size_t>> freePar, iter;
-    size_t iters;
+    size_t iters, nAccept;
 
     void setRng(unsigned seed);
     void setParam(MultModelParam &param);
@@ -52,7 +53,9 @@ private:
     size_t nFreePar;
     size_t nWalker;
     double stepA;
+    double RMin;
     vector<vector<double>> par, bound;
+    vector<double> bestPar, R0;
     void setupGW(MultModelParam &param, size_t n);
 };
 

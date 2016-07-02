@@ -32,11 +32,12 @@ void MC::setParam(MultModelParam &param) {
         }
     }
     cout << "total par " << nFreePar<< endl;
+    iters=0;
+    nAccept=0;
 }
 MC::MC(MultModelParam &param, unsigned seed) {
     setRng(seed);
     cfac=1.0;
-    iters=0;
     setParam(param);
 }
 
@@ -54,6 +55,9 @@ void MC::setupGW(MultModelParam &param, size_t n) {
     bound.resize(2);
     bound[0].resize(nFreePar);
     bound[1].resize(nFreePar);
+    bestPar.resize(nFreePar,0);
+    R0.resize(n,std::numeric_limits<double>::max());
+    RMin = std::numeric_limits<double>::max();
     size_t c(0);
     double ss(5e-3);
     for (size_t j=0; j<freePar.size(); ++j) {
@@ -335,20 +339,28 @@ double MC::strechMove(MultModelParam &param, size_t kk) {
             c++;
         }
     }
+    iters++;
     return pow(zz,nFreePar-1);
 }
 
-void MC::updateMove(MultModelParam &param, size_t kk) {
-    size_t c(0);
-    for(int j=0; j<param.nLens; ++j) {
-        for (auto k: freePar[j]) {
-            par[kk][c] = param.mixAllModels[3][j].paraList[k];
-            c++;
+void MC::updateMove(MultModelParam &param, size_t kk, double zn, double R) {
+    double weight(0.5);
+    if (R < R0[kk] || random() <= zn*exp(-(R-R0[kk])*weight)) {
+        R0[kk] = R;
+        size_t c(0);
+        for(int j=0; j<param.nLens; ++j) {
+            for (auto k: freePar[j]) {
+                par[kk][c] = param.mixAllModels[3][j].paraList[k];
+                if (R < RMin) bestPar[c] = par[kk][c];
+                c++;
+            }
         }
+        nAccept++;
     }
+    if (R < RMin) RMin = R;
 }
 
-void MC::load(string fileName, MultModelParam &param, vector<double> &R0, double &RMin, size_t &loop) {
+void MC::load(string fileName, size_t &loop) {
     ifstream input(fileName.c_str());
     string line, token;
     if (input) {
@@ -364,23 +376,21 @@ void MC::load(string fileName, MultModelParam &param, vector<double> &R0, double
         }
         getline(input, line);
         istringstream ss(line);
-        for(int j=0; j<param.nLens; ++j) {
-            for (auto k: freePar[j]) {
-                getline(ss, token, ' ');
-                param.mixAllModels[5][j].paraList[k] = stod(token);
-            }
+        for (size_t m=0; m<nFreePar; ++m) {
+            getline(ss, token, ' ');
+            bestPar[m] = stod(token);
         }
         getline(ss, token, ' ');
         RMin = stod(token);
         getline(input, line);
         loop = stoi(line);
-        checkPoint("copy_"+fileName, param, R0, RMin, loop);
+        checkPoint("copy_"+fileName, loop);
     }
 }
 
 
 
-void MC::checkPoint(string outputFileName, MultModelParam &param, vector<double> &R0, double RMin, size_t loop) {
+void MC::checkPoint(string outputFileName, size_t loop) {
     ofstream chkpt;
     chkpt.open(outputFileName);
     chkpt << std::scientific << std::setprecision(4);
@@ -390,30 +400,28 @@ void MC::checkPoint(string outputFileName, MultModelParam &param, vector<double>
         }
         chkpt << R0[j] << endl;
     }
-    for(int j=0; j<param.nLens; ++j) {
-        for (auto k: freePar[j]) {
-            chkpt << param.mixAllModels[5][j].paraList[k] << " ";
-        }
+    for (size_t m=0; m<nFreePar; ++m) {
+        chkpt << bestPar[m] << " ";
     }
     chkpt << RMin << endl;
     chkpt << loop << endl;
     chkpt.close();
 }
 
-void MC::writeOutput(ofstream &output, MultModelParam &param, double RMin, size_t loop, double rate) {
+void MC::writeOutput(ofstream &output, size_t loop) {
+    double rate = (double) nAccept/iters;
     output << std::scientific << std::setprecision(4);
-    for(int j=0; j<param.nLens; ++j) {
-        for (auto k: freePar[j]) {
-            output << param.mixAllModels[5][j].paraList[k] << " ";
-        }
+    for (size_t m=0; m<nFreePar; ++m) {
+        output << bestPar[m] << " ";
     }
     output << RMin << " ";
     output << std::fixed << rate << " ";
     output << std::setw(10) << loop << endl;
 }
 
-void MC::writeOutput(ofstream &output, vector<double> &R0, size_t loop, int thin, double rate) {
+void MC::writeOutput(ofstream &output, size_t loop, int thin) {
     double p(1./thin);
+    double rate = (double) nAccept/iters;
     for (size_t j=0; j<nWalker; ++j) {
         if (random() <= p) {
             output << std::scientific << std::setprecision(4);
@@ -426,3 +434,14 @@ void MC::writeOutput(ofstream &output, vector<double> &R0, size_t loop, int thin
         }
     }
 }
+
+void MC::copyParam(MultModelParam &param) {
+    size_t c(0);
+    for(int j=0; j<param.nLens; ++j) {
+        for (auto k: freePar[j]) {
+            param.mixAllModels[5][j].paraList[k] = bestPar[c];
+            c++;
+        }
+    }
+}
+

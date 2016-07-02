@@ -15,6 +15,7 @@
 #include <iomanip>
 #include "parafit.h"
 #include "mc.h"
+#include <omp.h>
 
 using namespace std;
 
@@ -130,59 +131,54 @@ void mcFit(Conf* conf, MultModelParam param_old, Image* dataImage, string dir, s
 
 }
 
+Model *model;
+#pragma omp threadprivate(model)
 void mcFitGW(Conf* conf, MultModelParam param_old, Image* dataImage, string dir, string outputFileName) {
-    size_t nLoops(conf->nLoops), lag(5), thin(15), nAccept(0), writeChkpt(30), iter(0);
-    double weight(0.5);
-    double RMin(std::numeric_limits<double>::max()), acceptRate(0.);
+    size_t nLoops(conf->nLoops), lag(5), thin(15), writeChkpt(30), iter(0);
     double lambdaS = conf->srcRegLevel;
     size_t nWalkers(conf->nWalkers);
-    vector<double> R0(nWalkers,std::numeric_limits<double>::max());
 
-    Model *model = new Model(conf, param_old, lambdaS);
+    #pragma omp parallel
+    model = new Model(conf, param_old, lambdaS);
+
     MC mc(model->param, conf->seed, nWalkers);
 
 	ofstream output;
     string out = "mcgw_chkpt_"+to_string(conf->seed)+".txt";
     if (conf->resume) {
-        mc.load(out, model->param, R0, RMin, iter);
+        mc.load(out, iter);
 	    output.open(outputFileName, std::ofstream::out | std::ofstream::app);
     } else {
 	    output.open(outputFileName);
     }
     nLoops += iter;
-
     for (size_t loop=iter; loop<nLoops; ++loop) {
+        #pragma omp parallel for
         for (size_t m=0; m<nWalkers; ++m) {
             double zn = mc.strechMove(model->param,m);
             if (zn <= 0) continue;
             model->copyParam(conf, 3);
             vector<double> R = getPenalty(model, dataImage, conf, conf->srcRegType);
-            if (conf->verbose && m % thin == 0) {
-                cout<< loop << " " << m << ": " << R[2] << " " << R0[m] << " " << RMin << "  "
-                    << R[0] << " " << R[1] << " " << model->param.mixAllModels[3][0].paraList[0] << " "
-                    << acceptRate << endl;
-            }
+            // if (conf->verbose && m % thin == 0) {
+            //     cout<< loop << " " << m << ": " << R[2] << " " << R0[m] << " " << RMin << "  "
+            //         << R[0] << " " << R[1] << " " << model->param.mixAllModels[3][0].paraList[0] << " "
+            //         << acceptRate << endl;
+            // }
             if (std::isnan(R[2])) {
                 cout << "Penalty NaN " << R[0] << " " << R[1] << " " << R[2] << endl;
-            } else if (R[2] < R0[m] || mc.random() <= zn*exp(-(R[2]-R0[m])*weight)) {
-                R0[m] = R[2];
-                if (R[2] < RMin) {
-                    RMin = R[2];
-                    model->copyParam(3,5);
-                }
-                mc.updateMove(model->param,m);
-                nAccept++;
-                acceptRate = nAccept/(m+1.+nWalkers*(loop-iter));
+                continue;
             }
+            mc.updateMove(model->param,m,zn,R[2]);
         }
         if (loop % lag == 0) {
-            mc.writeOutput(output, R0, loop, thin, acceptRate);
-            if (loop % writeChkpt == 0) mc.checkPoint(out, model->param, R0, RMin, loop);
+            mc.writeOutput(output, loop, thin);
+            if (loop % writeChkpt == 0) mc.checkPoint(out, loop);
         }
     }
-    mc.writeOutput(output, model->param, RMin, nLoops, acceptRate);
-    mc.checkPoint(out, model->param, R0, RMin, nLoops);
+    mc.writeOutput(output, nLoops);
+    mc.checkPoint(out, nLoops);
     output.close();
+    mc.copyParam(model->param);
     model->copyParam(conf, 5);
     vector<double> bestChi = getPenalty(model, dataImage, conf, conf->srcRegType);
     cout << "best chi: " << bestChi[0] << " dof: " << dataImage->dataList.size() << " reg: "<< bestChi[1] << " total:" << bestChi[2] << endl;
@@ -196,6 +192,7 @@ void mcFitGW(Conf* conf, MultModelParam param_old, Image* dataImage, string dir,
     cout << model->param.printCurrentModels(6).at(1);
     cout << model->param.printCurrentModels(7).at(1);
     cout << model->param.printCurrentModels(8).at(1);
+    #pragma omp parallel
     delete model;
 }
 
