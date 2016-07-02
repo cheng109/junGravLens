@@ -135,11 +135,11 @@ void mcFitGW(Conf* conf, MultModelParam param_old, Image* dataImage, string dir,
     double weight(0.5);
     double RMin(std::numeric_limits<double>::max()), acceptRate(0.);
     double lambdaS = conf->srcRegLevel;
-    size_t nWalker = 100;
-    vector<double> R0(nWalker,std::numeric_limits<double>::max());
+    size_t nWalkers(conf->nWalkers);
+    vector<double> R0(nWalkers,std::numeric_limits<double>::max());
 
     Model *model = new Model(conf, param_old, lambdaS);
-    MC mc(model->param, conf->seed, nWalker);
+    MC mc(model->param, conf->seed, nWalkers);
 
 	ofstream output;
     string out = "mcgw_chkpt_"+to_string(conf->seed)+".txt";
@@ -152,7 +152,7 @@ void mcFitGW(Conf* conf, MultModelParam param_old, Image* dataImage, string dir,
     nLoops += iter;
 
     for (size_t loop=iter; loop<nLoops; ++loop) {
-        for (size_t m=0; m<nWalker; ++m) {
+        for (size_t m=0; m<nWalkers; ++m) {
             double zn = mc.strechMove(model->param,m);
             if (zn <= 0) continue;
             model->copyParam(conf, 3);
@@ -172,7 +172,7 @@ void mcFitGW(Conf* conf, MultModelParam param_old, Image* dataImage, string dir,
                 }
                 mc.updateMove(model->param,m);
                 nAccept++;
-                acceptRate = nAccept/(m+1.+nWalker*(loop-iter));
+                acceptRate = nAccept/(m+1.+nWalkers*(loop-iter));
             }
         }
         if (loop % lag == 0) {

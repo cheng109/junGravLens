@@ -413,8 +413,9 @@ void MC::writeOutput(ofstream &output, MultModelParam &param, double RMin, size_
 }
 
 void MC::writeOutput(ofstream &output, vector<double> &R0, size_t loop, int thin, double rate) {
+    double p(1./thin);
     for (size_t j=0; j<nWalker; ++j) {
-        if (j % thin == 0) {
+        if (random() <= p) {
             output << std::scientific << std::setprecision(4);
             for (size_t m=0; m<nFreePar; ++m) {
                 output << par[j][m] << " ";

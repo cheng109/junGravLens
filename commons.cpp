@@ -72,6 +72,7 @@ Conf::Conf(Image* dataImage, map<string, string> confMap) {
         srcRegLevel = stod(confMap["srcRegLevel"]); 
         srcRegType = confMap["srcRegType"];
         nLoops = stoi(confMap["nLoops"]);
+        nWalkers = stoi(confMap["nWalkers"]);
         seed = stoi(confMap["seed"]);
         resume = stoi(confMap["resume"]);
         if (confMap.find("srcRegLevel2")!= confMap.end()) srcRegLevel2 = stod(confMap["srcRegLevel2"]);

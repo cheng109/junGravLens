@@ -121,6 +121,7 @@ public:
     double srcRegLevel2; 
     string srcRegType;
     int nLoops;
+    int nWalkers;
     int seed;
     int resume;
 
