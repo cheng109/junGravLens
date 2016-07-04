@@ -41,10 +41,17 @@ MC::MC(MultModelParam &param, unsigned seed) {
     setParam(param);
 }
 
-MC::MC(MultModelParam &param, unsigned seed, size_t n) {
+MC::MC(MultModelParam &param, unsigned seed, size_t n, int resume, string outputFileName, size_t &iter) {
     setRng(seed);
     setParam(param);
     setupGW(param, n);
+    chkptFileName = "mcgw_chkpt_"+to_string(seed)+".txt";
+    if (resume) {
+        load(iter);
+        output.open(outputFileName, std::ofstream::out | std::ofstream::app);
+    } else {
+        output.open(outputFileName);
+    }
 }
 
 void MC::setupGW(MultModelParam &param, size_t n) {
@@ -360,8 +367,8 @@ void MC::updateMove(MultModelParam &param, size_t kk, double zn, double R) {
     if (R < RMin) RMin = R;
 }
 
-void MC::load(string fileName, size_t &loop) {
-    ifstream input(fileName.c_str());
+void MC::load(size_t &loop) {
+    ifstream input(chkptFileName.c_str());
     string line, token;
     if (input) {
         for (size_t j=0; j<nWalker; ++j) {
@@ -384,15 +391,14 @@ void MC::load(string fileName, size_t &loop) {
         RMin = stod(token);
         getline(input, line);
         loop = stoi(line);
-        checkPoint("copy_"+fileName, loop);
     }
 }
 
 
 
-void MC::checkPoint(string outputFileName, size_t loop) {
+void MC::checkPoint(size_t loop) {
     ofstream chkpt;
-    chkpt.open(outputFileName);
+    chkpt.open(chkptFileName);
     chkpt << std::scientific << std::setprecision(4);
     for (size_t j=0; j<nWalker; ++j) {
         for (size_t m=0; m<nFreePar; ++m) {
@@ -408,7 +414,7 @@ void MC::checkPoint(string outputFileName, size_t loop) {
     chkpt.close();
 }
 
-void MC::writeOutput(ofstream &output, size_t loop) {
+void MC::writeOutput(size_t loop) {
     double rate = (double) nAccept/iters;
     output << std::scientific << std::setprecision(4);
     for (size_t m=0; m<nFreePar; ++m) {
@@ -417,22 +423,23 @@ void MC::writeOutput(ofstream &output, size_t loop) {
     output << RMin << " ";
     output << std::fixed << rate << " ";
     output << std::setw(10) << loop << endl;
+    output.close();
 }
 
-void MC::writeOutput(ofstream &output, size_t loop, int thin) {
-    double p(1./thin);
+void MC::writeOutput(size_t loop, int thin) {
     double rate = (double) nAccept/iters;
-    for (size_t j=0; j<nWalker; ++j) {
-        if (random() <= p) {
-            output << std::scientific << std::setprecision(4);
-            for (size_t m=0; m<nFreePar; ++m) {
-                output << par[j][m] << " ";
-            }
-            output << R0[j] << " ";
-            output << std::fixed << rate << " ";
-            output << std::setw(10) << loop << endl;
+    for (size_t k=0; k<nWalker/thin; ++k) {
+        size_t j = random()*nWalker;
+        output << std::scientific << std::setprecision(4);
+        for (size_t m=0; m<nFreePar; ++m) {
+            output << par[j][m] << " ";
         }
+        output << R0[j] << " ";
+        output << std::fixed << rate << " ";
+        output << std::setw(10) << loop << endl;
     }
+    nAccept = 0;
+    iters = 0;
 }
 
 void MC::copyParam(MultModelParam &param) {

@@ -141,16 +141,8 @@ void mcFitGW(Conf* conf, MultModelParam param_old, Image* dataImage, string dir,
     #pragma omp parallel
     model = new Model(conf, param_old, lambdaS);
 
-    MC mc(model->param, conf->seed, nWalkers);
+    MC mc(model->param, conf->seed, nWalkers, conf->resume, outputFileName, iter);
 
-	ofstream output;
-    string out = "mcgw_chkpt_"+to_string(conf->seed)+".txt";
-    if (conf->resume) {
-        mc.load(out, iter);
-	    output.open(outputFileName, std::ofstream::out | std::ofstream::app);
-    } else {
-	    output.open(outputFileName);
-    }
     nLoops += iter;
     for (size_t loop=iter; loop<nLoops; ++loop) {
         #pragma omp parallel for
@@ -171,13 +163,12 @@ void mcFitGW(Conf* conf, MultModelParam param_old, Image* dataImage, string dir,
             mc.updateMove(model->param,m,zn,R[2]);
         }
         if (loop % lag == 0) {
-            mc.writeOutput(output, loop, thin);
-            if (loop % writeChkpt == 0) mc.checkPoint(out, loop);
+            mc.writeOutput(loop, thin);
+            if (loop % writeChkpt == 0) mc.checkPoint(loop);
         }
     }
-    mc.writeOutput(output, nLoops);
-    mc.checkPoint(out, nLoops);
-    output.close();
+    mc.writeOutput(nLoops);
+    mc.checkPoint(nLoops);
     mc.copyParam(model->param);
     model->copyParam(conf, 5);
     vector<double> bestChi = getPenalty(model, dataImage, conf, conf->srcRegType);

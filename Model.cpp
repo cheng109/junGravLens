@@ -420,6 +420,7 @@ void Model::updateLensAndRegularMatrix(Image* dataImage,  Conf* constList, strin
     PointCloud<double> cloud;
     KDTreeAdaptor index(2, cloud, KDTreeSingleIndexAdaptorParams(20 ));
     vector<double> radius;
+    double meanx(0.), meany(0.), weight(0.);
 
     if (R_type == "vege") {
         size_t n = conf->length;
@@ -429,8 +430,13 @@ void Model::updateLensAndRegularMatrix(Image* dataImage,  Conf* constList, strin
             for(size_t j=0; j<n; ++j) {
                 cloud.pts[j].x = srcPosXListPixel[j];
                 cloud.pts[j].y = srcPosYListPixel[j];
+                meanx += srcPosXListPixel[j]*dataImage->dataList[j];
+                meany += srcPosYListPixel[j]*dataImage->dataList[j];
+                weight += dataImage->dataList[j];
             }
             index.buildIndex();
+            meanx /= weight;
+            meany /= weight;
         }
         for (size_t i=0; i<n; ++i) {
             int indexRegion1(-1), indexRegion2(-1), indexRegion3(-1), indexRegion4(-1);
@@ -460,7 +466,8 @@ void Model::updateLensAndRegularMatrix(Image* dataImage,  Conf* constList, strin
                     else if(indexRegion1 != -1 and indexRegion2 != -1 and indexRegion3 != -1 and indexRegion4 != -1)
                         break;
                 }
-                radius[i] = out_dist_sqr[num_results-1];
+                //radius[i] = out_dist_sqr[num_results-1];
+                radius[i] = pow(srcPosXListPixel[i] - meanx, 2) + pow(srcPosYListPixel[i] - meany, 2);
                 //if (std::isnan(radius[i]) || radius[i] > 1e5) {
                 //    cout << i << endl;
                 //    for (size_t k=0; k<num_results; ++k) cout << out_dist_sqr[k] << " ";

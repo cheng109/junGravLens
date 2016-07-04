@@ -324,7 +324,8 @@ void Image::updateBackSubtract(double back_mean, double back_std) {
 	std::default_random_engine generator; 
 	std::normal_distribution<double> distribution(back_mean, sigma); 
 	for (int i=0; i<dataList.size(); ++i ) {
-		double number = distribution(generator); 
+		//double number = distribution(generator); 
+        double number = back_mean;
 		dataList[i] -= number ;
         data[yList[i]*naxis1 + xList[i]] -= number;
 
@@ -545,7 +546,8 @@ void Image::updateVarList(double threshold, double back_mean, double back_std) {
 	for(int i=0; i<length; ++i) {
 		if(dataList[i]<threshold) {
 			//varList.push_back(back_var);
-			varList.push_back(threshold);
+			//varList.push_back(threshold);
+			varList.push_back(dataList[i]);
 		}
 		else
 			//varList.push_back(back_var);

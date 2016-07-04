@@ -17,7 +17,7 @@
 class MC {
 public:
     MC(MultModelParam &param, unsigned seed);
-    MC(MultModelParam &param, unsigned seed, size_t n);
+    MC(MultModelParam &param, unsigned seed, size_t n, int resume, string outputFileName, size_t &iter);
     double gauss(double sigma, double mu, double x);
     void makeCgauss();
     double cgauss();
@@ -26,14 +26,14 @@ public:
     void stepPar(MultModelParam &param);
     double stepPar(vector<vec> &src, double cfac, size_t &iter);
     void checkPoint(string outputFileName, MultModelParam &param, bool moveAll, double L, double LMax);
-    void checkPoint(string outputFileName, size_t loop);
+    void checkPoint(size_t loop);
     void load(string fileName, MultModelParam &param, bool moveAll, double &L, double &LMax);
-    void load(string fileName, size_t &loop);
+    void load(size_t &loop);
     void printIterNum(bool moveAll);
     double strechMove(MultModelParam &param, size_t kk);
     void updateMove(MultModelParam &param, size_t kk, double zn, double R);
-    void writeOutput(ofstream &output, size_t loop);
-    void writeOutput(ofstream &output, size_t loop, int thin);
+    void writeOutput(size_t loop);
+    void writeOutput(size_t loop, int thin);
     void copyParam(MultModelParam &param);
 
 private:
@@ -57,6 +57,8 @@ private:
     vector<vector<double>> par, bound;
     vector<double> bestPar, R0;
     void setupGW(MultModelParam &param, size_t n);
+    ofstream output;
+    string chkptFileName;
 };
 
 #endif /* MC_H_ */
