@@ -35,6 +35,10 @@ public:
     void writeOutput(size_t loop);
     void writeOutput(size_t loop, int thin);
     void copyParam(MultModelParam &param);
+    void startGA();
+    void evaluate(Model *model, size_t m);
+    void elitism();
+    double getRMin(){return RMin;};
 
 private:
     std::vector<double> cgArr;
@@ -48,19 +52,25 @@ private:
 
     void setRng(unsigned seed);
     void setParam(MultModelParam &param);
+    std::function<double(Model*)> objective;
 
-    //GW & GA
+    //GW
     size_t nFreePar;
     size_t nWalker;
     double stepA;
     double RMin;
     vector<vector<double>> par, bound;
-    vector<double> bestPar, R0, rR0, cR0;
+    vector<double> bestPar, R0;
     void setupGW(MultModelParam &param, size_t n);
     ofstream output;
     string chkptFileName;
-
-    std::function<double(Model*)> objective;
+    //GA
+    size_t nGens;
+    vector<size_t> index;
+    double pCrossOver, pMutation;
+    vector<double> bestParPrev;
+    double RMinPrev;
+    void setupGA();
 
 };
 

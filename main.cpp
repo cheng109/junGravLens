@@ -98,6 +98,8 @@ int main(int argc, char* argv[]) {
         mcFit(conf, param, dataImage, dir, output);
     else if (opt == 2)
         mcFitGW(conf, param, dataImage, dir, output);
+    else if (opt == 3)
+        mcFitGA(conf, param, dataImage, dir, output);
 
 
 	delete conf;

@@ -124,6 +124,7 @@ public:
     int nWalkers;
     int seed;
     int resume;
+    int GA;
 
 	long potN;
 	int bitpix;

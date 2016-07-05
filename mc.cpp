@@ -46,7 +46,12 @@ MC::MC(Model* model, Conf* conf,
     setRng(conf->seed);
     setParam(model->param);
     setupGW(model->param, n);
-    chkptFileName = "mcgw_chkpt_"+to_string(conf->seed)+".txt";
+    if (conf->GA) {
+        setupGA();
+        chkptFileName = "mcga_chkpt_"+to_string(conf->seed)+".txt";
+    } else {
+        chkptFileName = "mcgw_chkpt_"+to_string(conf->seed)+".txt";
+    }
     if (conf->resume) {
         load(iter);
         output.open(outputFileName, std::ofstream::out | std::ofstream::app);
@@ -54,6 +59,7 @@ MC::MC(Model* model, Conf* conf,
         output.open(outputFileName);
     }
     this->objective = objective;
+    if (conf->GA) setupGA();
 }
 
 void MC::setupGW(MultModelParam &param, size_t n) {
@@ -84,12 +90,15 @@ void MC::setupGW(MultModelParam &param, size_t n) {
     }
 }
 
-/*
 void MC::setupGA() {
-    rR0.resize(nWalker);
-    cR0.resize(nWalker);
-}*/
-
+    pCrossOver = 0.85;
+    pMutation = 0.05;
+    index.resize(nWalker);
+    for (size_t m=0; m<nWalker; ++m) {
+        index[m] = m;
+        for (size_t c=0; c<nFreePar; ++c) par[m][c] = bound[0][c] + random()*(bound[1][c]-bound[0][c]);
+    }
+}
 
 double MC::random() {
     return rng();
@@ -422,15 +431,14 @@ void MC::checkPoint(size_t loop) {
 }
 
 void MC::writeOutput(size_t loop) {
-    double rate = (double) nAccept/iters;
     output << std::scientific << std::setprecision(4);
     for (size_t m=0; m<nFreePar; ++m) {
         output << bestPar[m] << " ";
     }
     output << RMin << " ";
-    output << std::fixed << rate << " ";
+    if (iters>0) output << std::fixed << (double) nAccept/iters << " ";
     output << std::setw(10) << loop << endl;
-    output.close();
+    //output.close();  //let destructor close it
 }
 
 void MC::writeOutput(size_t loop, int thin) {
@@ -458,3 +466,64 @@ void MC::copyParam(MultModelParam &param) {
         }
     }
 }
+
+
+void MC::evaluate(Model *model, size_t m) {
+    size_t c(0);
+    for(int j=0; j<model->param.nLens; ++j) {
+        for (auto k: freePar[j]) {
+            model->param.mixAllModels[3][j].paraList[k] = par[m][c];
+            c++;
+        }
+    }
+    R0[m] = objective(model);
+}
+
+void MC::startGA() {
+    //selection
+    vector<vector<double>> parPrev(par);
+    for (size_t m=0; m<nWalker; ++m) {
+        size_t jj = pow(random(),1.7) * nWalker;
+        for (size_t k=0; k<nFreePar; ++k) par[m][k] = parPrev[index[jj]][k];
+    }
+
+    //crossover
+    int first(0);
+    size_t i;
+    for (size_t m=0; m<nWalker; ++m) {
+        double p = random();
+        if (p < pCrossOver) {
+            ++first;
+            if (first & 1) {  //odd
+                i = m;
+            } else {
+                for (size_t k=0; k<random()*nFreePar; ++k) {
+                    size_t kk = random()*nFreePar;
+                    double t = par[i][kk];
+                    par[i][kk] = par[m][kk];
+                    par[m][kk] = t;
+                }
+            }
+        }
+    }
+
+    //mutation
+    for (size_t t=0; t<pMutation*nFreePar*nWalker; ++t) {
+        int p = random()*nFreePar*nWalker;
+        size_t j = p / nFreePar;
+        size_t k = p % nFreePar;
+        par[j][k] = bound[0][k] + random()*(bound[1][k] - bound[0][k]);
+    }
+}
+
+void MC::elitism() {
+    index = sort_indexes(R0);
+    if (R0[index[0]] < RMin) {
+        RMin = R0[index[0]];
+        for (size_t k=0; k<nFreePar; ++k) bestPar[k] = par[index[0]][k];
+    } else {
+        for (size_t k=0; k<nFreePar; ++k) par[index[0]][k] = bestPar[k];
+        R0[index[0]] = RMin;
+    }
+}
+
