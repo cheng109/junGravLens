@@ -17,7 +17,8 @@
 class MC {
 public:
     MC(MultModelParam &param, unsigned seed);
-    MC(MultModelParam &param, unsigned seed, size_t n, int resume, string outputFileName, size_t &iter);
+    MC(Model* model, Conf* conf, const std::function<double(Model*)> &objective,
+            size_t n, string outputFileName, size_t &iter);
     double gauss(double sigma, double mu, double x);
     void makeCgauss();
     double cgauss();
@@ -30,8 +31,7 @@ public:
     void load(string fileName, MultModelParam &param, bool moveAll, double &L, double &LMax);
     void load(size_t &loop);
     void printIterNum(bool moveAll);
-    double strechMove(MultModelParam &param, size_t kk);
-    void updateMove(MultModelParam &param, size_t kk, double zn, double R);
+    void stretchMove(Model *model, size_t kk);
     void writeOutput(size_t loop);
     void writeOutput(size_t loop, int thin);
     void copyParam(MultModelParam &param);
@@ -49,16 +49,19 @@ private:
     void setRng(unsigned seed);
     void setParam(MultModelParam &param);
 
-    //GW
+    //GW & GA
     size_t nFreePar;
     size_t nWalker;
     double stepA;
     double RMin;
     vector<vector<double>> par, bound;
-    vector<double> bestPar, R0;
+    vector<double> bestPar, R0, rR0, cR0;
     void setupGW(MultModelParam &param, size_t n);
     ofstream output;
     string chkptFileName;
+
+    std::function<double(Model*)> objective;
+
 };
 
 #endif /* MC_H_ */

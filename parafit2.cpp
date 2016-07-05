@@ -137,30 +137,18 @@ void mcFitGW(Conf* conf, MultModelParam param_old, Image* dataImage, string dir,
     size_t nLoops(conf->nLoops), lag(5), thin(15), writeChkpt(30), iter(0);
     double lambdaS = conf->srcRegLevel;
     size_t nWalkers(conf->nWalkers);
+    auto objective = std::bind(getLogProb, std::placeholders::_1, dataImage, conf);
 
     #pragma omp parallel
     model = new Model(conf, param_old, lambdaS);
 
-    MC mc(model->param, conf->seed, nWalkers, conf->resume, outputFileName, iter);
+    MC mc(model, conf, objective, nWalkers, outputFileName, iter);
 
     nLoops += iter;
     for (size_t loop=iter; loop<nLoops; ++loop) {
         #pragma omp parallel for
         for (size_t m=0; m<nWalkers; ++m) {
-            double zn = mc.strechMove(model->param,m);
-            if (zn <= 0) continue;
-            model->copyParam(conf, 3);
-            vector<double> R = getPenalty(model, dataImage, conf, conf->srcRegType);
-            // if (conf->verbose && m % thin == 0) {
-            //     cout<< loop << " " << m << ": " << R[2] << " " << R0[m] << " " << RMin << "  "
-            //         << R[0] << " " << R[1] << " " << model->param.mixAllModels[3][0].paraList[0] << " "
-            //         << acceptRate << endl;
-            // }
-            if (std::isnan(R[2])) {
-                cout << "Penalty NaN " << R[0] << " " << R[1] << " " << R[2] << endl;
-                continue;
-            }
-            mc.updateMove(model->param,m,zn,R[2]);
+            mc.stretchMove(model,m);
         }
         if (loop % lag == 0) {
             mc.writeOutput(loop, thin);
@@ -203,6 +191,28 @@ vector<double> getPenalty2(Model* model, vec &s, Image* dataImage, Conf* conf, s
     penalty[2] = chi2[0] + srcR[0];
 
     return penalty;
+
+}
+
+double getLogProb(Model* model, Image* dataImage, Conf* conf) {
+
+    model->copyParam(conf, 3);
+    model->updatePosMapping(dataImage, conf);  // time used: 0.03s;
+    model->update_H_zero(conf);
+    model->updateLensAndRegularMatrix(dataImage, conf, conf->srcRegType);  // get matrix 'L' and 'RTR'; most time consuming part;
+    model->solveSource(&dataImage->invC, &dataImage->d);
+
+    vec &s = model->s;
+    vec res = ( model->L * s - dataImage->d);
+    vec srcR = s  .transpose() *  model->REG      * s   * model->lambdaS* model->lambdaS  ;
+
+    double lpChi = (res.cwiseProduct(dataImage->invSigma)).squaredNorm()*model->lambdaC* model->lambdaC;
+    double lp = srcR[0] + lpChi;
+    if (std::isnan(lp)) {
+        cout << "Penalty NaN " << lpChi << " " << srcR[0] << endl;
+        return -1.0;
+    }
+    return lp;
 
 }
 

@@ -41,17 +41,19 @@ MC::MC(MultModelParam &param, unsigned seed) {
     setParam(param);
 }
 
-MC::MC(MultModelParam &param, unsigned seed, size_t n, int resume, string outputFileName, size_t &iter) {
-    setRng(seed);
-    setParam(param);
-    setupGW(param, n);
-    chkptFileName = "mcgw_chkpt_"+to_string(seed)+".txt";
-    if (resume) {
+MC::MC(Model* model, Conf* conf,
+     const std::function<double(Model*)> &objective, size_t n, string outputFileName, size_t &iter) {
+    setRng(conf->seed);
+    setParam(model->param);
+    setupGW(model->param, n);
+    chkptFileName = "mcgw_chkpt_"+to_string(conf->seed)+".txt";
+    if (conf->resume) {
         load(iter);
         output.open(outputFileName, std::ofstream::out | std::ofstream::app);
     } else {
         output.open(outputFileName);
     }
+    this->objective = objective;
 }
 
 void MC::setupGW(MultModelParam &param, size_t n) {
@@ -81,6 +83,13 @@ void MC::setupGW(MultModelParam &param, size_t n) {
         for (size_t c=0; c<nFreePar; ++c) par[m][c] = par[m-1][c] + ss*(random()-0.5)*(bound[1][c]-bound[0][c]);
     }
 }
+
+/*
+void MC::setupGA() {
+    rR0.resize(nWalker);
+    cR0.resize(nWalker);
+}*/
+
 
 double MC::random() {
     return rng();
@@ -330,7 +339,7 @@ void MC::printIterNum(bool moveAll) {
     }
 }
 
-double MC::strechMove(MultModelParam &param, size_t kk) {
+void MC::stretchMove(Model *model, size_t kk) {
     size_t jj;
     do {
         jj = random()*nWalker;
@@ -338,26 +347,24 @@ double MC::strechMove(MultModelParam &param, size_t kk) {
 
     size_t c(0);
     double zz = pow((stepA - 1)*random() + 1,2)/stepA;
-    for(int j=0; j<param.nLens; ++j) {
+    for(int j=0; j<model->param.nLens; ++j) {
         for (auto k: freePar[j]) {
-            param.mixAllModels[3][j].paraList[k] = par[jj][c] + zz*(par[kk][c]-par[jj][c]);
-            if (param.mixAllModels[3][j].paraList[k]<bound[0][c] || param.mixAllModels[3][j].paraList[k]>bound[1][c])
-                return -1;
+            model->param.mixAllModels[3][j].paraList[k] = par[jj][c] + zz*(par[kk][c]-par[jj][c]);
+            if (model->param.mixAllModels[3][j].paraList[k]<bound[0][c] || model->param.mixAllModels[3][j].paraList[k]>bound[1][c])
+                return;
             c++;
         }
     }
     iters++;
-    return pow(zz,nFreePar-1);
-}
-
-void MC::updateMove(MultModelParam &param, size_t kk, double zn, double R) {
+    double R = objective(model);
+    if (R < 0) return;
     double weight(0.5);
-    if (R < R0[kk] || random() <= zn*exp(-(R-R0[kk])*weight)) {
+    if (R < R0[kk] || log(random()) <= (nFreePar-1)*log(zz) - (R-R0[kk])*weight) {
         R0[kk] = R;
         size_t c(0);
-        for(int j=0; j<param.nLens; ++j) {
+        for(int j=0; j<model->param.nLens; ++j) {
             for (auto k: freePar[j]) {
-                par[kk][c] = param.mixAllModels[3][j].paraList[k];
+                par[kk][c] = model->param.mixAllModels[3][j].paraList[k];
                 if (R < RMin) bestPar[c] = par[kk][c];
                 c++;
             }
@@ -451,4 +458,3 @@ void MC::copyParam(MultModelParam &param) {
         }
     }
 }
-
