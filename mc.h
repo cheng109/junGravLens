@@ -64,11 +64,13 @@ private:
     void setupGW(MultModelParam &param, size_t n);
     ofstream output;
     string chkptFileName;
+    bool runGA;
     //GA
     size_t nGens;
     vector<size_t> index;
     double pCrossOver, pMutation;
     vector<double> bestParPrev;
+    vector<vector<double>> parSum;
     double RMinPrev;
     void setupGA();
 
