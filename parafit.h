@@ -33,6 +33,7 @@ double getLogProb(Model* model, Image* dataImage, Conf* conf);
 void mcFit(Conf* conf, MultModelParam param, Image* dataImage, string dir, string outputFileName);
 void mcFitGW(Conf* conf, MultModelParam param, Image* dataImage, string dir, string outputFileName);
 void mcFitGA(Conf* conf, MultModelParam param, Image* dataImage, string dir, string outputFileName);
+void mcFitNM(Conf* conf, MultModelParam param, Image* dataImage, string dir, string outputFileName);
 
 
 

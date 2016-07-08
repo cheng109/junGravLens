@@ -219,6 +219,29 @@ void mcFitGA(Conf* conf, MultModelParam param_old, Image* dataImage, string dir,
     delete model;
 }
 
+void mcFitNM(Conf* conf, MultModelParam param_old, Image* dataImage, string dir, string outputFileName) {
+    size_t nLoops(conf->nLoops);
+    double lambdaS = conf->srcRegLevel;
+    size_t nWalkers(conf->nWalkers);
+    auto objective = std::bind(getLogProb, std::placeholders::_1, dataImage, conf);
+
+    #pragma omp parallel
+    model = new Model(conf, param_old, lambdaS);
+
+    MC mc(model, conf, objective, nWalkers, outputFileName);
+
+    for (size_t loop=0; loop<nLoops; ++loop) {
+        mc.startNM();
+        #pragma omp parallel for
+        for (size_t m=0; m<nWalkers; ++m) mc.nelmin(model,m);
+        mc.elitism();
+        mc.writeOutput(loop);
+    }
+
+    #pragma omp parallel
+    delete model;
+}
+
 
 
 vector<double> getPenalty2(Model* model, vec &s, Image* dataImage, Conf* conf, string R_type) {

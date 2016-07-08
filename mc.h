@@ -19,6 +19,8 @@ public:
     MC(MultModelParam &param, unsigned seed);
     MC(Model* model, Conf* conf, const std::function<double(Model*)> &objective,
             size_t n, string outputFileName, size_t &iter);
+    MC(Model* model, Conf* conf, const std::function<double(Model*)> &objective,
+            size_t n, string outputFileName);
     double gauss(double sigma, double mu, double x);
     void makeCgauss();
     double cgauss();
@@ -36,9 +38,11 @@ public:
     void writeOutput(size_t loop, int thin);
     void copyParam(MultModelParam &param);
     void startGA();
+    void startNM();
     void evaluate(Model *model, size_t m);
     void elitism();
     double getRMin(){return RMin;};
+    void nelmin(Model *model, size_t m);
 
 private:
     std::vector<double> cgArr;
@@ -73,7 +77,12 @@ private:
     vector<vector<double>> parSum;
     double RMinPrev;
     void setupGA();
-
+    //Simplex
+    double *step;
+    double evaluate(Model *model, double par[]);
+    void nelmin (Model *model, double start[], double xmin[],
+            double *ynewlo, double reqmin, int konvge, int kcount,
+            int *icount, int *numres, int *ifault);
 };
 
 #endif /* MC_H_ */
