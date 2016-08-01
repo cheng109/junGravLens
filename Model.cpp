@@ -63,6 +63,8 @@ Model::Model(Conf* conf, MultModelParam param, double lambdaS):
 		{
 	// initial s;
 	nLens = param.parameter.size();
+
+
 	occupation  = 0 ; 
 
 	lambdaC = 1.0; 
@@ -106,7 +108,9 @@ vector<double> Model::getDeflectionAngle(Conf* conf, double pfX, double pfY, dou
 	vector<double> srcPos;
 	int nLens = param->parameter.size(); 
 	
-	//cout << "nLens: " << nLens << endl; 
+
+
+	//cout << "nLens: " <<  param->parameter.size() << endl; 
 	for(int i=0; i<nLens; ++i) {
 		fX =  pfX - (param->parameter[i].centerX * conf->imgRes);   // lens center frame, 
 		fY =  pfY - (param->parameter[i].centerY * conf->imgRes);
@@ -336,6 +340,9 @@ void Model::updatePosMapping(Image* image, Conf* conf) {
 		double pfY = (imgY - conf->imgYCenter ) * conf->imgRes;
 
 		srcPos = getDeflectionAngle(conf,pfX, pfY, &defX, &defY, &param);
+
+		//if(i< 10) cout << defX << "\t" << defY << "\t"; 
+
 		pDeltaX.push_back(defX);
 		pDeltaY.push_back(defY);
 		srcPosXList.push_back(srcPos[0]);
@@ -761,20 +768,23 @@ double Model::getRegularizationSrcValue (vec d) {
 
 double Model::getScatterReg() {
 
-	// Now we know the 'srcPosXListPixel' and 'srcPosYListPixel': 
+	// Suppose we know the 'srcPosXListPixel' and 'srcPosYListPixel': 
+
 	double scatter = 0;   // STD of position 'x' and 'y'
 	double sumX = 0; 
 	double sumY = 0;  
 	for (int i=0; i<srcPosXList.size(); ++i) {
+		//cout << srcPosXList[i] << "\t" ; 
 		sumX += srcPosXList[i]; 
 		sumY += srcPosYList[i]; 
 	}
+
+	
+
 	double xPosMean = sumX / srcPosXList.size(); 
 	double yPosMean = sumY / srcPosYList.size();
 
-	
 	for (int i=0; i<srcPosXList.size(); ++i) {
-
 		scatter += (srcPosXList[i]-xPosMean) * (srcPosXList[i]-xPosMean) ;
 		scatter += (srcPosYList[i]-yPosMean) * (srcPosYList[i]-yPosMean) ;
 	}
@@ -1147,6 +1157,66 @@ MultModelParam::MultModelParam(map<string,string> confMap) {
 				nLens +=1;
 			}
 		}
+
+
+
+		// compute nComb; 
+		nComb = 0; 
+		for (double critRad0 = parameter[0].critRadFrom;	critRad0 <= parameter[0].critRadTo; critRad0 += parameter[0].critRadInc) {
+	        for (double centerX0 = parameter[0].centerXFrom;	centerX0 <= parameter[0].centerXTo; centerX0 += parameter[0].centerXInc) {
+	        	for (double centerY0 = parameter[0].centerYFrom;	centerY0 <= parameter[0].centerYTo; centerY0 += parameter[0].centerYInc) {
+	        		for (double e0 = parameter[0].eFrom;	e0 <= parameter[0].eTo; e0 += parameter[0].eInc) {
+	        			for (double PA0 = parameter[0].PAFrom; PA0 <= parameter[0].PATo; PA0 += parameter[0].PAInc) {
+	        				for(double core0 = parameter[0].coreFrom; core0 <= parameter[0].coreTo; core0 += parameter[0].coreInc) {
+
+
+		for (double critRad1 = parameter[1].critRadFrom;	critRad1 <= parameter[1].critRadTo; critRad1 += parameter[1].critRadInc) {
+	        for (double centerX1 = parameter[1].centerXFrom;	centerX1 <= parameter[1].centerXTo; centerX1 += parameter[1].centerXInc) {
+	        	for (double centerY1 = parameter[1].centerYFrom;	centerY1 <= parameter[1].centerYTo; centerY1 += parameter[1].centerYInc) {
+	        		for (double e1 = parameter[1].eFrom;	e1 <= parameter[1].eTo; e1 += parameter[1].eInc) {
+	        			for (double PA1 = parameter[1].PAFrom; PA1 <= parameter[1].PATo; PA1 += parameter[1].PAInc) {
+	        				for(double core1 = parameter[1].coreFrom; core1 <= parameter[1].coreTo; core1 += parameter[1].coreInc) {
+
+	    
+
+	    for (double critRad2 = parameter[2].critRadFrom;	critRad2 <= parameter[2].critRadTo; critRad2 += parameter[2].critRadInc) {
+	        for (double centerX2 = parameter[2].centerXFrom;	centerX2 <= parameter[2].centerXTo; centerX2 += parameter[2].centerXInc) {
+	        	for (double centerY2 = parameter[2].centerYFrom;  centerY2 <= parameter[2].centerYTo; centerY2 += parameter[2].centerYInc) {
+	        		for (double e2 = parameter[2].eFrom;	e2 <= parameter[2].eTo; e2 += parameter[2].eInc) {
+	        			for (double PA2 = parameter[2].PAFrom; PA2 <= parameter[2].PATo; PA2 += parameter[2].PAInc) {
+	        				for(double core2 = parameter[2].coreFrom; core2 <= parameter[2].coreTo; core2 += parameter[2].coreInc) {
+	        					nComb ++; 
+
+
+	        				}
+	        			}
+	        		}
+	        	}
+	        }
+	    }
+	    					}
+	        			}
+	        		}
+	        	}
+	        }
+	    }
+	    					}
+	        			}
+	        		}
+	        	}
+	        }
+	    }	
+		// for(int i=0; i<3; ++i) {
+		// 	nComb *= (floor(parameter[i].centerXTo-parameter[i].centerXFrom )/ parameter[i].centerXInc +1) ; 
+		// 	nComb *= (floor(parameter[i].centerYTo-parameter[i].centerYFrom )/ parameter[i].centerYInc +1); 
+		// 	nComb *= (floor(parameter[i].critRadTo-parameter[i].critRadFrom )/ parameter[i].critRadInc +1); 
+		// 	nComb *= (floor(parameter[i].eTo-parameter[i].eFrom)/ parameter[i].eInc +1); 
+		// 	nComb *= (floor(parameter[i].PATo-parameter[i].PAFrom )/ parameter[i].PAInc +1); 
+		// 	nComb *= (floor(parameter[i].coreTo-parameter[i].coreFrom )/ parameter[i].coreInc +1); 
+
+		// }		
+
+
 	}
 
 
@@ -1626,7 +1696,8 @@ void Model::resetVectors(Conf* conf) {
 	vector<normVec> meanNormV;
 
 
-	param.parameter.	clear(); 
+
+	//param.parameter.	clear(); 
 	srcPosXListPixel.	clear(); 
 	srcPosYListPixel.	clear(); 
 	srcPosXList.		clear(); 
@@ -1640,18 +1711,20 @@ void Model::resetVectors(Conf* conf) {
 	simple_res_img.		clear(); 
 	mod_img.			clear(); 
 
-
 	L.	 reserve(Eigen::VectorXi::Constant(length,3));
 	Ds.  reserve(2*length);
 	Dphi.reserve(2*length);
+	
 	Hs1. reserve(Eigen::VectorXi::Constant(length,10));
 	Hs2. reserve(Eigen::VectorXi::Constant(length,10));
 	RtR. reserve(200*length);
 	T.   reserve(length);
 
+	
 	H_zero.reserve(Eigen::VectorXi::Constant(length, 2)); 
 	H_grad.reserve(Eigen::VectorXi::Constant(length, 5)); 
 	H_curv.reserve(Eigen::VectorXi::Constant(length, 10)); 
+	
 	Hessian_grad.reserve(Eigen::VectorXi::Constant(conf->srcSize[0]*conf->srcSize[1], 6)); 
 
 }
@@ -2052,12 +2125,7 @@ Image* createLensImage(Conf* conf, MultModelParam * param) {
 				cout << "sum of model 1 & 2: " << sum << endl ; 
 
 			
-		}
-
-
-	
-
-	
+		}	
 	Image* lensImg = new Image(xList, yList, &val, conf->imgSize[0]*level, conf->imgSize[1]*level, conf->bitpix);
 
 	return lensImg; 

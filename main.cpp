@@ -68,7 +68,7 @@ int main(int argc, char* argv[]) {
 	MultModelParam param = MultModelParam(mapConf);
 	
 	param.printModels();
-	param.mix(opt); 	 // update 'AllMixModels'; 
+	//param.mix(opt); 	 // update 'AllMixModels'; 
 
 	// cout << "=====================" << endl; 
 	// for(int i=0; i<11; ++i) {
@@ -110,7 +110,7 @@ int main(int argc, char* argv[]) {
 	// 	cout << luminosity << "\n"; 
 	// } 
 	// cout << endl; 
-		if(1) {
+		if(0) {
 		map<string, double> backMap, backStdMap; 
 		backStdMap["f475"] = 6.4  ;
 		backStdMap["f606"] = 5.93 ; 
@@ -216,11 +216,32 @@ int main(int argc, char* argv[]) {
 		delete img0, img1, img2, img3, img4; 
 	}
 
-	//gridSearchVegetti(conf, param,  dataImage, dir, output);	
+	// Inititate dataImage1 ; 
+	Image* dataImage1 = new Image(mapConf["imageFileName"]);
+	dataImage1->updateFilterImage("horseshoe_test/north1_points_sparse_extended.reg", 1);
+	dataImage1->updateBackSubtract(conf->back_mean, conf->back_std); 
+
+	Image* dataImage2 = new Image(mapConf["imageFileName"]);
+	dataImage2->updateFilterImage("horseshoe_test/north2_points_sparse.reg", 1);
+	dataImage2->updateBackSubtract(conf->back_mean, conf->back_std); 
+
+	Image* dataImageSmall = new Image(mapConf["imageFileName"]);
+	dataImageSmall->updateFilterImage("horseshoe_test/trial_arc.reg", 1);
+	dataImageSmall->updateBackSubtract(conf->back_mean, conf->back_std); 
+
+
+	vector<Image* > dataImageList; 
+	dataImageList.push_back(dataImage1); 
+	dataImageList.push_back(dataImage2); 
+
+	//dataImageList.push_back(dataImage);
+	//dataImageList.push_back(dataImageSmall); 
+	gridSearchVegetti(conf, param,  dataImageList, dir, output);	
 
 
 	delete conf;
-	delete dataImage;
+	delete dataImage, dataImage1, dataImage2;
+
 	return 0;
 }
 

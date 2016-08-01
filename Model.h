@@ -87,15 +87,19 @@ struct SingleModelParam {
 	 	sersicScale =  sersicScaleFrom =  sersicScaleTo =  sersicScaleInc = 0 ;  
 	 	m =  mFrom =  mTo =  mInc = 0 ;  
 	}
+	bool reachEnd() { // only for SIE; 
+		return critRad >= critRadTo and centerX>=centerXTo and centerY >= centerYTo
+				and e>=eTo and PA >= PATo and coreTo>=coreTo; 
+	}
 };
 
 class MultModelParam{
 
 
 public:
-	vector<SingleModelParam> parameter;
+	vector<SingleModelParam> parameter;  // not huge one; 
 	int nLens ;
-	int nComb ; 
+	long long int nComb ; 
 	vector<int> nParam;
 	vector<vector<mixModels> > mixAllModels; 
 
@@ -107,11 +111,11 @@ public:
 };
 
 class Model {
-	int length;
+	
 
 
 public:
-
+	int length;
 	// For regularization;
 	double chi2;
 	double srcR;
