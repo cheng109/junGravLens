@@ -231,10 +231,10 @@ int main(int argc, char* argv[]) {
 
 
 	vector<Image* > dataImageList; 
-	dataImageList.push_back(dataImage1); 
-	dataImageList.push_back(dataImage2); 
+	//dataImageList.push_back(dataImage1); 
+	//dataImageList.push_back(dataImage2); 
 
-	//dataImageList.push_back(dataImage);
+	dataImageList.push_back(dataImage);
 	//dataImageList.push_back(dataImageSmall); 
 	gridSearchVegetti(conf, param,  dataImageList, dir, output);	
 

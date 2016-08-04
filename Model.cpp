@@ -23,6 +23,8 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <random>
+#include "Kmeans.h"
+#include <memory>
 using namespace std;
 //using namespace arma;
 using namespace Eigen;
@@ -349,6 +351,7 @@ void Model::updatePosMapping(Image* image, Conf* conf) {
 		srcPosYList.push_back(srcPos[1]);
 		srcPosXListPixel.push_back(srcPos[0]/conf->srcRes+conf->srcXCenter);
 		srcPosYListPixel.push_back(srcPos[1]/conf->srcRes+conf->srcYCenter);
+		group.push_back(0); 
 		posMap[make_pair(imgX, imgY)] = i;
 	}
 
@@ -791,6 +794,53 @@ double Model::getScatterReg() {
 	scatter = scatter / srcPosXList.size();  
 	return scatter; 
 	
+}
+
+
+double Model::getKmeansScatter() {
+	//Suppose we know the 'srcPosXListPixel' and 'srcPosYListPixel': 
+	clock_t begin = clock();
+	int k = 2; 
+	Kmeans kmeans(k, srcPosXListPixel, srcPosYListPixel, group); 
+	kmeans.initiate(); 
+
+
+	double diff = INT_MAX;
+	vector<pair<double, double>> pre_centers ; 
+	int iterNum = 0; 
+	while( diff > 1.0e-6  && iterNum < 20 ) {
+		iterNum ++; 
+		// cout << iterNum <<  ":\t" << kmeans.centers[0].first << "\t" << kmeans.centers[0].second 
+		// 		 << "\t" << kmeans.centers[1].first << "\t" << kmeans.centers[1].second 
+		// 		 << "\t" << diff << endl;
+
+		kmeans.updateGroup(); 
+		vector<int> count = kmeans.countGroup(); 
+		pre_centers = kmeans.centers; 
+		kmeans.updateCenters(); 
+		diff = 0; 
+		for(int i=0; i<k; ++i) {
+			double xdiff = pre_centers[i].first - kmeans.centers[i].first; 
+			double ydiff = pre_centers[i].second -kmeans.centers[i].second; 
+			diff += (xdiff * xdiff + ydiff * ydiff );  
+		}
+	}
+
+	//cout << "Time1: " << double(clock() - begin)/ CLOCKS_PER_SEC << endl; 
+	begin = clock(); 
+	// Now the centers are found; 
+	vector<int> countGroup  = kmeans.countGroup(); 
+	//cout << countGroup[0] << "\t" << countGroup[1] << endl; 
+
+	double scatter  = 0; 
+	for(int i=0; i<srcPosXListPixel.size(); ++i) {
+		double xdiff = srcPosXListPixel[i] - kmeans.centers[kmeans.group[i]].first; 
+		double ydiff = srcPosYListPixel[i] - kmeans.centers[kmeans.group[i]].second; 
+		scatter += xdiff * xdiff + ydiff * ydiff ; 
+
+	}
+	return scatter/srcPosXListPixel.size(); 
+
 }
 
 
@@ -2139,17 +2189,46 @@ void writeSrcModResImage(Model* model, Image* dataImage, Conf* conf, string file
 
 	// Part I:  output 'src', 'mod', and 'res' images: 
 	// Part II: output 'crit', 'caus' and 'lens' images; 
-	
-
 	vector<double> s = eigenV_to_cV(&model->s); 
-	Image* srcImg = new Image(model->srcPosXListPixel, model->srcPosYListPixel, &s, conf->srcSize[0], conf->srcSize[1], conf->bitpix);		
-	Image* modImg = new Image(dataImage->xList, dataImage->yList, &s, conf->imgSize[0], conf->imgSize[1], conf->bitpix);
+
+	////////    output image by separating sourse; 
+	// src1 and src2: 
+	vector<double> s0(s.size(), 0); 
+	vector<double> s1(s.size(), 0); 
+	for(int i=0; i<s.size(); ++i) {
+		if(model->group[i]==0) s0[i] = s[i]; 
+		if(model->group[i]!=0) s1[i] = s[i]; 
+	}
+
+	// write src1: 
+	unique_ptr<Image> srcImg0 (new Image(model->srcPosXListPixel, model->srcPosYListPixel, &s0, conf->srcSize[0], conf->srcSize[1], conf->bitpix));		
+	unique_ptr<Image> modImg0 (new Image(dataImage->xList, dataImage->yList, &s0, conf->imgSize[0], conf->imgSize[1], conf->bitpix));
+
+
+	unique_ptr<Image> srcImg1 (new Image(model->srcPosXListPixel, model->srcPosYListPixel, &s1, conf->srcSize[0], conf->srcSize[1], conf->bitpix));		
+	unique_ptr<Image> modImg1 (new Image(dataImage->xList, dataImage->yList, &s1, conf->imgSize[0], conf->imgSize[1], conf->bitpix));
+
+	srcImg0 -> writeToFile (dir + "img_src_" + fileName + "_0.fits");
+	modImg0 -> writeToFile (dir + "img_mod_" + fileName + "_0.fits");
+
+	srcImg1 -> writeToFile (dir + "img_src_" + fileName + "_1.fits");
+	modImg1 -> writeToFile (dir + "img_mod_" + fileName + "_1.fits");
+
+
+
+
+
+
+
+	
+	unique_ptr<Image> srcImg (new Image(model->srcPosXListPixel, model->srcPosYListPixel, &s, conf->srcSize[0], conf->srcSize[1], conf->bitpix));		
+	unique_ptr<Image> modImg  (new Image(dataImage->xList, dataImage->yList, &s, conf->imgSize[0], conf->imgSize[1], conf->bitpix));
 	Image* resImg = model->getFullResidual(dataImage);
 	//srcImg -> writeToFile (dir + "img_src_" + fileName + ".fits", conf->back_mean, conf->back_std ) ;
 	srcImg -> writeToFile (dir + "img_src_" + fileName + ".fits");
 	resImg -> writeToFile (dir + "img_res_" + fileName + ".fits");
 	modImg -> writeToFile (dir + "img_mod_" + fileName + ".fits");
-	delete srcImg, modImg, resImg; 
+	//delete srcImg, modImg, resImg; 
 
 	vector<Image* > curve =  getCritCaustic(conf, &model->param); 
 	Image* critImg = curve[0]; 
@@ -2158,7 +2237,7 @@ void writeSrcModResImage(Model* model, Image* dataImage, Conf* conf, string file
 	lensImg -> writeToFile(dir + "img_lens_" + fileName + ".fits");
 	critImg -> writeToFile(dir + "img_crit_" + fileName + ".fits");
 	causImg -> writeToFile(dir + "img_caus_" + fileName + ".fits");
-	delete critImg, causImg, lensImg ; 
+	//delete critImg, causImg, lensImg ; 
 }
 
 

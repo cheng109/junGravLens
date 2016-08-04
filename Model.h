@@ -135,6 +135,8 @@ public:
 	vector<double> srcPosXListPixel;	  // Source position after deflection in X direction, in pixel;
 	vector<double> srcPosYListPixel;	  // Source position after deflection in Y direction, in pixel;
 
+	vector<int> group; 
+
 
 	vector<double> srcPosXListPixel_increase; 
 	vector<double> srcPosYListPixel_follow; 
@@ -251,6 +253,7 @@ public:
 
 
 	double getScatterReg(); 
+	double getKmeansScatter() ; 
 	double getZerothOrderReg  	(Conf* conf, vector<double> briList);
 	double getGradientOrderReg	(Conf* conf, vector<double> briList); 
 	double getCurvatureOrderReg	(Conf* conf, vector<double> briList); 

@@ -24,7 +24,7 @@ void gridSearchVegetti(Conf* conf, MultModelParam param_old, vector<Image*> data
 
 	conf->length = dataImageList[0]->length; 
 	Model *model = new Model(conf, param_old, lambdaS);
-	cout << "nLen: " << param_old.parameter.size() << endl; 
+	//cout << "nLen: " << param_old.parameter.size() << endl; 
 		
 	int minIndex = 0; 
 	double minPenalty = std::numeric_limits<double>::max(); 
@@ -44,8 +44,7 @@ void gridSearchVegetti(Conf* conf, MultModelParam param_old, vector<Image*> data
 		
 		//model->updateReserve(conf); 
 
-		double time1 = 0; 
-		double time2 = 0 ; 
+		
 		clock_t begin = clock(); 
 		model->param.parameter[0].name = "SIE"; 
 		model->param.parameter[1].name = "SIE"; 
@@ -74,6 +73,8 @@ void gridSearchVegetti(Conf* conf, MultModelParam param_old, vector<Image*> data
 	        			for (double PA2 = parameter[2].PAFrom; PA2 <= parameter[2].PATo; PA2 += parameter[2].PAInc) {
 	        				for(double core2 = parameter[2].coreFrom; core2 <= parameter[2].coreTo; core2 += parameter[2].coreInc) {
 	        					
+	        					
+
 	        					model->resetVectors (conf); 
 	        					//SingleModelParam s0, s1, s2; 
 
@@ -99,9 +100,7 @@ void gridSearchVegetti(Conf* conf, MultModelParam param_old, vector<Image*> data
 	        					model->param.parameter[2].PA 	  = PA2;
 	        					model->param.parameter[2].core    = core2;  
 
-
-
-
+	        					
 	        					double sum = 0 ; 
 								for(auto & dataImage: dataImageList) {
 									conf->length = dataImage->length; 
@@ -133,8 +132,8 @@ void gridSearchVegetti(Conf* conf, MultModelParam param_old, vector<Image*> data
 	        						minParam[2][5]= core2;  
 	        	
 								}
+
 								count ++; 
-								cout << "Hahahhahdadhd: " << endl; 
 								cout << "[" + to_string(count) + "/" + to_string(model->param.nComb) + "] " << sum << endl; 
 								writeSrcModResImage(model,dataImageList[0], conf, to_string(0), dir) ; 
 
@@ -264,11 +263,12 @@ void gridSearchVegetti(Conf* conf, MultModelParam param_old, vector<Image*> data
 
 
 vector<double> getPenalty(Model* model, Image* dataImage, Conf* conf) {
+	int begin = clock(); 
 	vector<double> penalty(3); 
 	vec d = cV_to_eigenV (&dataImage->dataList); 
 	model->updatePosMapping(dataImage, conf);  // time used: 0.03s; 
 	
-	if(0) {
+	if(1) {
 		model->update_H_zero(conf); 
 		model->updateLensAndRegularMatrix(dataImage, conf);  // get matrix 'L' and 'RTR'; most time consuming part; 
 		model->solveSource(&dataImage->invC, &dataImage->d, conf->srcRegType); 
@@ -297,7 +297,11 @@ vector<double> getPenalty(Model* model, Image* dataImage, Conf* conf) {
 		penalty[1] = srcR[0]; 
 		penalty[2] = chi2[0] + srcR[0]; 
 	}
-	penalty[2] = model->getScatterReg() ; 
+	
+	//penalty[2] = model->getScatterReg() ; 	
+	penalty[2] = model->getKmeansScatter() ;
+	//cout << "Scatter used : " << double(clock()-begin)/CLOCKS_PER_SEC << " seconds !" << endl; 
+
 	return penalty; 
 }
 
