@@ -66,11 +66,12 @@ Conf::Conf(Image* dataImage, map<string, string> confMap) {
 		srcSize[0] =stod(confMap["srcX"]);
 		srcSize[1] =stod(confMap["srcY"]);
 
-		back_mean = stod(confMap["back_mean"]); 
-		back_std = stod(confMap["back_std"]);
+		back_mean 	= stod(confMap["back_mean"]); 
+		back_std 	= stod(confMap["back_std"]);
+		numSources 	= stoi(confMap["numSources"]); 
 
 		srcRegLevel = stod(confMap["srcRegLevel"]); 
-		srcRegType = confMap["srcRegType"]; 
+		srcRegType 	= confMap["srcRegType"]; 
 
 		verbose		  = stoi(confMap["verbose"]); 
 		usingRegion   = stoi(confMap["usingRegion"]); 
@@ -79,6 +80,7 @@ Conf::Conf(Image* dataImage, map<string, string> confMap) {
 		outputCritImg = stoi(confMap["outputCritImg"]); 
 		outputLensImg = stoi(confMap["outputLensImg"]); 
 		srcBackground = stoi(confMap["srcBackground"]); 	
+
 
 		causticLevel  = stoi(confMap["causticLevel"]); 
 

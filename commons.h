@@ -115,6 +115,7 @@ public:
 
 	double back_mean; 
 	double back_std; 
+	int numSources; 
 
 	double srcRegLevel; 
 	string srcRegType; 

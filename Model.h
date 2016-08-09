@@ -116,6 +116,8 @@ class Model {
 
 public:
 	int length;
+	int k;   // number of sources; 
+	
 	// For regularization;
 	double chi2;
 	double srcR;
@@ -253,7 +255,7 @@ public:
 
 
 	double getScatterReg(); 
-	double getKmeansScatter() ; 
+	double getKmeansScatter(Image* dataImage) ; 
 	double getZerothOrderReg  	(Conf* conf, vector<double> briList);
 	double getGradientOrderReg	(Conf* conf, vector<double> briList); 
 	double getCurvatureOrderReg	(Conf* conf, vector<double> briList); 

@@ -17,9 +17,10 @@ public:
 	vector<pair<double, double> > centers;  // vector of k centers; 
 	vector<double> & xPos; 
 	vector<double> & yPos; 
+	vector<double> & w; 
 
 public: 
-	Kmeans(int _k, vector<double>& _xPos, vector<double>& _yPos, vector<int>& group); 
+	Kmeans(int _k, vector<double>& _xPos, vector<double>& _yPos, vector<int>& group, vector<double>& w); 
 	void initiate() ; 
 	void updateGroup() ; 
 	void updateCenters(); 

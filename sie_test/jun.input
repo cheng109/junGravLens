@@ -12,7 +12,7 @@ xmin	  -10.000000
 ymin	  -10.000000
 xmax	  10.000000
 ymax	  10.000000
-pix_ext   0.10000
+pix_ext   0.05000
 pix_poi   1.000000
 maxlev	  5
 
@@ -25,12 +25,15 @@ obs_ncomb      1
 #wcs_dec0       30.000000
 
 ## define lenses and sources
-startup 3 1 0 
+startup 2 3 0 
 #lens point 2.0e12 2.0 2.0 0.0 0.0 0.0  0.0
 #lens point 2.0e12 0.0 -2.0 0.0 0.0 0.0  0.0
-lens sie 400 1.0 1.0 0.0 0.0 0.0  0.0
-#lens sie 400 -2.0 -2.0 0.0 0.0 0.0  0.0
-extend gauss 2.379 2.5  0.0  0.0 0.0 0.0 0.2 0.0
+lens sie 460 0.5 0.5 0.0 0.0 0.0  0.0
+lens sie 200 0.2 -1.0 0.0 0.0 0.0  0.0
+extend gauss 2.379 4.5  0.2  -0.2 0.0 0.0 0.2 0.0
+extend gauss 2.0 4.0  -0.5  0.2 0.1 45.0 0.3 0.0
+extend gauss 1.8 4.25  1.0  0.2 0.2 135.0 0.25 0.0
+
 
 #point 2.379  2.0e8 0.0 10.0
 #extend point  2.379 2.0e8  0.0 0.0  0.0   0.0 0.0 0.0
@@ -50,8 +53,8 @@ start_command
 calcimage 2.379 1.0 -1.5
 calcein 2.379
 
-writeimage_ori 0.0 0.0 
-writeimage 0.0 0.0 
+writeimage_ori 0.5 0.1
+writeimage 0.5 0.1 
 writecrit 2.379
 writelens 2.379
 #writepsf

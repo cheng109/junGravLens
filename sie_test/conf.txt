@@ -8,28 +8,46 @@ lenZ	0.4457
 
 
 ## Setting secondary parameters: 
-srcRes	0.1
-imgRes	0.10
+srcRes	0.05
+imgRes	0.05
 potRes	0.1
+causticLevel  4
 
 ## Files
-imageFileName	sie_test/jun_image.fits
-regionFileName	sie_test/full.reg
+imageFileName	sie_test/sie_test.fits
+regionFileName	sie_test/all.reg
 varFileName	  jun_var.fits
-psfFileName		PSF_test/cut_psf.fits
+psfFileName		horseshoe_test/HorseShoe_psf.fits
+criticalName	horseshoe_test/critical.reg
+causticName	horseshoe_test/caustic.reg
+
+contourCritName  horseshoe_test/ds9crit.con
+contourCausName  horseshoe_test/ds9caus.con
+
+## Flags:	 '1' == Yes && '0' == No
+verbose 		1
+usingRegion		1
+outputSrcImg	1
+outputModImg	1
+outputCritImg	1
+outputLensImg	1
+srcBackground	0
+
+srcRegLevel		0.0004
+srcRegType		vege 
 
 
-## Source plane size
-srcX	200
-srcY	200
-back_mean 0.0
-back_std 0.0
+
+## Source plane size (in pixel)
+srcX	400
+srcY	400
+
+back_mean 0.5
+back_std 0.1
+numSources	3
 
 ## Model_SIE {xfrom, xto, xinc, yfrom, yto, yinc, critfrom, critto, critinc, ellfrom, ellto, ellinc, pafrom, pato, painc, corefrom, coreto, coreinc}
-##SIE 0.0 0.0 0.5 -10.0 10.0 0.2 7.26 7.26 0.01 0.1 0.1 0.01 38.0 38.0 1.0 0.0 0.0 0.0 
-SIE 0.0 0.0 0.5 0.0 0.0 1.0 2.23 4.23 0.1 0.0 0.0 0.01 0.0 0.0 1.0 0.0 0.0 0.1 
-PTMASS 0.0 40.0 2.0 20.0 20.0 2.0 3.7 3.7 0.1
-PTMASS 0.0 0.0 0.1 -40.0 0.0 2.0 2.7 4.7 0.1
 
-
-
+SIE 10.0  10.0 2.0 10.0 10.0 2.0 4.27 4.27 0.2 0.0 0.0 0.02 0.0 0.0 20.0 0.0 0.0 0.5
+SIE 4.0  4.0 2.0 -20.0 -20.0 2.0 0.80 0.80 0.2 0.0 0.0 0.02 0.0 0.0 20.0 0.0 0.0 0.5
+SIE 0.0  0.0 1.0 0.0 0.0 2.0 0.0 0.0 0.1 0.08 0.08 0.01 0.0 0.0 0.5 0.0 0.0 0.5

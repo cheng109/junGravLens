@@ -299,7 +299,7 @@ vector<double> getPenalty(Model* model, Image* dataImage, Conf* conf) {
 	}
 	
 	//penalty[2] = model->getScatterReg() ; 	
-	penalty[2] = model->getKmeansScatter() ;
+	penalty[2] = model->getKmeansScatter(dataImage) ;
 	//cout << "Scatter used : " << double(clock()-begin)/CLOCKS_PER_SEC << " seconds !" << endl; 
 
 	return penalty; 
